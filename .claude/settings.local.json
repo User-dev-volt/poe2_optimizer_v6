@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(if not exist \"docs\" mkdir docs)",
+      "Bash(if [ ! -d \"D:\\poe2_optimizer_v6\\docs\" ])",
+      "Bash(then mkdir -p \"D:\\poe2_optimizer_v6\\docs\")",
+      "Bash(fi)",
+      "Bash(python:*)",
+      "WebSearch",
+      "Bash(dir:*)",
+      "Bash(xargs:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
