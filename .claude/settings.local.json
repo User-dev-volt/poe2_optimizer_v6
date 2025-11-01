@@ -10,7 +10,20 @@
       "Bash(dir:*)",
       "Bash(xargs:*)",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(timeout 120 python -m pytest:*)",
+      "Bash(git stash:*)",
+      "Bash(timeout 60 python:*)",
+      "Bash(pip-audit:*)",
+      "Bash(pytest:*)",
+      "Bash(test:*)",
+      "Bash(if not exist \"src\\optimizer\" mkdir srcoptimizer)",
+      "Read(//d/**)",
+      "Bash(if not exist \"D:\\poe2_optimizer_v6\\docs\\stories\" mkdir \"D:\\poe2_optimizer_v6\\docs\\stories\")",
+      "Bash(cd:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(findstr:*)",
+      "Bash(nul)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,141 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.7</storyId>
+    <title>Load Passive Tree Graph</title>
+    <status>Approved</status>
+    <generatedAt>2025-10-18</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>D:\poe2_optimizer_v6\docs\stories\story-1.7.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to load PoE 2 passive tree structure</iWant>
+    <soThat>optimization can navigate the tree correctly</soThat>
+    <tasks>
+      - Task 1: Create PassiveTreeGraph Data Model (AC: #1, #2, #5)
+      - Task 2: Implement Passive Tree Loader (AC: #1, #2, #3, #5)
+      - Task 3: Implement Tree Connectivity Validation (AC: #4)
+      - Task 4: Implement Tree Caching (AC: #1)
+      - Task 5: Integration with Story 1.5 (Enables Build Calculation)
+      - Task 6: Create Unit Tests for Passive Tree Loading (AC: All)
+      - Task 7: Error Handling and Edge Cases (AC: #1)
+      - Task 8: Documentation and Performance Validation (AC: All)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1.7.1">System loads PoE 2 passive tree JSON/Lua data</criterion>
+    <criterion id="AC-1.7.2">System understands node IDs, connections (edges), and node stats</criterion>
+    <criterion id="AC-1.7.3">System identifies character class starting positions</criterion>
+    <criterion id="AC-1.7.4">System validates allocated nodes are connected (no orphan nodes)</criterion>
+    <criterion id="AC-1.7.5">System handles Notable/Keystone/Small passive types</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="D:\poe2_optimizer_v6\docs\tech-spec-epic-1.md" title="Epic 1 Technical Specification">
+        <section line="231-264">PassiveTreeGraph data model definition - defines PassiveNode and PassiveTreeGraph dataclasses with node storage, edge adjacency lists, and class starting positions</section>
+        <section line="490-523">Workflow 3: Load Passive Tree Graph - detailed workflow showing how to locate PassiveTree.lua, load via Lupa, parse to Python adjacency list, and cache in memory</section>
+        <section line="959-977">Story 1.7 acceptance criteria and dependency notes - critical context that Story 1.7 enables Story 1.5 by providing PassiveTree data required for PoB engine initialization</section>
+        <section line="107">Integration layer module specification - passive_tree.py provides PassiveTree.lua loader and graph caching</section>
+      </doc>
+      <doc path="D:\poe2_optimizer_v6\docs\epics.md" title="Epic Definitions">
+        <section line="145-167">Story 1.7 definition with reorder rationale - explains why Story 1.7 was reordered before Story 1.5 due to PassiveTree dependency chain discovered during implementation</section>
+      </doc>
+      <doc path="D:\poe2_optimizer_v6\docs\solution-architecture.md" title="Solution Architecture">
+        <section line="316-398">Proposed source tree structure - shows calculator/passive_tree.py as part of calculator layer for PassiveTree.lua loader and graph structure</section>
+      </doc>
+    </docs>
+    <code>
+      <artifact path="D:\poe2_optimizer_v6\src\models\build_data.py" kind="dataclass" symbol="BuildData" lines="39-76">
+        <reason>Shows existing build data model with passive_nodes field (Set[int]) that will reference PassiveTreeGraph node IDs. Demonstrates allocated_point_count property that uses len(passive_nodes)</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\src\calculator\pob_engine.py" kind="class" symbol="PoBCalculationEngine" lines="46-456">
+        <reason>Story 1.5 calculation engine that will consume PassiveTree data. Shows _configure_lua_package_path() pattern for loading PoB Lua modules, which passive_tree.py should follow</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\src\parsers\pob_parser.py" kind="function" symbol="parse_pob_code" lines="25-144">
+        <reason>Shows how passive nodes are extracted from PoB XML (_extract_passive_nodes returns Set[int]). PassiveTree loader must validate these node IDs exist in tree</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\src\calculator\stub_functions.py" kind="module">
+        <reason>Contains Lupa-compatible stub functions (Deflate, Inflate, ConPrintf). If PassiveTree loading requires Lua execution, these stubs may be needed</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="lupa" version=">=2.0">Python-LuaJIT bindings for executing Lua code and loading PassiveTree.lua files</package>
+        <package name="pytest" version=">=7.4.0">Testing framework for unit tests (Task 6)</package>
+      </python>
+      <external>
+        <resource name="external/pob-engine/src/Data/">PoB data directory where PassiveTree.lua or equivalent tree structure files should be located</resource>
+        <resource name="external/pob-engine/">Path of Building engine submodule containing Lua calculation modules and data files</resource>
+      </external>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint id="layered-architecture" source="solution-architecture.md:226-267">
+      Module calculator/passive_tree.py belongs to Integration Layer, providing passive tree data to both calculator and optimizer modules. Must not depend on web/UI layers.
+    </constraint>
+    <constraint id="singleton-pattern" source="tech-spec-epic-1.md:515-523">
+      PassiveTree must be loaded once at startup and cached in module-level variable using singleton pattern (get_passive_tree() function). Avoid re-parsing on every call.
+    </constraint>
+    <constraint id="performance-target" source="tech-spec-epic-1.md:526-567">
+      Load time must be under 2 seconds for one-time initialization. Memory footprint estimated 5-10MB for 1500+ nodes and 3000+ edges. Use set for edges (O(1) neighbor lookup).
+    </constraint>
+    <constraint id="data-source-investigation" source="story-1.7.md:238-270">
+      PassiveTree data source location is unknown. Must investigate external/pob-engine/src/Data/ for options: PassiveTree.lua (Lua format), 3_0.lua (version-specific), JSON exports, or fallback to web API/GGPK extraction.
+    </constraint>
+    <constraint id="story-dependency-chain" source="epics.md:145-167, tech-spec-epic-1.md:931-933">
+      CRITICAL: Story 1.7 was reordered to execute BEFORE Story 1.5 because PoB calculation engine's calcs.initEnv() requires PassiveTree data. Story 1.5 blocked without this deliverable. Must provide to_lua_table() method for PoB engine integration.
+    </constraint>
+    <constraint id="testing-requirements" source="story-1.7.md:155-175">
+      Must create comprehensive unit tests in tests/unit/test_passive_tree.py covering all 5 acceptance criteria: file loading, node/edge parsing, class starting positions, BFS connectivity validation, and node type detection.
+    </constraint>
+    <constraint id="error-handling" source="tech-spec-epic-1.md:601-648">
+      Handle missing data files gracefully (FileNotFoundError), corrupted formats (ParseError), missing node fields (provide defaults), circular references (validate DAG), and invalid class starting nodes.
+    </constraint>
+  </constraints>
+  <interfaces>
+    <interface name="get_passive_tree" kind="function" signature="() -> PassiveTreeGraph" path="src/calculator/passive_tree.py">
+      Singleton accessor returning cached PassiveTreeGraph instance. Loads on first call, returns cached instance on subsequent calls. Required by Story 1.5 for PoB engine initialization.
+    </interface>
+    <interface name="PassiveTreeGraph.get_neighbors" kind="method" signature="(node_id: int) -> Set[int]" path="src/calculator/passive_tree.py">
+      Returns set of node IDs connected to given node. Used by Epic 2 optimization algorithm for pathfinding and neighbor generation. O(1) lookup using edges dict.
+    </interface>
+    <interface name="PassiveTreeGraph.is_connected" kind="method" signature="(from_node: int, to_node: int, allocated: Set[int]) -> bool" path="src/calculator/passive_tree.py">
+      BFS algorithm checking if path exists from from_node to to_node using only allocated nodes. Used for tree connectivity validation (AC-1.7.4) and Epic 2 tree validator.
+    </interface>
+    <interface name="PassiveTreeGraph.to_lua_table" kind="method" signature="() -> Dict" path="src/calculator/passive_tree.py">
+      Converts PassiveTreeGraph to Lua-compatible table format for PoB engine. Critical for Story 1.5 integration - provides build.spec.tree parameter required by calcs.initEnv().
+    </interface>
+    <interface name="load_passive_tree" kind="function" signature="() -> PassiveTreeGraph" path="src/calculator/passive_tree.py">
+      Internal loader function that parses PassiveTree data files and constructs PassiveTreeGraph object. Called by get_passive_tree() on first access. Handles file I/O, Lua parsing, and data structure conversion.
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      Project uses pytest (>=7.4.0) as testing framework. Test files follow pattern test_*.py in tests/ directory. Unit tests in tests/unit/, integration tests in tests/integration/. Markers: @pytest.mark.slow for external dependencies. Configuration in pytest.ini with pythonpath=src for module imports. Tests should be comprehensive, covering happy paths, edge cases, and error conditions.
+    </standards>
+    <locations>
+      - tests/unit/test_passive_tree.py (new file for this story)
+      - tests/integration/ (potential integration tests if needed)
+      - pytest.ini (configuration file)
+    </locations>
+    <ideas>
+      <test id="1" ac="AC-1.7.1">test_passive_tree_file_exists - Verify PassiveTree data file exists in external/pob-engine/src/Data/ directory</test>
+      <test id="2" ac="AC-1.7.1">test_load_passive_tree_no_errors - Verify load_passive_tree() executes without exceptions</test>
+      <test id="3" ac="AC-1.7.2">test_node_count_reasonable - Assert loaded tree has >1000 nodes (PoE 2 typical tree size)</test>
+      <test id="4" ac="AC-1.7.2">test_edges_bidirectional - Verify if edge A→B exists, then B→A also exists (undirected graph)</test>
+      <test id="5" ac="AC-1.7.2">test_node_has_stats - Verify PassiveNode objects have non-empty stats list with modifiers</test>
+      <test id="6" ac="AC-1.7.3">test_all_classes_have_start_nodes - Assert all 6 character classes (Witch, Warrior, Ranger, Monk, Mercenary, Sorceress) have valid starting node IDs</test>
+      <test id="7" ac="AC-1.7.4">test_is_connected_connected_path - BFS test with connected nodes: start→notable→keystone should return True</test>
+      <test id="8" ac="AC-1.7.4">test_is_connected_disconnected_nodes - BFS test with unconnected clusters should return False</test>
+      <test id="9" ac="AC-1.7.5">test_node_type_detection - Verify keystone, notable, and small passive flags are correctly set on appropriate nodes</test>
+      <test id="10" ac="AC-1.7.1">test_caching_returns_same_instance - Call get_passive_tree() twice, assert same object returned (id() check)</test>
+      <test id="11" ac="AC-1.7.2">test_get_neighbors_returns_set - Verify get_neighbors(node_id) returns Set[int] with connected node IDs</test>
+      <test id="12" ac="AC-1.7.1">test_to_lua_table_format - Verify to_lua_table() returns dict compatible with PoB Lua engine expectations</test>
+    </ideas>
+  </tests>
+</story-context>

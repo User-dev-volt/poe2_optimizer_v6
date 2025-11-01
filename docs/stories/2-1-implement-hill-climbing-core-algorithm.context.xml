@@ -1,0 +1,569 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>1</storyId>
+    <title>Implement Hill Climbing Core Algorithm</title>
+    <status>review</status>
+    <generatedAt>2025-10-28</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-1-implement-hill-climbing-core-algorithm.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to implement a hill climbing algorithm</iWant>
+    <soThat>the system can iteratively improve passive tree configurations</soThat>
+    <tasks>
+- Task 1: Design core algorithm structure (AC: #1, #2, #6) - ✅ COMPLETED
+  - Subtask 1.1: Create OptimizationConfiguration input data model - ✅ COMPLETED
+  - Subtask 1.2: Create OptimizationResult output data model - ✅ COMPLETED
+  - Subtask 1.3: Define optimize_build() function signature in src/optimizer/hill_climbing.py - ✅ COMPLETED
+  - Subtask 1.4: Implement baseline calculation using calculator.calculate_build_stats() - ✅ COMPLETED
+
+- Task 2: Implement main optimization loop (AC: #2, #3, #4, #5) - ✅ COMPLETED
+  - Subtask 2.1: Initialize optimization state (baseline stats, best found, iteration counter) - ✅ COMPLETED
+  - Subtask 2.2: Implement neighbor generation call (placeholder for Story 2.2) - ✅ COMPLETED
+  - Subtask 2.3: Implement steepest-ascent evaluation (calculate stats for all neighbors) - ✅ COMPLETED
+  - Subtask 2.4: Implement best neighbor selection logic - ✅ COMPLETED
+  - Subtask 2.5: Implement state update (adopt new build if improvement found) - ✅ COMPLETED
+  - Subtask 2.6: Integrate convergence detection (placeholder for Story 2.7) - ✅ COMPLETED
+  - Subtask 2.7: Implement iteration loop with max_iterations limit (600) - ✅ COMPLETED
+
+- Task 3: Implement result generation (AC: #6) - ✅ COMPLETED
+  - Subtask 3.1: Calculate final stats for best configuration found - ✅ COMPLETED
+  - Subtask 3.2: Calculate improvement percentage vs baseline - ✅ COMPLETED
+  - Subtask 3.3: Track node changes (adds, removes, swaps) - ✅ COMPLETED (placeholder for Story 2.2)
+  - Subtask 3.4: Package OptimizationResult with all required fields - ✅ COMPLETED
+
+- Task 4: Write unit tests (per testing strategy) - ✅ COMPLETED
+  - Subtask 4.1: Unit test with mocked calculator - verify baseline calculated (AC-2.1.1) - ✅ COMPLETED
+  - Subtask 4.2: Unit test with mocked neighbor generator - verify called (AC-2.1.2) - ✅ COMPLETED
+  - Subtask 4.3: Unit test with mocked metrics - verify all neighbors evaluated (AC-2.1.3) - ✅ COMPLETED
+  - Subtask 4.4: Unit test - verify best neighbor selected (AC-2.1.4) - ✅ COMPLETED
+  - Subtask 4.5: Unit test with mocked convergence - verify loop terminates (AC-2.1.5) - ✅ COMPLETED
+  - Subtask 4.6: Integration test - verify OptimizationResult format (AC-2.1.6) - ✅ COMPLETED
+
+- Task 5: Integration with Epic 1 calculator (AC: #3) - ✅ COMPLETED
+  - Subtask 5.1: Import calculate_build_stats from src/calculator/calculator.py - ✅ COMPLETED
+  - Subtask 5.2: Import BuildData and BuildStats from src/models/ - ✅ COMPLETED
+  - Subtask 5.3: Test integration with real calculator (2-3 test builds) - ✅ COMPLETED
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-2.1.1" status="✅ PASS">
+      <description>Algorithm starts with current passive tree (baseline)</description>
+      <verification>Unit test test_optimize_build_calculates_baseline_stats() verifies calculate_build_stats() called with original build. Result.baseline_stats populated correctly. (test_hill_climbing.py:79-107)</verification>
+    </criterion>
+
+    <criterion id="AC-2.1.2" status="✅ PASS">
+      <description>Algorithm generates neighbor configurations (add/swap 1 node)</description>
+      <verification>Unit test test_optimize_build_calls_neighbor_generator() verifies _generate_neighbors_placeholder() called during loop with correct arguments (BuildData, budget). Placeholder returns empty list per Story 2.1 design. (test_hill_climbing.py:139-172)</verification>
+    </criterion>
+
+    <criterion id="AC-2.1.3" status="✅ PASS">
+      <description>Algorithm evaluates each neighbor using PoB calculations</description>
+      <verification>Unit test test_evaluate_neighbors_all_neighbors_evaluated() verifies calculate_build_stats() called for all neighbors (5/5). Error handling tested in test_evaluate_neighbors_handles_calculation_error(). (test_hill_climbing.py:175-278)</verification>
+    </criterion>
+
+    <criterion id="AC-2.1.4" status="✅ PASS">
+      <description>Algorithm selects best neighbor if improvement found</description>
+      <verification>Unit test test_select_best_neighbor_highest_dps() verifies steepest-ascent selection (12000 DPS chosen over 9000, 11000). Metrics (DPS, EHP, balanced) tested in test_get_metric_value_*. (test_hill_climbing.py:280-372)</verification>
+    </criterion>
+
+    <criterion id="AC-2.1.5" status="✅ PASS">
+      <description>Algorithm repeats until convergence (no improvement)</description>
+      <verification>Unit tests verify convergence: test_optimize_build_converges_no_neighbors() (no valid neighbors → immediate stop), test_optimize_build_max_iterations_timeout() (max_iterations limit enforced). (test_hill_climbing.py:374-442)</verification>
+    </criterion>
+
+    <criterion id="AC-2.1.6" status="⚠️ PARTIAL - BLOCKING">
+      <description>Algorithm returns best configuration found</description>
+      <verification>Unit test test_optimize_build_returns_valid_result() verifies OptimizationResult structure with all required fields. (test_hill_climbing.py:444-506)</verification>
+      <blocker severity="HIGH" priority="BLOCKING">
+        Integration tests crash with Windows fatal exception (code 0xe24c4a02) at PoB calculation, preventing verification with real Epic 1 calculator. LuaJIT pytest cleanup issue. Solution: Use pytest -n 1 for process isolation (pytest-xdist). Must verify 13 integration tests pass before story completion.
+      </blocker>
+    </criterion>
+  </acceptanceCriteria>
+
+  <reviewActionItems>
+    <actionItem id="ACTION-1" severity="BLOCKING" priority="P0">
+      <title>Fix Integration Test Execution</title>
+      <description>Integration tests crash with Windows fatal exception. Must verify integration tests pass using pytest -n 1 for process isolation.</description>
+      <requirements>
+        - Run: pytest -n 1 tests/integration/optimizer/test_optimization_pipeline.py
+        - Document successful execution with pytest output showing 13/13 passing
+        - Update story completion notes with accurate test status
+      </requirements>
+      <relatedAC>AC-2.1.6</relatedAC>
+      <files>tests/integration/optimizer/test_optimization_pipeline.py, docs/stories/2-1-implement-hill-climbing-core-algorithm.md:168</files>
+    </actionItem>
+
+    <actionItem id="ACTION-2" severity="HIGH" priority="P1">
+      <title>Correct Progress Callback Frequency</title>
+      <description>Progress callback fires every 10 iterations but tech spec AC-2.8.6 specifies every 100 iterations.</description>
+      <requirements>
+        - Change hill_climbing.py:226 from 'iterations_run % 10' to 'iterations_run % 100'
+        - Reference: tech-spec-epic-2.md:662 "AC-2.8.6: Update every 100 iterations"
+      </requirements>
+      <relatedAC>AC-2.8.6</relatedAC>
+      <files>src/optimizer/hill_climbing.py:226</files>
+    </actionItem>
+
+    <actionItem id="ACTION-3" severity="HIGH" priority="P1">
+      <title>Fix Balanced Metric Weighting</title>
+      <description>Balanced metric uses 50/50 split but tech spec specifies 60% DPS / 40% EHP.</description>
+      <requirements>
+        - Update hill_climbing.py:412 from '0.5 DPS + 0.5 EHP' to '0.6 DPS + 0.4 EHP'
+        - Reference: tech-spec-epic-2.md:139, 644 "balanced: Weighted average (60% DPS normalized, 40% EHP normalized)"
+        - Note: Story 2.6 will implement full normalization; current simplified formula acceptable if weights correct
+      </requirements>
+      <relatedAC>AC-2.6.3</relatedAC>
+      <files>src/optimizer/hill_climbing.py:410-413</files>
+    </actionItem>
+
+    <actionItem id="ACTION-4" severity="MEDIUM" priority="P2">
+      <title>Clarify Node Change Tracking Scope</title>
+      <description>Node change tracking returns empty sets (placeholder). Confirm with Product Owner whether basic tracking is required for Story 2.1 or if placeholder is acceptable.</description>
+      <requirements>
+        - Confirm with Product Owner: Is placeholder acceptable for Story 2.1 scope?
+        - If tracking required: Implement simple diff logic between baseline and final passive_nodes
+        - If placeholder acceptable: Document as intentional design decision for Story 2.2
+      </requirements>
+      <relatedAC>AC-2.1.6</relatedAC>
+      <files>src/optimizer/hill_climbing.py:377-384</files>
+    </actionItem>
+
+    <actionItem id="ACTION-5" severity="LOW" priority="P3">
+      <title>Document Integration Test Execution</title>
+      <description>README.md missing documentation for pytest-xdist requirement for integration tests.</description>
+      <requirements>
+        - Add "Running Tests" section to README.md
+        - Document: pytest tests/unit/ for unit tests
+        - Document: pytest -n 1 tests/integration/optimizer/ for integration tests with process isolation
+        - Explain LuaJIT Windows exception workaround
+      </requirements>
+      <relatedAC>None (documentation)</relatedAC>
+      <files>README.md</files>
+    </actionItem>
+  </reviewActionItems>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/tech-spec-epic-2.md" section="Section 7.1: Services and Modules">
+        <title>Epic 2 Technical Specification - Module Architecture</title>
+        <snippet>The optimizer is implemented as six specialized components: hill_climbing.py (core algorithm orchestration), neighbor_generator.py (tree mutation strategies), budget_tracker.py (dual budget management), metrics.py (optimization objectives), convergence.py (stopping conditions), and progress.py (progress tracking/reporting). Each component has single responsibility with zero circular dependencies.</snippet>
+      </doc>
+
+      <doc path="docs/tech-spec-epic-2.md" section="Section 7.2: Data Models and Contracts">
+        <title>Epic 2 Technical Specification - OptimizationConfiguration and OptimizationResult</title>
+        <snippet>OptimizationConfiguration contains build, metric, unallocated_points, respec_points, max_iterations (1000), max_time_seconds (300), convergence_patience (3), and progress_callback. OptimizationResult returns optimized_build, baseline_stats, optimized_stats, improvement_pct, budget usage, convergence info, and node change tracking.</snippet>
+      </doc>
+
+      <doc path="docs/tech-spec-epic-2.md" section="Section 7.3: APIs and Interfaces">
+        <title>Epic 2 Technical Specification - optimize_build() API</title>
+        <snippet>Primary function optimize_build(config: OptimizationConfiguration) -> OptimizationResult executes hill climbing optimization. Algorithm: 1) Start with baseline, 2) Generate neighbors, 3) Evaluate each using PoB, 4) Select best if improvement, 5) Update budget, 6) Check convergence, 7) Repeat until converged or timeout.</snippet>
+      </doc>
+
+      <doc path="docs/tech-spec-epic-2.md" section="Section 7.4: Workflows and Sequencing">
+        <title>Epic 2 Technical Specification - High-Level Optimization Flow</title>
+        <snippet>Main loop: Generate neighbors (budget check, add/swap mutations, connectivity validation) → Evaluate neighbors (apply mutation, calculate stats via PoB, track best) → Update state (adopt if improvement, update budget/convergence, report progress) → Check convergence (no improvement for N iterations, max iterations, timeout, no valid neighbors).</snippet>
+      </doc>
+
+      <doc path="docs/solution-architecture.md" section="Section 6.2: Data Flow">
+        <title>Solution Architecture - User Request to Response Flow</title>
+        <snippet>Data flow: User submits PoB code + optimization goal → Parser extracts BuildData → Calculator validates baseline stats → Optimizer runs hill climbing loop (1000+ PoB calculations) → Results packaged → New PoB code generated → User receives before/after comparison.</snippet>
+      </doc>
+
+      <doc path="docs/solution-architecture.md" section="Section 7.3: Optimizer Component">
+        <title>Solution Architecture - Optimizer Algorithm Pattern</title>
+        <snippet>Steepest-ascent hill climbing with convergence detection. Local search algorithm (not global optimization). Deterministic behavior (same input = same output). Performance contract: <2 minutes typical (300 iterations × 400ms avg), <5 minutes maximum (600 iterations × 425ms).</snippet>
+      </doc>
+
+      <doc path="docs/research/hill-climbing-strategy.md" section="Section 3: Selected Algorithm">
+        <title>Hill Climbing Research - Steepest-Ascent with Optimizations</title>
+        <snippet>Selected approach: Steepest-Ascent Hill Climbing evaluates ALL neighbors, selects greatest improvement. Justification: Performance validated at 2ms per calculation × 200 neighbors = ~400ms/iteration (acceptable). Quality critical for MVP validation. Optional early termination if >5% improvement found (disabled by default, prioritize quality).</snippet>
+      </doc>
+
+      <doc path="docs/research/hill-climbing-strategy.md" section="Section 6: Convergence Criteria">
+        <title>Hill Climbing Research - Convergence Strategy</title>
+        <snippet>Primary criterion: Stop when no improvement for N=3 consecutive iterations (patience parameter). Secondary: Diminishing returns (<0.1% improvement), max iterations (600), timeout (5 minutes), no valid neighbors. Iteration budget: 600 max to ensure <5 min timeout compliance.</snippet>
+      </doc>
+
+      <doc path="docs/architecture/epic-2-optimizer-design.md" section="Section 4.1: Hill Climbing Algorithm">
+        <title>Epic 2 Architecture - Core Algorithm Responsibilities</title>
+        <snippet>hill_climbing.py orchestrates optimization loop, coordinates all modules, tracks best configuration, handles timeout/convergence, reports progress via callback. Main loop overhead ~0.01ms per iteration (negligible). Bottleneck: PoB calculations in metrics.py (~2ms each). Target: 300-500 iterations typical, 600 max.</snippet>
+      </doc>
+
+      <doc path="docs/architecture/epic-2-optimizer-design.md" section="Section 5: Algorithm Flow">
+        <title>Epic 2 Architecture - Detailed Pseudocode</title>
+        <snippet>Initialize: Load tree, calculate baseline, create budget/convergence/progress trackers. Main loop: Check timeout, generate neighbors (exit if empty), evaluate all neighbors (PoB calculation per candidate), update state if improvement, check convergence, report progress every 100 iterations. Finalize: Calculate final stats, compute improvement %, generate change summary.</snippet>
+      </doc>
+
+      <doc path="docs/PRD.md" section="FR-4.1: Hill Climbing Algorithm">
+        <title>PRD - Functional Requirement FR-4.1</title>
+        <snippet>System SHALL implement hill climbing algorithm: Start with user's current tree, iteratively test small changes (deallocate 1, allocate different nearby), keep changes that improve objective function, discard those that don't. Deterministic behavior required. Success criteria: 8%+ median improvement on non-optimal builds.</snippet>
+      </doc>
+
+      <doc path="docs/testing-coverage.md" section="Coverage Goals">
+        <title>Testing Coverage Standards</title>
+        <snippet>Story 1.5 target: 60%+ overall (achieved 63%). Epic 2 target: 85%+ overall with algorithm unit tests, performance tests. Focus on critical code: error handling, data validation, business logic, public APIs. Run coverage regularly with pytest --cov=src --cov-report=term-missing.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Epic 1 Calculator Integration (Completed - Stable API) -->
+      <artifact path="src/calculator/build_calculator.py" kind="module" symbol="calculate_build_stats" lines="74-155">
+        <reason>Primary API for PoB calculations. Use to evaluate each neighbor configuration in optimization loop. Thread-safe, 2ms per call performance validated.</reason>
+        <status>Stable - Epic 1 Completed</status>
+      </artifact>
+
+      <artifact path="src/models/build_data.py" kind="model" symbol="BuildData" lines="40-78">
+        <reason>Immutable build representation using dataclass. Contains passive_nodes Set[int], level, character_class. Use dataclasses.replace() to create neighbor configurations without mutating original.</reason>
+        <status>Stable - Epic 1 Completed</status>
+      </artifact>
+
+      <artifact path="src/models/build_stats.py" kind="model" symbol="BuildStats" lines="8-157">
+        <reason>Calculated statistics returned by calculate_build_stats(). Contains total_dps, effective_hp, life, resistances. Use these fields to calculate optimization metrics (DPS, EHP, balanced).</reason>
+        <status>Stable - Epic 1 Completed</status>
+      </artifact>
+
+      <artifact path="src/calculator/passive_tree.py" kind="service" symbol="PassiveTreeGraph" lines="63-199">
+        <reason>Passive tree graph structure with connectivity validation. Provides is_connected(), validate_tree_connectivity(), get_neighbors(). Use for neighbor generation (Story 2.2) and connectivity checks.</reason>
+        <status>Stable - Epic 1 Completed</status>
+      </artifact>
+
+      <artifact path="src/calculator/passive_tree.py" kind="function" symbol="get_passive_tree" lines="200-250">
+        <reason>Singleton function to load cached passive tree graph. Call once at optimization start, reuse throughout loop. Thread-safe singleton pattern.</reason>
+        <status>Stable - Epic 1 Completed</status>
+      </artifact>
+
+      <!-- Story 2.1 Implementation (Completed with Action Items) -->
+      <artifact path="src/optimizer/__init__.py" kind="package" symbol="__init__" lines="1-7">
+        <reason>Optimizer package initialization. Exports optimize_build() as primary API.</reason>
+        <status>✅ Implemented - Story 2.1</status>
+      </artifact>
+
+      <artifact path="src/optimizer/hill_climbing.py" kind="module" symbol="optimize_build" lines="60-250">
+        <reason>Main deliverable: Steepest-ascent hill climbing algorithm orchestrating optimization loop. Contains baseline calculation, neighbor evaluation, best neighbor selection, convergence detection, result generation.</reason>
+        <status>✅ Implemented - Story 2.1 (with pending action items)</status>
+        <actionItems>ACTION-1 (integration tests), ACTION-2 (progress callback frequency), ACTION-3 (balanced metric weighting)</actionItems>
+      </artifact>
+
+      <artifact path="src/optimizer/hill_climbing.py" kind="function" symbol="_generate_neighbors_placeholder" lines="277-308">
+        <reason>Placeholder for Story 2.2 neighbor generation. Currently returns empty list to trigger immediate convergence.</reason>
+        <status>Placeholder - Story 2.2 will implement full neighbor generation</status>
+      </artifact>
+
+      <artifact path="src/optimizer/hill_climbing.py" kind="function" symbol="_evaluate_neighbors" lines="311-356">
+        <reason>Evaluates all neighbor configurations using PoB calculations. Handles calculation errors gracefully, tracks successful evaluations.</reason>
+        <status>✅ Implemented - Story 2.1</status>
+      </artifact>
+
+      <artifact path="src/optimizer/hill_climbing.py" kind="function" symbol="_select_best_neighbor" lines="359-384">
+        <reason>Implements steepest-ascent selection: evaluates all neighbors, returns best improvement based on metric.</reason>
+        <status>✅ Implemented - Story 2.1</status>
+        <actionItems>ACTION-4 (node change tracking placeholder)</actionItems>
+      </artifact>
+
+      <artifact path="src/optimizer/hill_climbing.py" kind="function" symbol="_get_metric_value" lines="387-414">
+        <reason>Extracts metric value from BuildStats. Supports DPS, EHP, balanced metrics.</reason>
+        <status>✅ Implemented - Story 2.1 (simplified version)</status>
+        <actionItems>ACTION-3 (balanced metric weighting: 60/40 vs current 50/50)</actionItems>
+      </artifact>
+
+      <artifact path="src/models/optimization_config.py" kind="model" symbol="OptimizationConfiguration" lines="10-120">
+        <reason>Input data model for optimize_build(). Contains build, metric, unallocated_points, respec_points, max_iterations, max_time_seconds, convergence_patience, progress_callback. Includes comprehensive validation in __post_init__.</reason>
+        <status>✅ Implemented - Story 2.1</status>
+      </artifact>
+
+      <artifact path="src/models/optimization_config.py" kind="model" symbol="OptimizationResult" lines="123-193">
+        <reason>Output data model for optimize_build(). Contains optimized_build, baseline_stats, optimized_stats, improvement_pct, budget usage, convergence info, node changes.</reason>
+        <status>✅ Implemented - Story 2.1</status>
+      </artifact>
+
+      <!-- Test Files -->
+      <artifact path="tests/unit/optimizer/test_hill_climbing.py" kind="test" symbol="TestOptimizeBuild" lines="1-506">
+        <reason>Comprehensive unit tests with mocked dependencies (20/20 passing). Verifies algorithm logic without real PoB calculations. Tests all 6 acceptance criteria plus edge cases.</reason>
+        <status>✅ Implemented - 20/20 tests passing</status>
+      </artifact>
+
+      <artifact path="tests/integration/optimizer/test_optimization_pipeline.py" kind="test" symbol="TestOptimizationIntegration" lines="1-400+">
+        <reason>Integration tests with real calculate_build_stats(). Verifies end-to-end optimization on test builds.</reason>
+        <status>⚠️ Implemented - 13 tests crash with Windows fatal exception</status>
+        <blocker>ACTION-1: Must run with pytest -n 1 for process isolation (LuaJIT Windows issue)</blocker>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <python version="3.10+">
+        <package name="lupa" version=">=2.0">LuaJIT bindings for PoB calculation engine (Epic 1 dependency)</package>
+        <package name="xmltodict" version="0.13.0">XML parsing for PoB codes (Epic 1 dependency)</package>
+        <package name="pytest" version=">=7.4.0">Testing framework</package>
+        <package name="pytest-cov" version=">=4.1.0">Test coverage reporting</package>
+        <package name="pytest-benchmark" version=">=4.0.0">Performance benchmarking</package>
+        <package name="pytest-xdist" version=">=3.5.0">Process isolation for tests (CRITICAL for integration tests - ACTION-1)</package>
+        <package name="psutil" version=">=5.9.0">System metrics for profiling</package>
+      </python>
+
+      <external>
+        <dependency name="Path of Building Engine" path="external/pob-engine">
+          PoB Lua calculation modules (Epic 1 dependency). Already integrated and validated.
+        </dependency>
+      </external>
+
+      <stdlib>
+        <module>dataclasses</module>
+        <module>time</module>
+        <module>logging</module>
+        <module>typing</module>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <!-- Module Isolation -->
+    <constraint type="architecture">
+      Zero modifications to Epic 1 code (calculator, parsers, models are stable APIs). Optimizer depends on calculator, not vice versa. Clean separation: calculator = "what-if analysis", optimizer = "search strategy".
+    </constraint>
+
+    <!-- Immutability -->
+    <constraint type="data-integrity">
+      BuildData remains immutable - use dataclasses.replace() for modifications. Never mutate passive_nodes directly. Create new BuildData instances for each neighbor configuration.
+    </constraint>
+
+    <!-- Budget Enforcement -->
+    <constraint type="business-logic">
+      Budget constraints always enforced (no overspend possible). All returned trees must be valid (connected, within budget). Hard stop if budget exceeded.
+    </constraint>
+
+    <!-- Performance Contract -->
+    <constraint type="performance">
+      Target: &lt;2 minutes for typical builds (300 iterations × 400ms avg = 120s). Maximum: &lt;5 minutes for complex builds (600 iterations × 425ms = 255s). Iteration budget: 600 max iterations to ensure timeout compliance.
+    </constraint>
+
+    <!-- Thread Safety -->
+    <constraint type="concurrency">
+      Maintain thread-local LuaRuntime pattern from Epic 1. Resource cleanup after each optimization to prevent memory leaks. No shared mutable state between optimization runs.
+    </constraint>
+
+    <!-- Algorithm Pattern -->
+    <constraint type="algorithm">
+      Steepest-ascent hill climbing (NOT simple/stochastic/first-choice variants). Deterministic behavior required (same input = same output). Local search algorithm (accept local optima, not global optimization).
+    </constraint>
+
+    <!-- Testing Requirements -->
+    <constraint type="testing">
+      80%+ line coverage for optimizer module. Mock external dependencies (calculator, neighbor generator) in unit tests. Integration tests use real PoB calculations (2-3 builds, slow but accurate). CRITICAL: Integration tests MUST use pytest -n 1 for process isolation due to LuaJIT Windows cleanup issues.
+    </constraint>
+
+    <!-- File Organization -->
+    <constraint type="structure">
+      New files in src/optimizer/ directory. Models in src/models/ directory. Unit tests in tests/unit/optimizer/. Integration tests in tests/integration/optimizer/.
+    </constraint>
+
+    <!-- Convergence Detection -->
+    <constraint type="algorithm">
+      Placeholder for Story 2.7 convergence detector. For Story 2.1, use simple max_iterations limit (600). Full convergence logic (no improvement for N iterations, diminishing returns, timeout) will be implemented in Story 2.7.
+    </constraint>
+
+    <!-- Neighbor Generation -->
+    <constraint type="algorithm">
+      Placeholder for Story 2.2 neighbor generator. For Story 2.1, create simple mock/stub that returns empty list (triggers immediate convergence). Full neighbor generation (add/swap nodes, connectivity validation, prioritization) will be implemented in Story 2.2.
+    </constraint>
+
+    <!-- Progress Callback Frequency (ACTION-2) -->
+    <constraint type="implementation" status="PENDING_FIX">
+      Progress callback must fire every 100 iterations per AC-2.8.6 and tech spec line 662. Current implementation fires every 10 iterations (hill_climbing.py:226). MUST CHANGE to iterations_run % 100.
+    </constraint>
+
+    <!-- Balanced Metric Weighting (ACTION-3) -->
+    <constraint type="implementation" status="PENDING_FIX">
+      Balanced metric must use 60% DPS / 40% EHP weighting per tech spec lines 139, 644. Current implementation uses 50/50 split (hill_climbing.py:412). MUST CHANGE to 0.6 DPS + 0.4 EHP.
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <!-- Epic 1 APIs to Consume -->
+    <interface name="calculate_build_stats" kind="function">
+      <signature>def calculate_build_stats(build: BuildData) -> BuildStats</signature>
+      <path>src/calculator/build_calculator.py:74-155</path>
+      <description>Calculate character statistics using PoB engine. Thread-safe via thread-local storage. Performance: 2ms per call validated in Epic 1. Raises CalculationError or CalculationTimeout on failure.</description>
+    </interface>
+
+    <interface name="BuildData" kind="dataclass">
+      <signature>@dataclass BuildData(character_class, level, passive_nodes, items, skills, tree_version, build_name, notes, config)</signature>
+      <path>src/models/build_data.py:40-78</path>
+      <description>Immutable build representation. Key fields: passive_nodes (Set[int]), level (int), character_class (CharacterClass enum). Use dataclasses.replace() to create modified copies. Property: unallocated_points calculates free passive points based on level.</description>
+    </interface>
+
+    <interface name="BuildStats" kind="dataclass">
+      <signature>@dataclass BuildStats(total_dps, effective_hp, life, energy_shield, mana, resistances, armour, evasion, block_chance, spell_block_chance, movement_speed)</signature>
+      <path>src/models/build_stats.py:8-157</path>
+      <description>Calculated statistics from PoB engine. Key fields: total_dps (float), effective_hp (float), life (int), resistances (Dict[str, int]). All values validated in __post_init__ (no NaN/infinity). Method: to_dict() for serialization.</description>
+    </interface>
+
+    <interface name="PassiveTreeGraph" kind="class">
+      <signature>class PassiveTreeGraph(nodes, edges, class_start_nodes, tree_version)</signature>
+      <path>src/calculator/passive_tree.py:63-199</path>
+      <description>Passive tree graph structure. Methods: get_neighbors(node_id) -> Set[int], is_connected(from_node, to_node, allocated) -> bool, validate_tree_connectivity(allocated_nodes, class_name) -> bool. Use for neighbor generation and connectivity validation.</description>
+    </interface>
+
+    <interface name="get_passive_tree" kind="function">
+      <signature>def get_passive_tree() -> PassiveTreeGraph</signature>
+      <path>src/calculator/passive_tree.py:200-250</path>
+      <description>Singleton function to load cached passive tree graph. Thread-safe with module-level cache. Call once at optimization start, reuse throughout loop. ~0.02ms access time after first load.</description>
+    </interface>
+
+    <!-- Epic 2 APIs to Provide (This Story) -->
+    <interface name="optimize_build" kind="function">
+      <signature>def optimize_build(config: OptimizationConfiguration) -> OptimizationResult</signature>
+      <path>src/optimizer/hill_climbing.py:60-250</path>
+      <description>Primary optimization entry point. Executes hill climbing algorithm: 1) Calculate baseline, 2) Generate neighbors, 3) Evaluate all neighbors via PoB, 4) Select best if improvement, 5) Update state, 6) Check convergence, 7) Repeat. Returns OptimizationResult with best configuration found, improvement %, budget usage, convergence reason.</description>
+      <status>✅ Implemented with pending action items (ACTION-1, ACTION-2, ACTION-3)</status>
+    </interface>
+
+    <interface name="OptimizationConfiguration" kind="dataclass">
+      <signature>@dataclass OptimizationConfiguration(build, metric, unallocated_points, respec_points, max_iterations, max_time_seconds, convergence_patience, progress_callback)</signature>
+      <path>src/models/optimization_config.py:10-120</path>
+      <description>Input configuration for optimization. Fields: build (BuildData), metric (str: "dps"/"ehp"/"balanced"), unallocated_points (int), respec_points (Optional[int]), max_iterations (int, default 600), max_time_seconds (int, default 300), convergence_patience (int, default 3), progress_callback (Optional[Callable]). Includes comprehensive validation.</description>
+      <status>✅ Implemented</status>
+    </interface>
+
+    <interface name="OptimizationResult" kind="dataclass">
+      <signature>@dataclass OptimizationResult(optimized_build, baseline_stats, optimized_stats, improvement_pct, unallocated_used, respec_used, iterations_run, convergence_reason, time_elapsed_seconds, nodes_added, nodes_removed, nodes_swapped)</signature>
+      <path>src/models/optimization_config.py:123-193</path>
+      <description>Output of optimization run. Contains before/after builds and stats, improvement percentage, budget usage breakdown, convergence info (iterations, reason, time), and node change tracking (adds, removes, swaps - currently placeholder per ACTION-4).</description>
+      <status>✅ Implemented</status>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+Testing framework: pytest with coverage reporting (pytest-cov), benchmarking (pytest-benchmark), and process isolation (pytest-xdist). Current Epic 1 coverage: 63% overall. Epic 2 target: 85%+ overall with focus on critical paths.
+
+Unit Testing Strategy:
+- Mock external dependencies (calculator, neighbor generator, convergence detector) using pytest.Mock or unittest.mock
+- Test algorithm logic in isolation without real PoB calculations
+- Verify state transitions, loop termination, error handling
+- Fast execution (&lt;1 second total for all unit tests)
+- Status: ✅ 20/20 unit tests passing (0.11s execution time)
+
+Integration Testing Strategy:
+- Use real calculate_build_stats() for end-to-end validation
+- Test with 2-3 representative builds (small, medium complexity)
+- Verify correct integration with Epic 1 calculator API
+- Slower execution (acceptable, validates correctness)
+- Status: ⚠️ 13 integration tests crash with Windows fatal exception
+- CRITICAL: Must use pytest -n 1 for process isolation (ACTION-1)
+
+Property-Based Testing:
+- All outputs must be valid trees (connected, within budget)
+- Improvement percentage must be &gt;= 0% (never worse than baseline)
+- Budget usage never exceeds limits
+
+Coverage Standards:
+- 80%+ line coverage for optimizer module
+- Focus on error handling branches, edge cases, validation logic
+- Run: pytest --cov=src --cov-report=term-missing
+- HTML report: pytest --cov=src --cov-report=html
+    </standards>
+
+    <locations>
+      <location>tests/unit/optimizer/ - Unit tests with mocked dependencies (20/20 passing)</location>
+      <location>tests/integration/optimizer/ - Integration tests with real calculator (13 tests, require pytest -n 1)</location>
+      <location>tests/performance/ - Performance benchmarks (defer to Story 2.8 or Epic validation)</location>
+      <location>tests/fixtures/ - Test data and build fixtures</location>
+    </locations>
+
+    <ideas>
+      <!-- AC-2.1.1: Algorithm starts with current passive tree (baseline) -->
+      <test_idea ac="AC-2.1.1" type="unit" status="✅ PASSING">
+        Test: test_optimize_build_calculates_baseline_stats()
+        Mock: calculate_build_stats returns fixed BuildStats
+        Verify: optimize_build() calls calculate_build_stats() with original build
+        Assert: baseline_stats in result matches mocked return value
+        Location: test_hill_climbing.py:79-107
+      </test_idea>
+
+      <!-- AC-2.1.2: Algorithm generates neighbor configurations -->
+      <test_idea ac="AC-2.1.2" type="unit" status="✅ PASSING">
+        Test: test_optimize_build_calls_neighbor_generator()
+        Mock: neighbor generator returns list of mutations
+        Verify: generator called at least once during optimization
+        Assert: Correct arguments passed (current build, tree, budget)
+        Location: test_hill_climbing.py:139-172
+      </test_idea>
+
+      <!-- AC-2.1.3: Algorithm evaluates each neighbor using PoB -->
+      <test_idea ac="AC-2.1.3" type="unit" status="✅ PASSING">
+        Test: test_optimize_build_evaluates_all_neighbors()
+        Mock: neighbor generator returns 5 mutations, calculator returns different stats
+        Verify: calculate_build_stats() called 6 times (1 baseline + 5 neighbors)
+        Assert: All neighbors evaluated before selecting best
+        Location: test_hill_climbing.py:175-278
+      </test_idea>
+
+      <!-- AC-2.1.4: Algorithm selects best neighbor if improvement found -->
+      <test_idea ac="AC-2.1.4" type="unit" status="✅ PASSING">
+        Test: test_optimize_build_selects_best_neighbor()
+        Mock: neighbors with stats [baseline: 1000 DPS, n1: 900 DPS, n2: 1200 DPS, n3: 1100 DPS]
+        Verify: Algorithm adopts n2 (highest DPS)
+        Assert: optimized_build in result matches n2 configuration
+        Location: test_hill_climbing.py:280-372
+      </test_idea>
+
+      <!-- AC-2.1.5: Algorithm repeats until convergence -->
+      <test_idea ac="AC-2.1.5" type="unit" status="✅ PASSING">
+        Test: test_optimize_build_terminates_on_convergence()
+        Mock: convergence detector returns False for 3 iterations, then True
+        Verify: Main loop executes 3 times then exits
+        Assert: iterations_run = 3 in result
+        Location: test_hill_climbing.py:374-442
+      </test_idea>
+
+      <!-- AC-2.1.6: Algorithm returns best configuration found -->
+      <test_idea ac="AC-2.1.6" type="integration" status="⚠️ BLOCKED">
+        Test: test_optimize_build_returns_valid_result()
+        Real: Use calculate_build_stats() with small test build
+        Verify: OptimizationResult has all required fields
+        Assert: optimized_build, baseline_stats, optimized_stats, improvement_pct, iterations_run, convergence_reason all present and valid types
+        Location: test_hill_climbing.py:444-506 (unit version passing), test_optimization_pipeline.py (integration version blocked)
+        Blocker: ACTION-1 - Integration tests crash, require pytest -n 1
+      </test_idea>
+
+      <!-- Edge Case: No valid neighbors (immediate convergence) -->
+      <test_idea ac="Edge Case" type="unit" status="✅ PASSING">
+        Test: test_optimize_build_no_neighbors_converges()
+        Mock: neighbor generator returns empty list
+        Verify: Loop terminates immediately
+        Assert: convergence_reason = "no_valid_neighbors", iterations_run = 0, improvement_pct = 0.0
+      </test_idea>
+
+      <!-- Edge Case: Max iterations reached -->
+      <test_idea ac="Edge Case" type="unit" status="✅ PASSING">
+        Test: test_optimize_build_max_iterations_timeout()
+        Mock: Set max_iterations=10, neighbors always available
+        Verify: Loop terminates after exactly 10 iterations
+        Assert: convergence_reason = "max_iterations", iterations_run = 10
+      </test_idea>
+
+      <!-- Integration: Real calculator with small build -->
+      <test_idea ac="Integration" type="integration" status="⚠️ BLOCKED">
+        Test: test_optimize_build_integration_small_build()
+        Real: Use calculate_build_stats() with Witch level 50, 30 passive nodes
+        Config: max_iterations=5 (limit for test speed)
+        Verify: Optimization completes without errors
+        Assert: Result has valid stats, improvement_pct &gt;= 0.0, no exceptions raised
+        Blocker: ACTION-1 - Must run with pytest -n 1 for LuaJIT Windows workaround
+      </test_idea>
+
+      <!-- Error Handling: PoB calculation failure -->
+      <test_idea ac="Error Handling" type="unit" status="✅ PASSING">
+        Test: test_optimize_build_handles_calculation_error()
+        Mock: calculate_build_stats raises CalculationError on neighbor evaluation
+        Verify: Error logged, neighbor skipped, optimization continues
+        Assert: Optimization completes with other valid neighbors
+      </test_idea>
+    </ideas>
+  </tests>
+</story-context>

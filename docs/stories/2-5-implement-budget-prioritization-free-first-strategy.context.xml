@@ -1,0 +1,232 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>5</storyId>
+    <title>Implement Budget Prioritization (Free-First Strategy)</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-5-implement-budget-prioritization-free-first-strategy.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>neighbor generation to prioritize unallocated points over respec points</iWant>
+    <soThat>optimization maximizes free allocations before costly respecs, delivering immediate value to users</soThat>
+    <tasks>
+- Task 1: Implement free-first neighbor generation logic (AC: 2.5.1, 2.5.2)
+  - Subtask 1.1: Modify `generate_neighbors()` to accept `prioritize_adds: bool = True` parameter
+  - Subtask 1.2: Implement Phase 1: Generate all "add node" mutations when `budget.can_allocate()`
+  - Subtask 1.3: Implement Phase 2: Generate "swap node" mutations only when `budget.unallocated_remaining == 0`
+  - Subtask 1.4: Add conditional logic to skip swap generation if unallocated budget available
+  - Subtask 1.5: Update neighbor generation to return adds first, swaps second in priority order
+
+- Task 2: Enhance budget reporting with "FREE" indicator (AC: 2.5.3)
+  - Subtask 2.1: Modify `format_budget_string()` to add "(FREE)" label to unallocated usage
+  - Subtask 2.2: Update `create_budget_progress_data()` to include free/costly distinction
+  - Subtask 2.3: Update progress callback format to highlight free allocations
+  - Subtask 2.4: Ensure final OptimizationResult clearly shows free vs costly budget usage
+
+- Task 3: Write unit tests (AC: all)
+  - Subtask 3.1: Test neighbor generation with `prioritize_adds=True` produces adds first
+  - Subtask 3.2: Test swap generation is skipped when `unallocated_remaining > 0`
+  - Subtask 3.3: Test swap generation activates when `unallocated_remaining == 0`
+  - Subtask 3.4: Test budget string formatting includes "(FREE)" label
+  - Subtask 3.5: Test with various budget configurations (0 unallocated, unlimited respec, etc.)
+
+- Task 4: Integration testing with hill climbing (AC: 2.5.4)
+  - Subtask 4.1: Integration test verifies free allocations exhausted before respec usage
+  - Subtask 4.2: Test progress updates show unallocated budget consumed first
+  - Subtask 4.3: Validate final results highlight free vs costly improvements
+  - Subtask 4.4: End-to-end test with real build confirms free-first behavior
+
+- Task 5: Update documentation and examples (AC: 2.5.3, 2.5.4)
+  - Subtask 5.1: Document `prioritize_adds` parameter in neighbor_generator API
+  - Subtask 5.2: Add example showing free-first optimization workflow
+  - Subtask 5.3: Update budget reporting documentation with new format
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. AC-2.5.1: When generating neighbors, prioritize "add node" moves (use unallocated)
+   - Neighbor generation produces ALL valid "add node" mutations first
+   - "Add node" mutations use only unallocated budget (free allocations)
+   - Generator processes add mutations before considering swap mutations
+   - Prioritization is default behavior (prioritize_adds=True parameter)
+
+2. AC-2.5.2: Only generate "swap node" moves if unallocated exhausted
+   - System checks `BudgetState.can_allocate()` before generating swaps
+   - If `unallocated_remaining > 0`, skip swap generation entirely
+   - If `unallocated_remaining == 0`, generate swap mutations using respec budget
+   - Swap mutations only appear in neighbor list when add mutations unavailable
+
+3. AC-2.5.3: Result breakdown shows: "Used X of Y unallocated (FREE), Z of W respec"
+   - Budget summary explicitly labels unallocated usage as "FREE"
+   - Format example: "Budget: 15/15 unallocated (FREE), 4/12 respec"
+   - Format for zero unallocated: "Budget: 0/0 unallocated (FREE), 8/12 respec"
+   - Format for unlimited respec: "Budget: 10/10 unallocated (FREE), 5/unlimited respec"
+
+4. AC-2.5.4: Users see immediate value from free allocations
+   - Optimization explores all free allocation options before costly alternatives
+   - Progress updates show unallocated budget consumed first
+   - Final results highlight that free allocations were maximized
+   - Budget breakdown clearly distinguishes free vs costly improvements
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Optimization Engine</title>
+        <section>Story 2.5: Budget Prioritization (Free-First Strategy)</section>
+        <snippet>Free-first optimization strategy maximizes user value by consuming zero-cost unallocated budget before costly respec budget. Two-phase neighbor generation: Phase 1 generates "add node" mutations when can_allocate()=True, Phase 2 generates "swap node" mutations only when unallocated_remaining==0. Budget precedence hierarchy: 1) Unallocated points (FREE) always consumed first, 2) Respec points (COSTLY) only consumed after unallocated exhausted.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/epic-2-optimizer-design.md</path>
+        <title>Epic 2: Core Optimization Engine - Architecture Design</title>
+        <section>4.2 Neighbor Generator (Story 2.2)</section>
+        <snippet>generate_neighbors() function supports prioritize_adds parameter (default=True). When True, generates free allocations first, swaps only if budget exhausted. Neighbor generation limited to 50-200 per iteration for performance (under 20ms target). Edge cases: no unallocated budget yields only swaps, no respec budget yields only adds.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/epic-2-optimizer-design.md</path>
+        <title>Epic 2: Core Optimization Engine - Architecture Design</title>
+        <section>4.3 Budget Tracker (Story 2.4)</section>
+        <snippet>BudgetTracker manages dual budget constraints. Key methods: can_apply_mutation() checks budget fit, apply_mutation() updates counters, get_budget_summary() returns usage report, format_budget_string() generates human-readable display. Invariants: unallocated_used must be less than or equal to unallocated_available (always enforced), never allow mutations that violate budget.</snippet>
+      </doc>
+      <doc>
+        <path>docs/solution-architecture.md</path>
+        <title>Solution Architecture: PoE 2 Passive Tree Optimizer</title>
+        <section>7.3 Optimizer Component</section>
+        <snippet>Optimizer module sits at Application Logic Layer, consuming Epic 1 calculation services. Module isolation: zero modifications to Epic 1 code, no circular dependencies. Performance contract: optimization completes within 5 minutes, budget 600 iterations times 425ms equals 4.25 min worst case.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-4-implement-dual-budget-constraint-tracking.md</path>
+        <title>Story 2.4: Implement Dual Budget Constraint Tracking</title>
+        <section>Dev Notes - Lessons Learned</section>
+        <snippet>Story 2.4 implemented defense-in-depth budget filtering in neighbor generation (lines 286-298). Budget checked at generation time AND application time. Uses fail-fast AssertionError for algorithm bugs (not user errors). Comprehensive boundary testing: test 0, available, available+1 for all scenarios.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/optimizer/neighbor_generator.py</path>
+        <kind>module</kind>
+        <symbol>generate_neighbors</symbol>
+        <lines>179-350</lines>
+        <reason>Primary implementation target for free-first prioritization logic. Function signature needs prioritize_adds parameter. Modify to generate add mutations before swap mutations based on budget.unallocated_remaining check.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/neighbor_generator.py</path>
+        <kind>class</kind>
+        <symbol>BudgetState</symbol>
+        <lines>36-114</lines>
+        <reason>Budget state class with can_allocate(count) method and unallocated_remaining property. Story 2.5 uses these interfaces to control two-phase neighbor generation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/budget_tracker.py</path>
+        <kind>module</kind>
+        <symbol>format_budget_string</symbol>
+        <lines>375-405</lines>
+        <reason>Format budget display string. Needs enhancement to add "(FREE)" label to unallocated budget portion per AC-2.5.3.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/budget_tracker.py</path>
+        <kind>function</kind>
+        <symbol>create_budget_progress_data</symbol>
+        <lines>412-458</lines>
+        <reason>Creates budget data for progress callbacks. May need update to include free/costly distinction in display data.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/budget_tracker.py</path>
+        <kind>class</kind>
+        <symbol>BudgetState</symbol>
+        <lines>36-153</lines>
+        <reason>Full BudgetState implementation with can_allocate(), can_respec(), and budget properties. Used for budget validation in neighbor generation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/hill_climbing.py</path>
+        <kind>module</kind>
+        <symbol>optimize_build</symbol>
+        <lines>1-200</lines>
+        <reason>Main optimization loop that calls generate_neighbors(). Verify integration with updated neighbor generation and budget reporting.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="pytest" version="&gt;=7.4.0" usage="Testing framework for unit and integration tests"/>
+        <package name="pytest-cov" version="&gt;=4.1.0" usage="Code coverage measurement (target 80%+ for modified functions)"/>
+        <package name="pytest-benchmark" version="&gt;=4.0.0" usage="Performance testing for neighbor generation (under 20ms target)"/>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Free-first strategy: MUST consume all unallocated points before using respec points. Two-phase neighbor generation required: Phase 1 (adds only) when unallocated_remaining &gt; 0, Phase 2 (swaps only) when unallocated_remaining == 0.</constraint>
+    <constraint>Defense-in-depth validation: Budget must be checked both at neighbor generation time AND mutation application time. Follow Story 2.4 pattern of double-checking budget availability.</constraint>
+    <constraint>Fail-fast for algorithm bugs: Use AssertionError if swap generated when unallocated budget available. This indicates logic error in prioritization code, not user error.</constraint>
+    <constraint>Performance target: Neighbor generation must complete in under 20ms per iteration. Two-phase generation should not degrade performance - early termination (skip swaps when unallocated available) may actually improve speed.</constraint>
+    <constraint>API backward compatibility: New prioritize_adds parameter must have default value True. Existing callers continue to work without modification.</constraint>
+    <constraint>No modifications to Epic 1 code: All changes confined to src/optimizer/ module. Zero modifications to calculator, parsers, or models from Epic 1.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>BudgetState.can_allocate</name>
+      <kind>method</kind>
+      <signature>def can_allocate(self, count: int) -&gt; bool</signature>
+      <path>src/optimizer/neighbor_generator.py</path>
+      <usage>Check if count unallocated points are available. Returns True if unallocated_used + count &lt;= unallocated_available. Used to determine if add mutations can be generated.</usage>
+    </interface>
+    <interface>
+      <name>BudgetState.unallocated_remaining</name>
+      <kind>property</kind>
+      <signature>@property def unallocated_remaining(self) -&gt; int</signature>
+      <path>src/optimizer/neighbor_generator.py</path>
+      <usage>Returns max(0, unallocated_available - unallocated_used). Used to check if Phase 1 (adds) or Phase 2 (swaps) should be active in neighbor generation.</usage>
+    </interface>
+    <interface>
+      <name>generate_neighbors</name>
+      <kind>function</kind>
+      <signature>def generate_neighbors(build: BuildData, tree: PassiveTreeGraph, budget: BudgetState, prioritize_adds: bool = True) -&gt; List[TreeMutation]</signature>
+      <path>src/optimizer/neighbor_generator.py</path>
+      <usage>Main neighbor generation function. Story 2.5 adds prioritize_adds parameter (default True) and implements conditional two-phase generation based on budget.unallocated_remaining.</usage>
+    </interface>
+    <interface>
+      <name>BudgetTracker.format_budget_string</name>
+      <kind>method</kind>
+      <signature>def format_budget_string(self) -&gt; str</signature>
+      <path>src/optimizer/budget_tracker.py</path>
+      <usage>Formats budget usage as human-readable string. Story 2.5 enhances to add "(FREE)" label: "Budget: X/Y unallocated (FREE), Z/W respec"</usage>
+    </interface>
+    <interface>
+      <name>create_budget_progress_data</name>
+      <kind>function</kind>
+      <signature>def create_budget_progress_data(tracker: BudgetTracker) -&gt; Dict[str, Any]</signature>
+      <path>src/optimizer/budget_tracker.py</path>
+      <usage>Creates budget data structure for progress callbacks. May need update to include free/costly distinction in display_string field.</usage>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Testing follows Epic 2 standards: 80%+ line coverage for modified functions, comprehensive boundary testing (0, available, available+1), integration tests with real PassiveTreeGraph data (not just mocks), performance tests to validate under 20ms neighbor generation. Use pytest with pytest-cov for coverage measurement. Follow Story 2.4 patterns: fail-fast AssertionError for algorithm bugs, defense-in-depth validation, test all edge cases (zero unallocated, unlimited respec, both budgets available, both exhausted).</standards>
+    <locations>
+      <location>tests/unit/optimizer/test_neighbor_generator.py - Unit tests for neighbor generation logic</location>
+      <location>tests/unit/optimizer/test_budget_tracker.py - Unit tests for budget formatting and reporting</location>
+      <location>tests/integration/optimizer/test_budget_integration.py - Integration tests for free-first behavior with hill climbing</location>
+      <location>tests/integration/optimizer/test_neighbor_generator.py - Integration tests with real tree data</location>
+    </locations>
+    <ideas>
+      <idea ac="2.5.1">Test generate_neighbors with prioritize_adds=True and unallocated_remaining &gt; 0: verify result contains only add mutations, no swap mutations</idea>
+      <idea ac="2.5.1">Test generate_neighbors with prioritize_adds=False: verify both adds and swaps generated regardless of budget (backward compatibility test)</idea>
+      <idea ac="2.5.2">Test generate_neighbors with unallocated_remaining == 0: verify result contains only swap mutations, add mutations skipped</idea>
+      <idea ac="2.5.2">Test neighbor generation transitions from Phase 1 to Phase 2: start with unallocated=5, verify first 5 iterations use adds, then switches to swaps</idea>
+      <idea ac="2.5.3">Test format_budget_string includes "(FREE)" label in all cases: 15/15 unallocated (FREE), 0/0 unallocated (FREE), with unlimited respec</idea>
+      <idea ac="2.5.3">Test create_budget_progress_data display_string field contains free/costly distinction</idea>
+      <idea ac="2.5.4">Integration test: run hill climbing optimization with mixed budget (10 unallocated, 5 respec), verify unallocated consumed completely before any respec usage</idea>
+      <idea ac="2.5.4">Integration test: verify progress callback shows unallocated decreasing first, then respec decreasing after unallocated exhausted</idea>
+      <idea ac="all">Boundary test: zero unallocated + some respec available → only swaps generated</idea>
+      <idea ac="all">Boundary test: some unallocated + zero respec available → only adds generated until budget exhausted</idea>
+      <idea ac="all">Boundary test: both budgets exhausted → empty neighbor list (triggers convergence)</idea>
+      <idea ac="all">Performance test: measure neighbor generation time with prioritize_adds=True, verify under 20ms (should be faster due to early termination)</idea>
+    </ideas>
+  </tests>
+</story-context>

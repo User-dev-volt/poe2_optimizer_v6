@@ -1,0 +1,180 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/1.5" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>5</storyId>
+    <title>Execute Single Build Calculation</title>
+    <status>Blocked</status>
+    <generatedAt>2025-10-17</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>D:\poe2_optimizer_v6/docs/stories/story-1.5.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to calculate stats for a single PoB build using MinimalCalc.lua</iWant>
+    <soThat>I can verify calculation accuracy and provide the foundation for the optimization algorithm</soThat>
+    <tasks>
+      - Task 1: Design BuildStats Data Model (AC: #3, #6)
+      - Task 2: Implement Calculate() Function in MinimalCalc.lua (AC: #2, #5)
+      - Task 3: Create calculate_build_stats() High-Level API (AC: #1, #2, #6)
+      - Task 4: Implement BuildData to XML Conversion (AC: #1)
+      - Task 5: Implement Result Extraction from Lua (AC: #3, #6)
+      - Task 6: Add Error Handling and Timeout (AC: #5)
+      - Task 7: Create Integration Tests (AC: ALL)
+      - Task 8: Update Module Exports (AC: #3)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1.5.1">System accepts BuildData object as input (from parser module)</criterion>
+    <criterion id="AC-1.5.2">System calls PoB calculation engine via MinimalCalc.lua</criterion>
+    <criterion id="AC-1.5.3">System extracts calculated stats: DPS, Life, EHP, resistances</criterion>
+    <criterion id="AC-1.5.4">Calculation completes in &lt;100ms (single call)</criterion>
+    <criterion id="AC-1.5.5">No Lua errors during calculation</criterion>
+    <criterion id="AC-1.5.6">Results are numeric (not nil/undefined)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="D:\poe2_optimizer_v6/docs/tech-spec-epic-1.md" title="Technical Specification: Epic 1">
+        <section name="BuildStats Data Model" lines="180-229">
+          Defines BuildStats dataclass with fields: total_dps, effective_hp, life, energy_shield, mana, resistances (dict), armour, evasion, block_chance, spell_block_chance, movement_speed. Includes to_dict() method for JSON serialization.
+        </section>
+        <section name="Calculator Module API" lines="318-386">
+          Specifies calculate_build_stats(build: BuildData) -&gt; BuildStats function signature, PoBCalculationEngine class with calculate() and cleanup() methods, get_pob_engine() thread-local factory pattern. Thread-safe design ensures one LuaRuntime instance per thread.
+        </section>
+        <section name="Workflow 2: Calculate Build Stats" lines="428-475">
+          Details calculation workflow: get thread-local engine → convert BuildData to XML → call Lua via Lupa → extract results → validate. Performance notes: first call ~200ms (Lua compilation), subsequent &lt;100ms, batch 1000 calls 150-500ms.
+        </section>
+        <section name="Error Handling Strategy" lines="615-648">
+          Calculation timeout implementation (5 seconds per FR-3.4), wrap lupa.LuaError in CalculationError, never expose Lua stack traces to user, log technical details, graceful degradation for missing stats.
+        </section>
+        <section name="Performance Targets" lines="516-554">
+          Single calculation &lt;100ms (95th percentile), batch 1000 calculations 150-500ms, memory &lt;100MB per session, Lua compilation first call &lt;200ms. Strategies: pre-compile Lua functions, reuse Build objects, minimize Python↔Lua serialization.
+        </section>
+        <section name="Story 1.5 Acceptance Criteria" lines="915-926">
+          All six ACs listed with testing method (integration test with sample build, verify stats returned). Architectural note about MinimalCalc.lua replacing HeadlessWrapper.lua.
+        </section>
+      </doc>
+      <doc path="D:\poe2_optimizer_v6/docs/prd.md" title="Product Requirements Document">
+        <section name="FR-3.2: Build State Calculation" lines="399-403">
+          System SHALL accept build state as input (passive tree, items, skills, config), execute PoB calculation engine to compute stats (Total DPS, EHP, resistances, life, ES, mana), return calculated stats to optimization algorithm. AC: results match PoB GUI within 0.1% tolerance, deterministic.
+        </section>
+        <section name="FR-3.4: Calculation Timeout &amp; Error Recovery" lines="428-432">
+          System SHALL implement 5-second timeout per calculation, catch/log Lua runtime errors without crashing session, provide graceful degradation for edge case builds. AC: 0% crashes, &lt;1% timeout rate.
+        </section>
+        <section name="NFR-1: Performance" lines="1023-1046">
+          Response time targets: PoB code parsing &lt;500ms, optimization 2-10 minutes based on build complexity. Throughput: handle 10 concurrent optimizations, maintain &lt;1s for 1000 calcs under normal load.
+        </section>
+      </doc>
+      <doc path="D:\poe2_optimizer_v6/docs/epics.md" title="Epic Breakdown">
+        <section name="Story 1.5" lines="145-169">
+          Epic 1 Story 5: Execute Single Build Calculation. 6 ACs covering BuildData input, MinimalCalc.lua integration, stat extraction, &lt;100ms performance, error handling, numeric validation. Technical notes: MinimalCalc architecture (Story 1.4 breakthrough), incremental build object (start with minimal fields), performance profiling plan.
+        </section>
+      </doc>
+    </docs>
+    <code>
+      <artifact path="D:\poe2_optimizer_v6/src/models/build_data.py" kind="dataclass" symbol="BuildData" lines="39-76">
+        Existing BuildData dataclass with fields: character_class, level, ascendancy, passive_nodes (Set[int]), items, skills, tree_version, build_name, notes. Computed properties: allocated_point_count, unallocated_points. This is the INPUT to calculate_build_stats().
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6/src/calculator/pob_engine.py" kind="class" symbol="PoBCalculationEngine" lines="46-288">
+        Existing PoBCalculationEngine class with __init__(), _ensure_initialized(), _configure_lua_package_path(), _load_headless_wrapper() (loads MinimalCalc.lua), cleanup() methods. calculate(build: BuildData) method currently raises NotImplementedError - THIS IS WHAT STORY 1.5 IMPLEMENTS. Thread-local pattern via get_pob_engine() factory.
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6/src/calculator/stub_functions.py" kind="module" symbol="Deflate, Inflate, ConPrintf, etc." lines="1-346">
+        Python stub functions for PoB Lua dependencies (from Story 1.3). Deflate/Inflate use zlib, ConPrintf logs to Python logger, SpawnProcess/OpenURL are no-ops. These are registered in Lua globals during PoBCalculationEngine initialization.
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6/src/calculator/MinimalCalc.lua" kind="lua-bootstrap" symbol="Calculate()" lines="1-200">
+        Custom PoB bootstrap from Story 1.4. Loads Common.lua, Data/Global.lua, Data/Misc.lua, Modules/Calcs.lua without GUI. Exposes Calculate() function that constructs build object, calls calcs.initEnv() and calcs.perform(), extracts env.player.output stats. Story 1.5 implements this function.
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6/src/calculator/__init__.py" kind="module-init" lines="1-50">
+        Module exports. Story 1.5 Task 8 will add: from .build_calculator import calculate_build_stats
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6/src/models/__init__.py" kind="module-init" lines="1-32">
+        Module exports. Story 1.5 Task 8 will add: from .build_stats import BuildStats
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="lupa" version="2.0" source="requirements.txt">Python-LuaJIT bindings, core integration library</package>
+        <package name="xmltodict" version="0.13.0" source="requirements.txt">PoB XML parsing (may be used for XML generation in reverse)</package>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint id="minimalcalc-architecture">
+      MinimalCalc.lua Architecture (Story 1.4 Breakthrough): Original HeadlessWrapper.lua abandoned due to GUI dependencies. Custom MinimalCalc.lua bootstrap loads only minimal PoB constants (Data/Global.lua, Data/Misc.lua) and Modules/Calcs.lua. Build object structure: build.data, build.spec, build.configTab, build.itemsTab, build.skillsTab. Call sequence: calcs.initEnv(build) → calcs.perform(build) → extract env.player.output.
+    </constraint>
+    <constraint id="incremental-build-construction">
+      Incremental Build Object Construction: Start with simplest case - character class, level, passive tree nodes only. Defer items/skills to Story 1.6 or Epic 2. Build minimal build object in MinimalCalc.lua Calculate() function with empty itemsTab and skillsTab arrays.
+    </constraint>
+    <constraint id="performance-targets">
+      Performance Targets: Single calculation &lt;100ms (AC-1.5.4), batch 1000 calculations 150-500ms (Story 1.8 target). First call per thread may take ~200ms (Lua compilation overhead), subsequent calls must hit &lt;100ms target. Profile and optimize hot paths.
+    </constraint>
+    <constraint id="error-handling-strategy">
+      Error Handling Strategy: 5-second timeout per calculation (FR-3.4), wrap all Lua errors in CalculationError (never expose lupa.LuaError to user), log technical details with logger.error(), raise user-friendly exceptions. Graceful degradation: if stats missing, return 0 or None with warning.
+    </constraint>
+    <constraint id="thread-safety">
+      Thread Safety: calculate_build_stats() must be thread-safe. Uses thread-local PoBCalculationEngine from Story 1.2 (get_pob_engine() factory). Each thread gets isolated LuaRuntime instance. Epic 3 may require concurrent calculations (multiple users).
+    </constraint>
+    <constraint id="xml-conversion-approach">
+      BuildData to XML Conversion: Create inline helper function _build_to_xml(build: BuildData) → str in build_calculator.py. Generate minimal PoB XML template with character class, level, passive nodes. Defer item/skill serialization to future stories. Alternative: reuse pob_generator.py logic from Story 1.1 (may be overkill).
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="calculate_build_stats" kind="function" signature="calculate_build_stats(build: BuildData) -&gt; BuildStats" path="src/calculator/build_calculator.py">
+      High-level calculation API (Story 1.5 Task 3). Get thread-local engine via get_pob_engine(), convert BuildData to XML, call MinimalCalc.lua Calculate() via Lupa, parse Lua results into BuildStats, validate results. Raises CalculationError or CalculationTimeout. Performance: &lt;100ms. Thread-safe.
+    </interface>
+    <interface name="PoBCalculationEngine.calculate" kind="method" signature="calculate(self, build: BuildData) -&gt; BuildStats" path="src/calculator/pob_engine.py">
+      Low-level Lua engine interface (Story 1.5 implementation). Currently raises NotImplementedError. Will: ensure initialized, serialize BuildData, call Lua Calculate() function, extract stats from Lua table, construct BuildStats object. This is the CORE IMPLEMENTATION for Story 1.5.
+    </interface>
+    <interface name="get_pob_engine" kind="function" signature="get_pob_engine() -&gt; PoBCalculationEngine" path="src/calculator/pob_engine.py">
+      Thread-local engine factory (from Story 1.2). Returns cached PoBCalculationEngine instance for current thread. If first call in thread, creates new instance. Ensures thread safety and session isolation.
+    </interface>
+    <interface name="BuildData" kind="dataclass" signature="BuildData(character_class, level, passive_nodes, items, skills, ...)" path="src/models/build_data.py">
+      Input data model (from Story 1.1). Fields: character_class (CharacterClass enum), level (int), passive_nodes (Set[int]), items (List[Item]), skills (List[Skill]), tree_version, ascendancy, build_name, notes. Computed properties: allocated_point_count, unallocated_points.
+    </interface>
+    <interface name="BuildStats" kind="dataclass" signature="BuildStats(total_dps, effective_hp, life, energy_shield, mana, resistances, ...)" path="src/models/build_stats.py">
+      Output data model (Story 1.5 Task 1 NEW FILE). Fields: total_dps (float), effective_hp (float), life (int), energy_shield (int), mana (int), resistances (Dict[str, int]), armour (int), evasion (int), block_chance (float), spell_block_chance (float), movement_speed (float). Method: to_dict() for JSON serialization. Validation: numeric types, no NaN/infinity.
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Test Pyramid: Unit tests (60%): BuildStats dataclass validation, XML generation helpers, result extraction logic. Integration tests (30%): Full calculation pipeline (BuildData → BuildStats), MinimalCalc.lua integration, thread-local engine behavior. Performance tests (10%): Single calculation &lt;100ms (pytest-benchmark), batch calculations, memory usage. Testing framework: pytest. Coverage target: &gt;80% for src/calculator/ and src/models/. Story 1.5 focuses on calculation mechanics (does it run without errors?). Story 1.6 validates accuracy (do results match PoB GUI?).
+    </standards>
+    <locations>
+      tests/unit/ - Unit tests for dataclasses, helpers, validators
+      tests/integration/ - Integration tests for calculation pipeline
+      tests/integration/test_single_calculation.py - NEW FILE for Story 1.5
+      tests/fixtures/sample_builds/ - Sample PoB codes for testing
+    </locations>
+    <ideas>
+      <test ac="AC-1.5.1" desc="Test BuildData Input">
+        test_calculate_accepts_builddata(): Create BuildData instance, pass to calculate_build_stats(), verify no exceptions. Assert BuildData fields are accessible by calculation engine.
+      </test>
+      <test ac="AC-1.5.2" desc="Test MinimalCalc.lua Integration">
+        test_minimalcalc_lua_called(): Mock/spy on Lua execute to verify Calculate() function called. Assert Lua runtime initialized and MinimalCalc.lua loaded.
+      </test>
+      <test ac="AC-1.5.3" desc="Test Stat Extraction">
+        test_extract_stats_from_lua(): Calculate minimal build, assert stats.total_dps exists (may be 0), stats.life &gt; 0, stats.effective_hp &gt; 0, stats.resistances is dict with fire/cold/lightning/chaos keys.
+      </test>
+      <test ac="AC-1.5.4" desc="Test Performance &lt;100ms">
+        test_calculation_performance(): Use pytest-benchmark to time calculate_build_stats(). Assert elapsed &lt; 0.1 seconds. Run multiple iterations to account for Lua compilation overhead on first call.
+      </test>
+      <test ac="AC-1.5.5" desc="Test Error Handling">
+        test_no_lua_errors(): Calculate 10+ different builds, assert no lupa.LuaError raised. Test edge cases: level 1, level 100, 0 passive nodes, 100+ passive nodes. Verify all wrapped in CalculationError.
+      </test>
+      <test ac="AC-1.5.6" desc="Test Numeric Results">
+        test_stats_are_numeric(): Calculate build, assert isinstance(stats.total_dps, float), isinstance(stats.life, int), all resistance values are int, no NaN values (math.isnan check), no infinity values.
+      </test>
+      <test ac="ALL" desc="Integration Test - Happy Path">
+        test_calculate_simple_build(): Minimal BuildData (Witch level 90, starting nodes only), calculate stats, assert stats.life &gt; 0, stats.resistances is dict, stats.total_dps &gt;= 0 (may be 0 without skills).
+      </test>
+      <test ac="ALL" desc="Integration Test - Error Recovery">
+        test_invalid_build_raises_error(): BuildData with invalid level (-1), assert raises CalculationError or ValidationError. BuildData with impossible passive nodes, assert graceful error.
+      </test>
+    </ideas>
+  </tests>
+</story-context>

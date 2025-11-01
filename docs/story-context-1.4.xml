@@ -1,0 +1,323 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.4</storyId>
+    <title>Load HeadlessWrapper.lua and PoB Modules</title>
+    <status>Done</status>
+    <generatedAt>2025-10-13</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>D:\poe2_optimizer_v6\docs\stories\story-1.4.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to load HeadlessWrapper.lua and required PoB data modules via Lupa</iWant>
+    <soThat>the PoB calculation engine is initialized and ready to process build calculations</soThat>
+    <tasks>
+      - [x] Task 1: Setup PoB Engine Git Submodule (AC: #1) - Submodule at commit 69b825bda, POB_VERSION.txt created
+      - [x] Task 2: Configure Lua Package Path for PoB Modules (AC: #3, #5) - _configure_lua_package_path() implemented, Windows path handling fixed
+      - [x] Task 3: Load HeadlessWrapper.lua via Lupa (AC: #2, #5) - _load_headless_wrapper() implemented, dofile() succeeds but environment shim incomplete
+      - [x] Task 4: Load Required PoB Data Modules (AC: #3, #5, #6) - Actual paths: src/Classes/PassiveTree.lua, src/Data/Misc.lua (not Data/Classes.lua per spec)
+      - [x] Task 5: Initialize PoB Calculation Context (AC: #4, #6) - _initialize_pob_context() placeholder implemented, passive_node_count=0
+      - [x] Task 6: Create Integration Tests for Module Loading (AC: All) - 10 tests created in test_headlesswrapper_loading.py
+      - [x] Task 7: Error Handling and Edge Cases (AC: #5) - Windows path conversion, FileNotFoundError handling, CalculationError wrapper
+      - [x] Task 8: Documentation and Validation (AC: All) - Partial: POB_VERSION.txt complete, README.md deferred, pytest.ini updated
+
+      **Review Follow-ups (AI) - CRITICAL BLOCKING ITEMS:**
+      - [ ] **[AI-Review][High] Implement HeadlessWrapper runtime environment shim** (AC-1.4.2, AC-1.4.4 BLOCKING)
+        Story 1.4 only calls dofile() without providing PoB runtime environment that HeadlessWrapper expects:
+        - Launch.lua initialization (fix path: dofile("Launch.lua") → dofile("src/Launch.lua"))
+        - manifest.xml handling (provide minimal manifest or ensure devMode fallback at HeadlessWrapper line 59)
+        - Event loop stubs (GetTime(), module loading hooks if needed)
+        - xml module in package.path (PoB's xml parser)
+        Analogy: Like Playwright providing headless Chrome event loop for website JavaScript, Story 1.4 must provide PoB environment shim.
+        Estimated effort: 3-4 hours. Solution already discovered (completion notes lines 680-694) but incorrectly deferred.
+      - [ ] [AI-Review][Med] Complete error path test for missing HeadlessWrapper.lua - Mock-based test with unittest.mock.patch (15 min)
+      - [ ] [AI-Review][Med] Update README.md with PoB setup and environment shim documentation - Submodule setup, headless browser analogy, troubleshooting (30 min)
+      - [ ] [AI-Review][Low] Add explicit cleanup on initialization failure - finally: block in _ensure_initialized() (10 min)
+      - [ ] [AI-Review][Low] Add negative test for Lua syntax errors - Verify lupa.LuaError → CalculationError wrapping (20 min)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1.4.1" status="PASS">
+      System locates HeadlessWrapper.lua in `external/pob-engine/`
+      Evidence: test_headlesswrapper_file_exists(), POB_VERSION.txt documents actual path (src/HeadlessWrapper.lua)
+    </ac>
+    <ac id="1.4.2" status="FAIL">
+      System loads HeadlessWrapper.lua via Lupa **without errors**
+      **BLOCKING ISSUE:** _load_headless_wrapper() calls dofile() successfully, BUT HeadlessWrapper expects runtime environment (Launch.lua, manifest.xml, event loop, GetTime()) that is not provided. "Without errors" requires functional environment shim, not just successful dofile() call. Completion notes (lines 680-694) documented solution but incorrectly deferred to Story 1.5.
+    </ac>
+    <ac id="1.4.3" status="PASS">
+      System loads required PoB modules: Data/PassiveTree.lua, Data/Classes.lua
+      Evidence: _load_pob_data_modules() loads actual paths: src/Classes/PassiveTree.lua + src/Data/Misc.lua (character class data)
+      Note: File paths differ from tech spec assumptions but correctly load PoB data.
+    </ac>
+    <ac id="1.4.4" status="FAIL">
+      System initializes PoB calculation context
+      **BLOCKING ISSUE:** _initialize_pob_context() sets flags (_initialized=True, _passive_node_count=0) but doesn't verify HeadlessWrapper operational state (event loop ready, Launch.lua initialized, modules loadable). Initialization means environment ready, not just variables set.
+    </ac>
+    <ac id="1.4.5" status="SUPERFICIAL">
+      No Lua errors during module loading
+      **RISK:** try/except wraps Lua operations, but environment incompleteness may cause latent errors when HeadlessWrapper attempts to use missing events/functions. Errors may be deferred to first calculation attempt (Story 1.5) rather than caught during initialization.
+    </ac>
+    <ac id="1.4.6" status="PLACEHOLDER">
+      PoB passive tree data accessible (nodes, connections, stats)
+      Evidence: _passive_node_count set to 0 without actual extraction from Lua globals.
+      Note: Can remain placeholder if AC-1.4.2/1.4.4 resolved. Actual tree extraction is Story 1.7 per tech spec.
+    </ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="D:\poe2_optimizer_v6\docs\tech-spec-epic-1.md" title="Technical Specification: Foundation - PoB Calculation Engine Integration">
+        <section name="Story 1.4 Acceptance Criteria" lines="901-910">
+          Authoritative source for Story 1.4 acceptance criteria. Defines system requirements for loading HeadlessWrapper.lua, PassiveTree.lua, and Classes.lua via Lupa. **CRITICAL:** AC-1.4.2 "without errors" means operationally functional, not just dofile() success.
+        </section>
+        <section name="Calculator Module API" lines="356-386">
+          Defines PoBCalculationEngine interface and initialization pattern. Includes get_pob_engine() factory function and calculate() method signature. Emphasizes thread-local instances and lazy initialization.
+        </section>
+        <section name="Workflow 3: Load Passive Tree Graph" lines="479-509">
+          Step-by-step workflow for loading PassiveTree.lua, parsing Lua structure to Python adjacency list, and caching in memory for optimizer queries. Story 1.4 loads files; Story 1.7 parses to adjacency list.
+        </section>
+        <section name="External Dependencies - Git Submodule" lines="769-798">
+          Path of Building engine setup via git submodule. Includes submodule initialization commands, version pinning strategy (POB_VERSION.txt), and required file paths. PoB repository: https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2
+        </section>
+        <section name="Error Handling Strategy" lines="601-648">
+          Comprehensive error handling patterns for parsing errors, calculation errors, resource cleanup, and timeout implementation. Includes try/except patterns, lupa.LuaError → CalculationError wrapping, and clear error messages.
+        </section>
+        <section name="PassiveTreeGraph Data Model" lines="231-264">
+          Python data structure for passive tree representation. Defines PassiveNode and PassiveTreeGraph classes with adjacency list structure. Story 1.7 will implement this; Story 1.4 only loads Lua files.
+        </section>
+        <section name="Post-Review Follow-ups - Story 1.4" lines="1255-1267">
+          Senior developer review action items. **BLOCKING [H1]:** Implement HeadlessWrapper environment shim (Launch.lua, manifest.xml, event loop). Solution discovered (completion notes lines 680-694) but incorrectly deferred. Must complete in Story 1.4 to meet objective: "PoB calculation engine initialized and ready to process build calculations."
+        </section>
+      </doc>
+      <doc path="D:\poe2_optimizer_v6\docs\backlog.md" title="Engineering Backlog">
+        <section name="Story 1.4 Backlog Items" lines="29-32">
+          Four backlog items from Story 1.4 review:
+          - [Bug][Med] Complete error path test for missing HeadlessWrapper.lua (mock-based)
+          - [TechDebt][Med] Update README.md with PoB setup and environment shim documentation
+          - [Enhancement][Low] Add explicit cleanup on initialization failure (finally: block)
+          - [Enhancement][Low] Add negative test for Lua syntax errors
+          All items deferred to backlog, but [H1] environment shim is **BLOCKING** and must be completed before Story 1.4 can be marked "Done".
+        </section>
+      </doc>
+      <doc path="D:\poe2_optimizer_v6\docs\epics.md" title="Epic Breakdown - Epic 1: Foundation">
+        <section name="Story 1.4 Definition" lines="119-140">
+          Original user story definition with acceptance criteria, technical notes, priority (Must-have MVP blocking), and size estimate (5 story points). Story objective: "so that the PoB calculation engine is **initialized and ready to process build calculations**" - emphasizes operational readiness.
+        </section>
+      </doc>
+      <doc path="D:\poe2_optimizer_v6\docs\solution-architecture.md" title="Solution Architecture">
+        <section name="Layered Architecture">
+          Defines Integration Layer where calculator/pob_engine.py resides. Specifies dependency rules (calculator depends on parsers, but parsers has ZERO dependencies on calculator). Integration layer must fully integrate with PoB engine, not just load files.
+        </section>
+      </doc>
+      <doc path="D:\poe2_optimizer_v6\docs\stories\story-1.3.md" title="Story 1.3: Implement Required Stub Functions (Completed)">
+        <section name="Lessons Learned" lines="245-252">
+          Carry-forward lessons: Write integration tests alongside implementation, comprehensive docstrings, @pytest.mark.slow for integration tests, document discovered API quirks immediately, handle edge cases defensively, test with actual PoB files.
+        </section>
+        <section name="Dev Notes - Stub Functions" lines="256-451">
+          Comprehensive guidance on Python stub functions (Deflate, Inflate, ConPrintf, ConPrintTable, SpawnProcess, OpenURL) that must be registered in Lua globals before loading HeadlessWrapper.lua. Story 1.3 completed these stubs. Story 1.4 must add GetTime() stub if not already in HeadlessWrapper stubs.
+        </section>
+      </doc>
+      <doc path="D:\poe2_optimizer_v6\docs\stories\story-1.4.md" title="Story 1.4 (Current - In Progress)">
+        <section name="Completion Notes" lines="697-743">
+          **KEY DISCOVERY:** HeadlessWrapper.lua requires GUI dependencies (Launch.lua, GetTime(), SetWindowTitle(), manifest.xml). However, **SOLUTION DISCOVERED** (lines 680-694): HeadlessWrapper.lua already contains all necessary GUI stubs. No additional stubs needed. Problem: HeadlessWrapper calls dofile("Launch.lua") which fails on path. Fix: Use dofile("src/Launch.lua"), ensure xml module in package.path, handle manifest.xml gracefully (devMode fallback), ensure operational initialization.
+        </section>
+        <section name="Senior Developer Review" lines="756-1069">
+          Comprehensive review identifying critical gap [H1]: HeadlessWrapper environment shim not implemented. Story 1.4 only calls dofile() without providing PoB runtime environment. Implementation discovered solution but incorrectly deferred to Story 1.5. **Headless Browser Analogy:** Like Playwright providing event loop for website JavaScript, Story 1.4 must provide PoB environment shim for HeadlessWrapper.lua. Review [H1] is BLOCKING - Story 1.4 incomplete until resolved.
+        </section>
+      </doc>
+      <doc path="external/pob-engine/src/HeadlessWrapper.lua" title="HeadlessWrapper.lua (External PoB File)">
+        <section name="GUI Stubs">
+          HeadlessWrapper.lua line 2-50 (approx): Already contains stubs for GUI functions (SetWindowTitle, GetCursorPos, rendering, event loop). No additional Python stubs needed. Problem is Launch.lua path and manifest.xml handling, not missing stubs.
+        </section>
+      </doc>
+    </docs>
+    <code>
+      <artifact path="D:\poe2_optimizer_v6\src\calculator\pob_engine.py" kind="module" lines="1-161">
+        <symbol>PoBCalculationEngine._ensure_initialized</symbol>
+        <reason>Primary initialization method. Currently: (1) initializes Lupa, (2) registers stub functions, (3-6) loads HeadlessWrapper and PoB modules. **GAP:** Does not provide HeadlessWrapper runtime environment (Launch.lua, manifest.xml, event loop). Must add environment shim in Story 1.4.</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\src\calculator\pob_engine.py" kind="module" lines="89-145">
+        <symbol>PoBCalculationEngine._load_headless_wrapper</symbol>
+        <reason>Loads HeadlessWrapper.lua via dofile(). Currently succeeds at dofile() call but HeadlessWrapper expects environment. Must modify to: (1) fix Launch.lua path, (2) add xml module to package.path, (3) handle manifest.xml, (4) verify operational state.</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\src\calculator\pob_engine.py" kind="module" lines="123-133">
+        <symbol>PoBCalculationEngine._load_pob_data_modules</symbol>
+        <reason>Loads PassiveTree.lua and Misc.lua (not Classes.lua per spec - actual PoB structure). Successfully loads files. No changes needed for environment shim.</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\src\calculator\pob_engine.py" kind="module" lines="135-145">
+        <symbol>PoBCalculationEngine._initialize_pob_context</symbol>
+        <reason>Placeholder implementation. Sets _passive_node_count=0 without extracting from Lua globals. **GAP:** Must verify HeadlessWrapper operational state (Launch.lua executed, event loop ready, modules loadable). Not just set flags.</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\src\calculator\stub_functions.py" kind="module" lines="1-346">
+        <symbol>Deflate, Inflate, ConPrintf, ConPrintTable, SpawnProcess, OpenURL</symbol>
+        <reason>Python stub functions registered in Lua globals (Story 1.3). HeadlessWrapper.lua depends on these. Already functional. May need to add GetTime() stub if not in HeadlessWrapper stubs (verify during environment shim implementation).</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\src\calculator\exceptions.py" kind="module">
+        <symbol>CalculationError, CalculationTimeout</symbol>
+        <reason>Custom exception classes for calculator module. CalculationError wraps lupa.LuaError. CalculationTimeout for 5-second timeout (FR-3.4). Created in Story 1.4.</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\tests\integration\test_headlesswrapper_loading.py" kind="test" lines="1-285">
+        <symbol>test_headlesswrapper_file_exists, test_load_headlesswrapper_no_errors, test_passive_tree_accessible</symbol>
+        <reason>Integration tests for Story 1.4. Currently 10 tests. **GAP:** Tests validate superficial loading (dofile() succeeds) not operational state (environment functional). Must update tests to verify: (1) Launch.lua executed, (2) modules loadable by HeadlessWrapper, (3) event loop stubs accessible, (4) manifest.xml handled.</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\tests\integration\test_headlesswrapper_loading.py" kind="test" lines="163-183">
+        <symbol>test_missing_headlesswrapper_raises_error</symbol>
+        <reason>Placeholder test with `assert True`. **GAP:** Must implement mock-based test using unittest.mock.patch to simulate missing HeadlessWrapper.lua and verify FileNotFoundError raised with expected message.</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\tests\integration\test_lupa_basic.py" kind="test">
+        <symbol>test_load_simple_lua_script, test_python_function_callable_from_lua</symbol>
+        <reason>Reference test patterns from Story 1.2. Shows how to test Lua file loading via dofile() and Python↔Lua function calls. Use these patterns when implementing environment shim tests.</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\tests\integration\test_stub_functions.py" kind="test">
+        <symbol>test_lua_can_call_deflate, test_multiple_sequential_calls</symbol>
+        <reason>Reference test patterns from Story 1.3. Shows how to test Python stubs callable from Lua context and sequential Lua operations. Use these patterns when verifying environment stubs (GetTime, event loop) accessible from Lua.</reason>
+      </artifact>
+      <artifact path="external/pob-engine/src/HeadlessWrapper.lua" kind="lua-script">
+        <symbol>dofile("Launch.lua"), LoadModule, PLoadModule</symbol>
+        <reason>External PoB file. Contains GUI stubs (SetWindowTitle, GetCursorPos, etc.) and module loading functions. Problem: Calls dofile("Launch.lua") which fails on path (should be "src/Launch.lua"). Environment shim must fix this path or redirect the call.</reason>
+      </artifact>
+      <artifact path="external/pob-engine/src/Launch.lua" kind="lua-script">
+        <symbol>manifest.xml loading, devMode fallback</symbol>
+        <reason>External PoB file. Initializes PoB environment (loads manifest.xml, sets up module paths, initializes windowing system). HeadlessWrapper calls dofile("Launch.lua") at line ~8. Environment shim must ensure Launch.lua can be loaded (path fix) and manifest.xml handled (provide minimal manifest or ensure devMode fallback at Launch.lua line 59 per completion notes).</reason>
+      </artifact>
+      <artifact path="D:\poe2_optimizer_v6\POB_VERSION.txt" kind="documentation">
+        <symbol>commit 69b825bda1733288a3ea3b1018a1c328900a4924</symbol>
+        <reason>Documents pinned PoB engine version. Created in Task 1. Ensures stability (PoB repository structure may change). Version: v0.12.2-61 per completion notes.</reason>
+      </artifact>
+    </code>
+    <dependencies ecosystem="python">
+      <package name="lupa" version=">=2.0" reason="Python-LuaJIT bindings for PoB calculation engine integration. Required for loading and executing HeadlessWrapper.lua. Version 2.5 currently installed. Supports max_memory parameter for resource limiting (Epic 3 security feature)." />
+      <package name="xmltodict" version="==0.13.0" reason="PoB XML parsing (Story 1.1). No direct use in Story 1.4, but part of calculator module ecosystem." />
+      <package name="pytest" version=">=7.4.0" reason="Testing framework. Story 1.4 creates integration tests with @pytest.mark.slow decorator. pytest.ini updated with pythonpath=src for module imports." />
+    </dependencies>
+    <dependencies ecosystem="external">
+      <package name="PathOfBuilding-PoE2" source="git submodule" url="https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2.git" version="commit 69b825bda" reason="Path of Building PoE2 calculation engine. Provides HeadlessWrapper.lua, PassiveTree.lua, Misc.lua (character classes). Must be initialized as git submodule at external/pob-engine/. Pinned version documented in POB_VERSION.txt (v0.12.2-61)." />
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint id="layered-architecture">
+      **Layered Architecture:** calculator/pob_engine.py is Integration Layer. ZERO dependencies on upper layers (optimizer/, web/). Depends on: Lupa (Story 1.2), stub_functions (Story 1.3), external PoB files. **Integration Layer must fully integrate with PoB engine** - not just load files, but provide operational environment.
+    </constraint>
+    <constraint id="story-scope">
+      **Story 1.4 Scope:** Load PoB modules AND provide runtime environment shim to make HeadlessWrapper operationally functional. Do NOT attempt to execute PoB calculations (Story 1.5). Do NOT parse PassiveTree.lua into Python PassiveTreeGraph (Story 1.7). Focus: Module loading, environment initialization, operational verification.
+
+      **Scope Clarification (Post-Review):** "Load HeadlessWrapper.lua" means make HeadlessWrapper operational (provide environment), not just call dofile() and hope for the best. Analogy: Like Playwright providing event loop shim for website JavaScript, Story 1.4 provides PoB environment shim for HeadlessWrapper.lua.
+    </constraint>
+    <constraint id="environment-shim-requirement">
+      **HeadlessWrapper Environment Shim (CRITICAL):** HeadlessWrapper.lua expects PoB runtime environment:
+      1. Launch.lua initialization: Fix path dofile("Launch.lua") → dofile("src/Launch.lua")
+      2. xml module in package.path: Ensure PoB's xml parser can be loaded (part of PoB repo)
+      3. manifest.xml handling: Either provide minimal manifest or ensure devMode fallback works (HeadlessWrapper line 59)
+      4. Event loop stubs: GetTime(), module loading hooks if not already in HeadlessWrapper stubs (verify during implementation)
+
+      **Headless Browser Pattern:** Just as Playwright provides headless Chrome event loop for website JavaScript (start browser, load page, wait for "document loaded" signal, provide DOM/events/timers), Story 1.4 must provide PoB environment shim for HeadlessWrapper.lua (fix Launch.lua path, load xml module, handle manifest, stub environment functions, verify ready state).
+    </constraint>
+    <constraint id="lua-package-path">
+      **Lua Package Path:** MUST configure lua_globals.package.path BEFORE loading HeadlessWrapper.lua. Required paths: {pob_engine_dir}/?.lua, {pob_engine_dir}/src/?.lua, {pob_engine_dir}/src/Data/?.lua, {pob_engine_dir}/src/Modules/?.lua. **ADDITIONAL:** Must add xml module path for PoB's xml parser (part of environment shim).
+    </constraint>
+    <constraint id="error-handling">
+      **Error Handling:** Wrap all Lua operations in try/except. Catch lupa.LuaError, wrap with CalculationError. Provide clear error messages: "PoB engine not found. Run: git submodule update --init", "HeadlessWrapper.lua missing at {path}. Verify PoB version.", "Failed to initialize HeadlessWrapper environment. Check Launch.lua and manifest.xml."
+    </constraint>
+    <constraint id="path-handling">
+      **Path Handling (Windows Compatibility):** Use os.path for cross-platform compatibility (Windows/Linux path separators). Use os.path.abspath() for pob_engine_dir. Use os.path.join() for file paths. **CRITICAL:** Convert Windows backslashes to forward slashes for Lua: `path.replace('\\', '/')`. Lua dofile() fails with backslash paths (escape sequence errors). Discovered and fixed in Story 1.4 implementation.
+    </constraint>
+    <constraint id="lazy-initialization">
+      **Lazy Initialization:** _ensure_initialized() is idempotent. Check self._initialized flag before loading. Safe to call multiple times. Never load HeadlessWrapper multiple times per instance.
+    </constraint>
+    <constraint id="stub-dependency">
+      **Stub Functions Dependency:** HeadlessWrapper.lua requires stub functions (Deflate, Inflate, ConPrintf, ConPrintTable, SpawnProcess, OpenURL) to be registered in Lua globals BEFORE loading. Story 1.3 already implements stub registration in _ensure_initialized(). May need to add GetTime() stub for environment shim (verify if not already in HeadlessWrapper stubs).
+    </constraint>
+    <constraint id="testing">
+      **Integration Tests Only:** Story 1.4 has no unit tests. All tests require Lupa + external/pob-engine/ directory. Mark all tests with @pytest.mark.slow. **GAP IDENTIFIED:** Current tests validate superficial loading (dofile() succeeds) not operational state (environment functional). Must add tests to verify: Launch.lua executed, modules loadable by HeadlessWrapper, event loop ready, manifest handled.
+    </constraint>
+    <constraint id="operational-verification">
+      **Operational Verification (Post-Review):** Tests must validate HeadlessWrapper is **operationally functional**, not just loaded. Verify:
+      1. Launch.lua executed successfully (no errors)
+      2. HeadlessWrapper can load PoB calculation modules (not just data modules)
+      3. Event loop stubs accessible from Lua
+      4. Manifest.xml handled (either present or devMode fallback active)
+      5. Environment ready for calculation (Story 1.5 can immediately call calculation functions)
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="PoBCalculationEngine._configure_lua_package_path" kind="method" path="src/calculator/pob_engine.py">
+      <signature>def _configure_lua_package_path(self) -> None</signature>
+      <description>Configure Lua package.path to find PoB modules. Sets lua_globals.package.path with paths to external/pob-engine/ directories. Called in _ensure_initialized() before loading HeadlessWrapper.lua. **UPDATE FOR ENVIRONMENT SHIM:** Must add xml module path for PoB's xml parser.</description>
+    </interface>
+    <interface name="PoBCalculationEngine._load_headless_wrapper" kind="method" path="src/calculator/pob_engine.py">
+      <signature>def _load_headless_wrapper(self) -> None</signature>
+      <description>Load HeadlessWrapper.lua via Lupa dofile(). Verifies file exists with os.path.exists(). Wraps lupa.LuaError with CalculationError. Logs success message. **UPDATE FOR ENVIRONMENT SHIM:** Must fix Launch.lua path (redirect dofile("Launch.lua") → dofile("src/Launch.lua")) and ensure manifest.xml handled gracefully.</description>
+    </interface>
+    <interface name="PoBCalculationEngine._load_pob_data_modules" kind="method" path="src/calculator/pob_engine.py">
+      <signature>def _load_pob_data_modules(self) -> None</signature>
+      <description>Load PassiveTree.lua and Misc.lua via Lupa dofile(). Called after _load_headless_wrapper(). Verifies data accessible from Lua globals. **NO CHANGES NEEDED for environment shim** - data modules already load successfully.</description>
+    </interface>
+    <interface name="PoBCalculationEngine._initialize_pob_context" kind="method" path="src/calculator/pob_engine.py">
+      <signature>def _initialize_pob_context(self) -> None</signature>
+      <description>Extract PoB passive tree data from Lua globals. Cache node count in self._passive_node_count. Validate node count >1000 for PoE 2. Log initialization success. **UPDATE FOR ENVIRONMENT SHIM:** Must verify HeadlessWrapper operational state (Launch.lua executed, event loop ready, modules loadable by HeadlessWrapper) - not just set variables. This is operational verification, not just data extraction.</description>
+    </interface>
+    <interface name="PoBCalculationEngine._register_stub_functions" kind="method" path="src/calculator/pob_engine.py">
+      <signature>def _register_stub_functions(self) -> None</signature>
+      <description>Register Python stub functions in Lua global namespace. Already implemented in Story 1.3. Referenced here as dependency. **MAY NEED UPDATE:** Add GetTime() stub if not already in HeadlessWrapper stubs (verify during environment shim implementation).</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      **Testing Framework:** pytest 7.4+ with @pytest.mark.slow decorator for all Story 1.4 tests (requires external dependency: PoB git submodule).
+
+      **Test Organization:** All tests in tests/integration/test_headlesswrapper_loading.py. No unit tests (Story 1.4 is entirely integration). Currently 10 tests created.
+
+      **Test Patterns:** Follow patterns from Story 1.2 (test_lupa_basic.py) and Story 1.3 (test_stub_functions.py). Use PoBCalculationEngine() instantiation, call _ensure_initialized(), verify no exceptions raised.
+
+      **Assertions:** File existence with os.path.exists(), no LuaError raised, passive tree data accessible from lua_globals, node count >1000 for PoE 2. **UPDATE NEEDED:** Add operational verification assertions (Launch.lua executed, modules loadable, environment ready).
+
+      **Fixtures:** No special fixtures required. Tests directly instantiate PoBCalculationEngine.
+
+      **Test Quality Gap (Post-Review):** Current tests validate superficial loading (dofile() succeeds) not operational state (environment functional). Must add tests for: Launch.lua initialization, HeadlessWrapper module loading capability, event loop accessibility, manifest handling.
+    </standards>
+    <locations>
+      - tests/integration/test_headlesswrapper_loading.py (NEW - primary deliverable, 10 tests, requires operational verification updates)
+      - tests/integration/test_lupa_basic.py (reference - Story 1.2)
+      - tests/integration/test_stub_functions.py (reference - Story 1.3)
+    </locations>
+    <ideas>
+      <test ac="1.4.1" name="test_headlesswrapper_file_exists">
+        Verify HeadlessWrapper.lua file exists at external/pob-engine/src/HeadlessWrapper.lua (actual path, not root) using os.path.exists(). Assert file exists with clear failure message. **STATUS:** Implemented, passing.
+      </test>
+      <test ac="1.4.2,1.4.5" name="test_load_headlesswrapper_no_errors">
+        Instantiate PoBCalculationEngine(), call _ensure_initialized(). Verify no lupa.LuaError raised during HeadlessWrapper.lua loading. Mark @pytest.mark.slow. **GAP:** Only verifies dofile() succeeds, not operational state. **UPDATE NEEDED:** Add assertions for Launch.lua executed, no environment errors.
+      </test>
+      <test ac="1.4.3" name="test_load_pob_data_modules">
+        After initialization, verify PassiveTree.lua and Misc.lua loaded. Check lua_globals for PassiveTreeData or passiveTree variable. Verify not None/nil. **STATUS:** Implemented, passing.
+      </test>
+      <test ac="1.4.4" name="test_pob_context_initialized">
+        Verify PoBCalculationEngine._passive_node_count is set after initialization. Assert self._passive_node_count is not None. **GAP:** Only verifies variable set, not HeadlessWrapper operational. **UPDATE NEEDED:** Verify Launch.lua executed, event loop ready.
+      </test>
+      <test ac="1.4.6" name="test_passive_tree_data_accessible">
+        Access passive tree data from lua_globals. Verify node count >1000 (PoE 2 expected size). Verify data structure (exact pattern depends on PoB implementation). **STATUS:** Placeholder (_passive_node_count=0), can defer to Story 1.7 if environment shim resolved.
+      </test>
+      <test ac="1.4.5" name="test_missing_headlesswrapper_raises_error">
+        Mock os.path.exists() to return False using unittest.mock.patch. Verify FileNotFoundError raised with message "HeadlessWrapper.lua not found at {path}. Run: git submodule update --init". **GAP:** Placeholder test with `assert True`. **TODO:** Implement mock-based test (15 min, backlog item).
+      </test>
+      <test ac="1.4.5" name="test_lua_syntax_error_wrapped">
+        Mock HeadlessWrapper.lua to have Lua syntax error. Verify lupa.LuaError caught and wrapped with CalculationError. Verify error message includes "Failed to load HeadlessWrapper.lua". **GAP:** Not implemented. **TODO:** Add negative test (20 min, backlog item).
+      </test>
+      <test ac="1.4.2,1.4.4" name="test_launch_lua_initialized" priority="HIGH">
+        **NEW TEST NEEDED FOR ENVIRONMENT SHIM:** Verify Launch.lua executed successfully after _ensure_initialized(). Check lua_globals for Launch.lua initialization markers (environment variables, module paths set, devMode flag). Verify no errors during Launch.lua execution.
+      </test>
+      <test ac="1.4.4" name="test_headlesswrapper_can_load_modules" priority="HIGH">
+        **NEW TEST NEEDED FOR ENVIRONMENT SHIM:** Verify HeadlessWrapper can load PoB calculation modules (not just data modules). Attempt to call HeadlessWrapper's LoadModule or PLoadModule function with a known PoB module. Verify module loads without error.
+      </test>
+      <test ac="1.4.4" name="test_manifest_handled" priority="HIGH">
+        **NEW TEST NEEDED FOR ENVIRONMENT SHIM:** Verify manifest.xml handling (either file present or devMode fallback active). Check lua_globals.devMode flag or manifest loading success. Ensure no errors related to missing manifest.
+      </test>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,226 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>7</storyId>
+    <title>Convergence Detection</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-7-convergence-detection.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to detect when optimization has converged</iWant>
+    <soThat>the algorithm stops when no further improvement is possible</soThat>
+    <tasks>
+- Task 1: Implement ConvergenceDetector class (AC: 2.7.1, 2.7.2, 2.7.3)
+  - Subtask 1.1: Create `src/optimizer/convergence.py` module
+  - Subtask 1.2: Define ConvergenceDetector class with `__init__(patience, min_improvement)` constructor
+  - Subtask 1.3: Implement `update(current_metric)` method to track improvement history
+  - Subtask 1.4: Implement patience counter logic (reset on improvement, increment on stagnation)
+  - Subtask 1.5: Implement diminishing returns check (improvement delta &lt; 0.1%)
+  - Subtask 1.6: Add internal state tracking: iterations_without_improvement, best_metric
+
+- Task 2: Implement convergence detection logic (AC: 2.7.1, 2.7.2)
+  - Subtask 2.1: Implement `has_converged()` method returning boolean
+  - Subtask 2.2: Check patience threshold (iterations_without_improvement &gt;= patience)
+  - Subtask 2.3: Check diminishing returns (delta &lt; min_improvement threshold)
+  - Subtask 2.4: Track convergence reason internally for reporting
+
+- Task 3: Implement convergence reason reporting (AC: 2.7.4)
+  - Subtask 3.1: Implement `get_convergence_reason()` method returning string
+  - Subtask 3.2: Return reason codes: "no_improvement", "diminishing_returns", "no_neighbors"
+  - Subtask 3.3: Format user-friendly messages: "Converged: no improvement for 3 iterations"
+
+- Task 4: Write unit tests for convergence detector (AC: all)
+  - Subtask 4.1: Create `tests/unit/optimizer/test_convergence.py`
+  - Subtask 4.2: Test patience counter logic (3 iterations without improvement triggers convergence)
+  - Subtask 4.3: Test diminishing returns detection (&lt;0.1% improvement triggers convergence)
+  - Subtask 4.4: Test improvement reset (patience counter resets when improvement found)
+  - Subtask 4.5: Test edge cases: first iteration, negative improvement, equal metric values
+  - Subtask 4.6: Test convergence reason strings match expected format
+  - Subtask 4.7: Achieve 80%+ line coverage for convergence.py module
+
+- Task 5: Integration with hill climbing loop (AC: 2.7.3, 2.7.4)
+  - Subtask 5.1: Verify ConvergenceDetector integrates with hill_climbing.py (Story 2.1 dependency)
+  - Subtask 5.2: Confirm max_iterations (600) properly enforced in main loop
+  - Subtask 5.3: Validate convergence reason logged to DEBUG level
+  - Subtask 5.4: Create integration test: run optimization until convergence, verify reason
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. **AC-2.7.1:** Stop when no neighbor improves metric for N consecutive iterations (N=3)
+2. **AC-2.7.2:** Stop when improvement delta &lt;0.1% (diminishing returns)
+3. **AC-2.7.3:** Stop when maximum iteration limit reached (600 iterations)
+4. **AC-2.7.4:** Log convergence reason: "Converged: no improvement for 3 iterations"
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Section 4.5 - Convergence Detector</section>
+        <snippet>Defines ConvergenceDetector class with patience counter logic, diminishing returns check, and convergence reason reporting. Pure logic module with zero external dependencies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Section 3.4 - Convergence Detection API</section>
+        <snippet>API contract: ConvergenceDetector class with __init__(patience=3, min_improvement=0.001), update(current_metric), has_converged(), and get_convergence_reason() methods.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Section 5.2 - Algorithm Flow Pseudocode</section>
+        <snippet>Main optimization loop: Initialize convergence detector with patience=3, call detector.update(current_metric) each iteration, check detector.has_converged() for termination, log detector.get_convergence_reason() on exit.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Traceability Mapping</section>
+        <snippet>AC-2.7.1: Patience counter logic (3 iterations). AC-2.7.2: Diminishing returns threshold (&lt;0.1%). AC-2.7.3: Max iterations enforced in hill_climbing.py. AC-2.7.4: Convergence reason strings.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/epic-2-optimizer-design.md</path>
+        <title>Epic 2 Architecture Design</title>
+        <section>Section 4.5 - Convergence Detector Component</section>
+        <snippet>Module: optimizer/convergence.py. Convergence conditions: No improvement (patience iterations), diminishing returns (&lt;0.1%), no valid neighbors. Tracks improvement history and reports convergence reason.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/epic-2-optimizer-design.md</path>
+        <title>Epic 2 Architecture Design</title>
+        <section>Section 5.1 - Algorithm Flow</section>
+        <snippet>Main loop step 6: Update convergence detector with current metric. Check convergence conditions: no improvement for N iterations, max iterations reached, timeout exceeded.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 2.7 - Convergence Detection</section>
+        <snippet>User story and acceptance criteria for convergence detection. Priority: Must-have (MVP blocking). Size: Medium (3 story points).</snippet>
+      </doc>
+      <doc>
+        <path>docs/testing-coverage.md</path>
+        <title>Test Coverage Guide</title>
+        <section>Coverage Goals - Epic 2</section>
+        <snippet>Target: 85%+ overall coverage for Epic 2. Focus on algorithm unit tests and performance tests. Maintain high coverage on critical paths including convergence logic.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/optimizer/hill_climbing.py</path>
+        <kind>module</kind>
+        <symbol>optimize_build</symbol>
+        <lines>41-276</lines>
+        <reason>Main optimization loop that will consume ConvergenceDetector. Shows integration pattern: initialize detector, call update() each iteration, check has_converged() for termination.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/metrics.py</path>
+        <kind>module</kind>
+        <symbol>calculate_metric</symbol>
+        <lines>N/A</lines>
+        <reason>Provides metric values (DPS, EHP, balanced) to convergence detector. Story 2.6 dependency - convergence detector receives metric values from this module.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/budget_tracker.py</path>
+        <kind>module</kind>
+        <symbol>BudgetTracker</symbol>
+        <lines>N/A</lines>
+        <reason>Related optimizer utility module. Example of pure logic module pattern with zero dependencies - same pattern convergence.py should follow.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/neighbor_generator.py</path>
+        <kind>module</kind>
+        <symbol>generate_neighbors</symbol>
+        <lines>N/A</lines>
+        <reason>Related to convergence condition: when neighbor generator returns empty list, this triggers "no_valid_neighbors" convergence in hill_climbing.py (not in detector).</reason>
+      </artifact>
+      <artifact>
+        <path>src/models/optimization_config.py</path>
+        <kind>model</kind>
+        <symbol>OptimizationConfiguration</symbol>
+        <lines>N/A</lines>
+        <reason>Defines convergence_patience parameter (default: 3) and max_iterations (default: 600) used to configure convergence detector.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="pytest" version="&gt;=7.4.0">Testing framework for unit tests</package>
+        <package name="pytest-cov" version="&gt;=4.1.0">Coverage reporting for 80%+ line coverage target</package>
+      </python>
+      <stdlib>
+        <note>Convergence detector uses only Python stdlib - no external dependencies required</note>
+      </stdlib>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Module Location: src/optimizer/convergence.py (new file to create)</constraint>
+    <constraint>Pure Logic Module: Zero external dependencies - Python stdlib only</constraint>
+    <constraint>Single Responsibility: Detect when optimization should terminate (conditions #1 and #2 only)</constraint>
+    <constraint>Stateful Design: Class maintains internal state tracking improvement history across iterations</constraint>
+    <constraint>No Epic 1 Dependencies: Module has zero imports from Epic 1 code</constraint>
+    <constraint>No Circular Dependencies: convergence.py must have zero dependencies on other optimizer modules</constraint>
+    <constraint>Convergence Scope: Detector handles "no improvement" and "diminishing returns" only. Max iterations, timeout, and no valid neighbors are checked in hill_climbing.py main loop.</constraint>
+    <constraint>Integration Pattern: Used by hill_climbing.py main loop - detector.update(metric) each iteration, detector.has_converged() for termination check</constraint>
+    <constraint>Coverage Target: 80%+ line coverage for convergence.py module</constraint>
+    <constraint>Test Framework: pytest with unit tests in tests/unit/optimizer/test_convergence.py</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ConvergenceDetector.__init__</name>
+      <kind>constructor</kind>
+      <signature>def __init__(self, patience: int = 3, min_improvement: float = 0.001)</signature>
+      <path>src/optimizer/convergence.py</path>
+      <description>Initialize convergence detector with patience (iterations without improvement) and min_improvement threshold (0.1% = 0.001)</description>
+    </interface>
+    <interface>
+      <name>ConvergenceDetector.update</name>
+      <kind>method</kind>
+      <signature>def update(self, current_metric: float) -&gt; None</signature>
+      <path>src/optimizer/convergence.py</path>
+      <description>Update detector with latest metric value. Tracks improvement history and updates internal counters (iterations_without_improvement, best_metric).</description>
+    </interface>
+    <interface>
+      <name>ConvergenceDetector.has_converged</name>
+      <kind>method</kind>
+      <signature>def has_converged(self) -&gt; bool</signature>
+      <path>src/optimizer/convergence.py</path>
+      <description>Check if optimization has converged. Returns True if patience exceeded or diminishing returns detected.</description>
+    </interface>
+    <interface>
+      <name>ConvergenceDetector.get_convergence_reason</name>
+      <kind>method</kind>
+      <signature>def get_convergence_reason(self) -&gt; str</signature>
+      <path>src/optimizer/convergence.py</path>
+      <description>Return convergence reason. Values: "no_improvement" | "diminishing_returns" | None (if not converged). Format user-friendly messages for logging.</description>
+    </interface>
+    <interface>
+      <name>hill_climbing.optimize_build</name>
+      <kind>integration-point</kind>
+      <signature>Integration pattern in main loop</signature>
+      <path>src/optimizer/hill_climbing.py</path>
+      <description>Main optimization loop initializes ConvergenceDetector, calls update(current_metric) each iteration, checks has_converged() for termination, logs get_convergence_reason() on exit.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use pytest testing framework (version 7.4.0+). Target 80%+ line coverage for convergence.py module using pytest-cov. Run tests with: pytest tests/unit/optimizer/test_convergence.py --cov=src/optimizer/convergence --cov-report=term-missing. Follow Epic 2 testing standards: unit tests for pure logic modules, mock-free tests (convergence.py has no external dependencies), focus on edge cases and error paths.</standards>
+    <locations>
+      <location>tests/unit/optimizer/test_convergence.py (new file to create)</location>
+      <location>tests/unit/optimizer/ (existing test directory for optimizer module tests)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-2.7.1">Test patience counter: 3 consecutive iterations without improvement triggers convergence. Test reset: improvement resets counter to 0. Test edge case: first iteration (no previous best metric).</idea>
+      <idea ac="AC-2.7.2">Test diminishing returns: improvement delta &lt; 0.1% (0.001) triggers convergence. Test boundary: exactly 0.1% improvement does NOT converge. Test above threshold: 0.2% improvement continues optimization.</idea>
+      <idea ac="AC-2.7.1, AC-2.7.2">Test convergence priority: if both conditions met simultaneously, verify which reason is reported. Test improvement reset: after 2 iterations without improvement, then improvement found, counter resets.</idea>
+      <idea ac="AC-2.7.4">Test convergence reason strings: verify "no_improvement" for patience exceeded, "diminishing_returns" for threshold breach, None before convergence. Test message format matches expected: "Converged: no improvement for 3 iterations".</idea>
+      <idea ac="all">Test edge cases: negative improvement (regression - should reset counter), equal metric values (no improvement), very large metric values (overflow protection), None/NaN metric values (defensive handling).</idea>
+      <idea ac="all">Test state management: verify best_metric properly tracked across updates, iterations_without_improvement increments correctly, convergence_reason correctly set when has_converged() returns True.</idea>
+      <idea ac="all">Achieve 80%+ line coverage: test all branches in update() method, test all return paths in has_converged(), test get_convergence_reason() in all states (converged vs not converged).</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,17 @@
+# PoE2 Build Optimizer - Production Dependencies
+# Epic 1: Foundation - PoB Calculation Engine Integration
+
+# XML parsing for PoB codes
+xmltodict==0.13.0
+
+# Python-LuaJIT bindings for PoB calculation engine integration
+# Embeds LuaJIT 2.1+ runtime to execute Path of Building's Lua calculation modules
+# Version 2.0+ required; 2.5 currently installed (backward compatible)
+lupa>=2.0
+
+# Testing framework
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-benchmark>=4.0.0
+pytest-xdist>=3.5.0  # Process isolation to handle LuaJIT Windows exceptions (Windows-compatible)
+psutil>=5.9.0

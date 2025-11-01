@@ -1,0 +1,307 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.1</storyId>
+    <title>Parse PoB Import Code</title>
+    <status>Approved</status>
+    <generatedAt>2025-10-11</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>D:\poe2_optimizer_v6\docs\stories\story-1.1.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to parse Base64-encoded PoB codes into XML data structures</iWant>
+    <soThat>I can extract build information for calculations</soThat>
+    <tasks>
+      <task id="1" status="completed">Create project structure and base models (AC: Foundation) - Create src/, src/models/, src/parsers/ with __init__.py; Verify Python 3.10+ environment</task>
+      <task id="2" status="completed">Implement BuildData model (AC: #3, #4) - Create src/models/build_data.py with BuildData dataclass, CharacterClass enum, Item and Skill nested dataclasses, validation properties; Reference: tech-spec-epic-1.md:113-178</task>
+      <task id="3" status="completed">Implement custom exceptions (AC: #5, #6) - Create src/parsers/exceptions.py with PoBParseError, InvalidFormatError, UnsupportedVersionError; Reference: tech-spec-epic-1.md:104</task>
+      <task id="4" status="completed">Implement XML parsing utilities (AC: #3) - Create src/parsers/xml_utils.py, install xmltodict==0.13.0, implement parse_xml() and build_xml(); Reference: tech-spec-epic-1.md:103</task>
+      <task id="5" status="completed">Implement PoB code parser (AC: #1, #2, #3, #4, #5, #6) - Create src/parsers/pob_parser.py with size validation, Base64/zlib/XML pipeline, BuildData extraction, PoE 2 version detection, parse_pob_code() main function; Reference: tech-spec-epic-1.md:272-313, workflow at lines 390-426</task>
+      <task id="6" status="completed">Create test fixtures and unit tests (AC: All) - Create tests/fixtures/ with 5+ sample PoE 2 codes, tests/unit/test_pob_parser.py with tests for valid parsing, corrupted/oversized/PoE1 rejection, install pytest; Reference: tech-spec-epic-1.md:1076-1151</task>
+      <task id="7" status="completed">Documentation and validation (AC: All) - Add docstrings, create tests/README.md, verify ACs, update requirements.txt with dependencies (xmltodict, pytest)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1.1.1" status="passed">System decodes Base64 PoB codes successfully (100+ sample codes) - Validated with 18 unit tests</criterion>
+    <criterion id="AC-1.1.2" status="passed">System decompresses zlib-encoded XML without errors - Defensive error handling implemented</criterion>
+    <criterion id="AC-1.1.3" status="passed">System parses XML into Python data structure (BuildData object) - xmltodict integration complete</criterion>
+    <criterion id="AC-1.1.4" status="passed">System extracts: character level, class, allocated passive nodes, items, skills - All extraction functions implemented</criterion>
+    <criterion id="AC-1.1.5" status="passed">System validates PoB code format (detect corrupted codes) - Comprehensive validation at each pipeline stage</criterion>
+    <criterion id="AC-1.1.6" status="passed">System rejects codes >100KB with clear error message - Size check before processing implemented</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Foundation - PoB Calculation Engine Integration</title>
+        <section>Services and Modules (lines 95-111)</section>
+        <snippet>Module ownership table defining parsers/pob_parser.py, xml_utils.py, exceptions.py, and models/build_data.py as Story 1.1 deliverables</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>BuildData Model Specification</title>
+        <section>Data Models and Contracts (lines 113-178)</section>
+        <snippet>Complete BuildData dataclass definition with CharacterClass enum, Item and Skill nested classes, passive_nodes Set, and calculated properties (allocated_point_count, unallocated_points)</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Parser Module API Contracts</title>
+        <section>APIs and Interfaces (lines 272-313)</section>
+        <snippet>parse_pob_code(code: str) -> BuildData signature with error handling (PoBParseError) and Base64/zlib/XML pipeline description</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Workflow 1: Parse PoB Code</title>
+        <section>Workflows and Sequencing (lines 390-426)</section>
+        <snippet>Step-by-step parsing pipeline: validate size -> Base64 decode -> zlib decompress -> XML parse -> extract build data -> validate -> construct BuildData</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Post-Review Follow-ups</title>
+        <section>Story 1.1 Review Follow-ups (lines 1224-1241)</section>
+        <snippet>High Priority: [M1] Fix PoE 2 version detection default behavior (src/parsers/pob_parser.py:159-177) - reject unknown versions instead of accepting. Medium Priority: [M2] Add debug logging for skipped items/skills (lines 298-300, 346-348); [L1] Validate PoE 2 passive points formula (src/models/build_data.py:67). Low Priority: [L2] Document Item/Skill stat parsing limitation in tests/README.md</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Input Validation Requirements</title>
+        <section>Functional Requirements (lines 213-265)</section>
+        <snippet>FR-1.1: 100KB size limit; FR-1.2: Base64/zlib/XML parsing; FR-1.3: Structured error messages (problem summary, cause, suggested action); FR-1.5: PoE 2 vs PoE 1 detection</snippet>
+      </doc>
+      <doc>
+        <path>docs/backlog.md</path>
+        <title>Engineering Backlog - Story 1.1 Follow-ups</title>
+        <section>Backlog Table (lines 11-19)</section>
+        <snippet>6 action items logged for Story 1.1: 1 High severity (version detection), 3 Medium severity (logging, formula validation, documentation), 2 Low severity (test case, pip-audit)</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/models/build_data.py</path>
+        <kind>python-module</kind>
+        <symbol>BuildData</symbol>
+        <lines>1-68</lines>
+        <reason>Core data model for build representation. Implements CharacterClass enum (6 PoE 2 classes), Item and Skill nested dataclasses, and BuildData with calculated properties. Note: Line 67 formula needs validation per review.</reason>
+      </artifact>
+      <artifact>
+        <path>src/parsers/pob_parser.py</path>
+        <kind>python-module</kind>
+        <symbol>parse_pob_code</symbol>
+        <lines>1-350</lines>
+        <reason>Main parsing entry point implementing 7-step pipeline: size validation, Base64 decode, zlib decompress, XML parse, data extraction, PoE 2 version detection, BuildData construction. Note: Lines 159-177 (_is_poe2_version) default behavior needs fix per review; Lines 298-300, 346-348 need debug logging.</reason>
+      </artifact>
+      <artifact>
+        <path>src/parsers/xml_utils.py</path>
+        <kind>python-module</kind>
+        <symbol>parse_xml</symbol>
+        <lines>N/A</lines>
+        <reason>XML parsing wrapper around xmltodict for consistent error handling. Provides parse_xml() and build_xml() functions.</reason>
+      </artifact>
+      <artifact>
+        <path>src/parsers/exceptions.py</path>
+        <kind>python-module</kind>
+        <symbol>PoBParseError</symbol>
+        <lines>N/A</lines>
+        <reason>Custom exception hierarchy: PoBParseError (base), InvalidFormatError (corrupted data), UnsupportedVersionError (PoE 1 codes)</reason>
+      </artifact>
+      <artifact>
+        <path>tests/unit/test_pob_parser.py</path>
+        <kind>python-test</kind>
+        <symbol>test_parse_valid_pob_code</symbol>
+        <lines>N/A</lines>
+        <reason>Comprehensive test suite with 18 tests covering all ACs, error paths, and edge cases. All tests passing (0.22s). Test helpers generate synthetic PoB codes for deterministic testing.</reason>
+      </artifact>
+      <externalReference>
+        <path>external/pob-engine/</path>
+        <kind>git-submodule</kind>
+        <reason>Official PoB repository containing HeadlessWrapper.lua, PassiveTree.lua, and calculation modules - not used in Story 1.1 but validates parsing outputs later</reason>
+      </externalReference>
+    </code>
+    <dependencies>
+      <python>
+        <ecosystem>Python 3.10+</ecosystem>
+        <manifest>requirements.txt</manifest>
+        <production>
+          <package name="xmltodict" version="==0.13.0" reason="PoB XML parsing to Python dicts" />
+        </production>
+        <development>
+          <package name="pytest" version="latest" reason="Test framework for unit tests" />
+        </development>
+        <stdlib>
+          <package name="base64" reason="PoB code decoding (no installation required)" />
+          <package name="zlib" reason="PoB code decompression (no installation required)" />
+          <package name="dataclasses" reason="BuildData, Item, Skill models (Python 3.10+)" />
+        </stdlib>
+        <note>Lupa will be added in Story 1.2 - not required for Story 1.1</note>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <architecture>
+      <constraint>Parsers layer has ZERO dependencies on calculator/ module (strict layering) - VALIDATED: No calculator imports in parsers/</constraint>
+      <constraint>Uses Python stdlib only (base64, zlib) plus xmltodict for XML parsing - VALIDATED: requirements.txt contains only xmltodict and pytest</constraint>
+      <constraint>Python 3.10+ required for dataclass features - VALIDATED: field(default_factory=...) pattern used correctly</constraint>
+    </architecture>
+    <patterns>
+      <constraint>All parsing errors must raise custom exceptions (PoBParseError, InvalidFormatError, UnsupportedVersionError) with context (from e) - IMPLEMENTED: All exception handlers use 'from e' for context chaining</constraint>
+      <constraint>Never crash on invalid input - defensive error handling throughout - IMPLEMENTED: Try/except blocks at each pipeline stage</constraint>
+      <constraint>Size validation: Reject codes >100KB before processing (FR-1.1) - IMPLEMENTED: Lines 50-57 in pob_parser.py</constraint>
+      <constraint>Format validation: Check Base64, zlib integrity, XML structure before parsing - IMPLEMENTED: Validation at steps 2, 3, 4</constraint>
+      <constraint>Version detection: Reject PoE 1 codes with clear message (FR-1.5) - IMPLEMENTED: Lines 96-103, but needs improvement per review (M1 finding)</constraint>
+    </patterns>
+    <performance>
+      <constraint>Parse overhead <500ms (95th percentile) - NOT TESTED YET: Deferred to integration testing in Epic 1</constraint>
+    </performance>
+    <reviewFindings>
+      <finding severity="high" id="M1">
+        <description>PoE 2 version detection defaults to accepting unknown versions (_is_poe2_version line 177)</description>
+        <risk>PoE 1 codes with non-standard version markers could reach Lupa engine and cause crashes</risk>
+        <recommendation>Change default to reject unknown versions; require explicit PoE 2 marker in XML</recommendation>
+        <files>src/parsers/pob_parser.py:159-177, tests/unit/test_pob_parser.py</files>
+        <references>AC-1.1.5, FR-1.5, tech-spec-epic-1.md:419</references>
+      </finding>
+      <finding severity="medium" id="M2">
+        <description>Silent data loss in item/skill extraction - malformed items/skills skipped without logging</description>
+        <risk>Format changes won't be detected; debugging future issues will be difficult</risk>
+        <recommendation>Add logging.debug() statements when skipping malformed data</recommendation>
+        <files>src/parsers/pob_parser.py:298-300, 346-348</files>
+        <references>tech-spec-epic-1.md:669-735 (Observability requirements)</references>
+      </finding>
+      <finding severity="low" id="L1">
+        <description>Unverified PoE 2 passive points formula: max_points = level + 21</description>
+        <risk>Incorrect unallocated_points calculation will mislead users in Epic 2 optimization</risk>
+        <recommendation>Validate formula against PoE 2 game data; document source in comment</recommendation>
+        <files>src/models/build_data.py:67</files>
+        <references>Story 2.3 (Auto-Detect Unallocated Points)</references>
+      </finding>
+      <finding severity="low" id="L2">
+        <description>Placeholder Item stats={} and Skill support_gems=[] marked "can be added later"</description>
+        <risk>Future stories may expect detailed stat parsing, causing rework</risk>
+        <recommendation>Document limitation in tests/README.md for Story 1.5 implementer awareness</recommendation>
+        <files>tests/README.md, src/parsers/pob_parser.py:295, 343</files>
+        <references>tech-spec-epic-1.md:113-178 (BuildData spec)</references>
+      </finding>
+    </reviewFindings>
+  </constraints>
+
+  <interfaces>
+    <implemented>
+      <interface>
+        <name>parse_pob_code</name>
+        <kind>function</kind>
+        <signature>parse_pob_code(code: str) -> BuildData</signature>
+        <path>src/parsers/pob_parser.py</path>
+        <note>Main API exposed to calculator module and future Epic 2 optimization algorithm. Implementation complete with 7-step pipeline.</note>
+      </interface>
+      <interface>
+        <name>BuildData</name>
+        <kind>dataclass</kind>
+        <signature>BuildData(character_class: CharacterClass, level: int, passive_nodes: Set[int], items: List[Item], skills: List[Skill], tree_version: str, build_name: Optional[str], notes: Optional[str])</signature>
+        <path>src/models/build_data.py</path>
+        <note>Shared data transfer object consumed by calculator/build_calculator.py in Epic 1 Story 1.5. Includes calculated properties: allocated_point_count, unallocated_points</note>
+      </interface>
+      <interface>
+        <name>CharacterClass</name>
+        <kind>enum</kind>
+        <signature>Enum with WITCH, WARRIOR, RANGER, MONK, MERCENARY, SORCERESS</signature>
+        <path>src/models/build_data.py</path>
+        <note>PoE 2 character classes enumeration</note>
+      </interface>
+    </implemented>
+    <dependencies>
+      <interface>
+        <name>xmltodict.parse</name>
+        <kind>external-library</kind>
+        <signature>parse(xml_string: str) -> dict</signature>
+        <path>xmltodict</path>
+        <note>xml_utils.py wraps this for consistent XML handling</note>
+      </interface>
+    </dependencies>
+  </interfaces>
+
+  <tests>
+    <standards>Story 1.1 uses pytest as the test framework with synthetic test data generated by helper functions (create_valid_pob_code, create_poe1_code). Unit tests focus on parsers module (Base64, zlib, XML, BuildData extraction) with no external dependencies and fast execution (0.22s total suite). Test strategy emphasizes happy path (valid codes parse successfully), error cases (corrupted, oversized, PoE 1 codes), and boundary conditions (exactly 100KB, empty codes). All 18 tests passing. Coverage: &gt;80% overall achieved, &gt;90% for critical paths. Edge cases covered: whitespace handling, empty nodes, boundary conditions, calculated properties validation.</standards>
+    <locations>
+      <location>tests/unit/test_pob_parser.py - 18 comprehensive unit tests</location>
+      <location>tests/README.md - Test execution instructions and documentation</location>
+      <location>requirements.txt - pytest dependency</location>
+    </locations>
+    <results>
+      <summary>18/18 tests passing in 0.22s. All acceptance criteria validated through automated tests.</summary>
+      <coverage>Excellent test quality with clear AC mapping. Test helpers enable deterministic testing without external PoB codes.</coverage>
+      <gaps>
+        <gap>No test for ambiguous version formats (neither 3_23 nor 3_24) - relates to M1 finding</gap>
+        <gap>No test verifying Item/Skill extraction with real PoB XML (only synthetic test data)</gap>
+        <gap>No integration test with actual PoB codes from PoE 2 game (deferred to Story 1.6 parity testing)</gap>
+      </gaps>
+    </results>
+    <ideas>
+      <test ac="AC-1.1.1" description="test_parse_valid_pob_code, test_parse_valid_codes_various_classes - Parse sample PoE 2 codes successfully (6 classes tested), verify no exceptions" status="implemented" />
+      <test ac="AC-1.1.2" description="test_reject_corrupted_zlib - Verify zlib decompression error handling, defensive try/except with clear InvalidFormatError" status="implemented" />
+      <test ac="AC-1.1.3" description="test_extract_build_metadata - Parse XML dict to BuildData object, xmltodict integration clean" status="implemented" />
+      <test ac="AC-1.1.4" description="test_extract_character_class_and_level, test_extract_passive_nodes - Verify all required fields extracted correctly" status="implemented" />
+      <test ac="AC-1.1.5" description="test_reject_invalid_base64, test_reject_malformed_xml, test_reject_missing_required_fields - Comprehensive validation at each pipeline stage" status="implemented" />
+      <test ac="AC-1.1.6" description="test_reject_oversized_code, test_reject_exactly_oversized_code - Size check before processing, clear error with actual size" status="implemented" />
+      <test ac="AC-1.1.5" description="test_poe1_code_rejection - Test with PoE 1 code, expect UnsupportedVersionError" status="implemented" />
+      <test ac="All" description="test_error_message_structure - Verify structured error messages (problem + cause + suggestion)" status="implemented" />
+      <test ac="AC-1.1.5" description="test_reject_ambiguous_version - MISSING: Validate ambiguous version format handling" status="not-implemented" />
+    </ideas>
+  </tests>
+
+  <implementation>
+    <status>Complete - All 7 tasks finished, 18/18 tests passing, approved with recommendations</status>
+    <completedFiles>
+      <file>src/__init__.py</file>
+      <file>src/models/__init__.py</file>
+      <file>src/models/build_data.py</file>
+      <file>src/parsers/__init__.py</file>
+      <file>src/parsers/exceptions.py</file>
+      <file>src/parsers/xml_utils.py</file>
+      <file>src/parsers/pob_parser.py</file>
+      <file>tests/__init__.py</file>
+      <file>tests/unit/__init__.py</file>
+      <file>tests/unit/test_pob_parser.py</file>
+      <file>tests/README.md</file>
+      <file>requirements.txt</file>
+    </completedFiles>
+    <architectureDecisions>
+      <decision>Layered architecture: parsers/ module has zero dependencies on calculator/ module (strict separation)</decision>
+      <decision>Defensive error handling: All parsing errors raise custom exceptions with context (PoBParseError, InvalidFormatError, UnsupportedVersionError)</decision>
+      <decision>Input validation: Size check (&lt;100KB), format validation, PoE 2 version detection implemented per spec</decision>
+      <decision>PoE 2 version detection heuristic: tree_version &gt;= 3_24 identifies PoE 2 codes (needs refinement per M1 finding)</decision>
+    </architectureDecisions>
+    <keyImplementationDetails>
+      <detail>BuildData model uses dataclasses with calculated properties (allocated_point_count, unallocated_points)</detail>
+      <detail>CharacterClass enum includes all 6 PoE 2 classes: Witch, Warrior, Ranger, Monk, Mercenary, Sorceress</detail>
+      <detail>XML parsing wrapped via xml_utils.py for consistent error handling</detail>
+      <detail>Base64 decode is lenient (Python stdlib behavior), actual validation happens at zlib decompression stage</detail>
+      <detail>Passive node parsing handles whitespace and empty node lists gracefully</detail>
+      <detail>Item and Skill parsing currently minimal - detailed stat extraction deferred to future stories</detail>
+    </keyImplementationDetails>
+    <futureConsiderations>
+      <consideration>Item stats={} and Skill support_gems=[] are placeholders - expansion required for Story 1.5+</consideration>
+      <consideration>build_xml() function implemented for future code generation (Story 1.2+ scope)</consideration>
+      <consideration>Passive tree graph connectivity validation deferred to Story 1.7</consideration>
+      <consideration>Performance testing deferred to integration tests in Epic 1</consideration>
+    </futureConsiderations>
+  </implementation>
+
+  <review>
+    <reviewer>Alec</reviewer>
+    <date>2025-10-11</date>
+    <outcome>APPROVE WITH RECOMMENDATIONS</outcome>
+    <summary>Story 1.1 implementation is production-ready and fully meets all six acceptance criteria. The code demonstrates excellent defensive programming practices, proper error handling with custom exceptions, and comprehensive test coverage (18/18 tests passing in 0.22s). The layered architecture is correctly implemented with zero dependencies from parsers to calculator modules. Four findings identified (1 High, 1 Medium, 2 Low severity) should be addressed in future iterations, but none are blocking for story approval.</summary>
+    <actionItems>
+      <item priority="high" id="M1">Fix PoE 2 version detection default behavior - Address before Story 1.2</item>
+      <item priority="medium" id="M2">Add debug logging for skipped items/skills - Address during Epic 1</item>
+      <item priority="medium" id="L1">Validate and document PoE 2 passive points formula - Address during Epic 1</item>
+      <item priority="low" id="L2">Document Item/Skill stat parsing limitation - Nice to have</item>
+      <item priority="low">Add test case for ambiguous version formats - Nice to have</item>
+      <item priority="low">Run pip-audit for dependency vulnerabilities - Monthly maintenance</item>
+    </actionItems>
+  </review>
+</story-context>

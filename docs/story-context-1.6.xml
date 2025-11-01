@@ -1,0 +1,325 @@
+<story-context id="story-1.6-context" v="2.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.6</storyId>
+    <title>Validate Calculation Accuracy (Parity Testing)</title>
+    <status>InProgress (TRUE GUI Parity Testing - Discrepancies Found)</status>
+    <generatedAt>2025-10-21</generatedAt>
+    <generator>BMAD Story Context Workflow v2</generator>
+    <sourceStoryPath>d:\poe2_optimizer_v6\docs\stories\story-1.6.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to verify calculations match PoB GUI results</iWant>
+    <soThat>I can trust optimization recommendations</soThat>
+    <tasks>
+1. ✅ Create Test Build Collection (AC-1.6.1)
+   - 14 real builds from official PoB GUI v0.12.2
+   - All 7 character classes (including Huntress)
+   - Level ranges: 1, 30, 60, 75, 90, 100
+
+2. ✅ Record PoB GUI Baseline Stats (AC-1.6.1, AC-1.6.3)
+   - TRUE baseline stats extracted from PoB XML exports
+   - Stored in gui_baseline_stats.json
+   - Stats calculated BY official PoB, not our engine
+
+3. ✅ Implement Automated Parity Test Suite (AC-1.6.2, AC-1.6.3, AC-1.6.6)
+   - test_gui_parity.py with 37 test cases
+   - Independent validation (no circular testing)
+
+4. ❌ Validate 0.1% Tolerance for All Stats (AC-1.6.4) - BLOCKER
+   - FAILING: Errors exceed tolerance by 10,000×+
+   - Must fix calculation engine discrepancies
+
+5. 🔄 Document Discrepancies and Root Cause Analysis (AC-1.6.5) - IN PROGRESS
+   - Discrepancies documented in story-1.6-next-steps.md
+   - Root cause investigation needed
+
+6. ✅ Create Continuous Parity Monitoring (AC-1.6.6)
+   - Test infrastructure complete with @pytest.mark.gui_parity
+
+**CRITICAL BLOCKERS:**
+- DPS Calculation: 4.2 (ours) vs 0.183 (PoB GUI) - 2192% error
+- Life Calculation: 56 (ours) vs 65 (PoB GUI) - 13.8% error
+- Mana Calculation: 98 (ours) vs 67 (PoB GUI) - 46.3% error
+- Example: Witch Level 1, no passive nodes allocated
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+AC-1.6.1: Create 10 test builds with known PoB GUI results
+  - Status: ✅ COMPLETED (14 real builds, exceeds requirement)
+  - Evidence: tests/fixtures/parity_builds/*.xml
+  - Builds created in official PoB GUI v0.12.2, exported as XML
+
+AC-1.6.2: Calculate each build using headless engine
+  - Status: ✅ COMPLETED
+  - Evidence: test_gui_parity.py uses calculate_build_stats()
+  - All builds successfully calculated (but with incorrect results)
+
+AC-1.6.3: Compare results to PoB GUI: DPS, Life, EHP, resistances
+  - Status: ❌ FAILING - Significant discrepancies found
+  - Evidence: pytest tests/integration/test_gui_parity.py shows failures
+  - Comparison infrastructure working, but results don't match
+
+AC-1.6.4: All results within 0.1% tolerance (per NFR-1)
+  - Status: ❌ BLOCKING - Errors exceed tolerance by 10,000×+
+  - Must fix integrated PoB engine calculation errors
+  - Cannot proceed until calculations match PoB GUI
+
+AC-1.6.5: Document any discrepancies and root cause
+  - Status: 🔄 IN PROGRESS
+  - Discrepancies documented in story-1.6-next-steps.md
+  - Root cause investigation in progress
+  - Need to fix: character base stats, DPS formulas, stat scaling
+
+AC-1.6.6: Create automated parity test suite
+  - Status: ✅ COMPLETED
+  - Evidence: tests/integration/test_gui_parity.py (37 tests)
+  - Pytest marker @pytest.mark.gui_parity registered
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Epic 1 - Foundation</title>
+        <section>Story 1.6: Validate Calculation Accuracy (Parity Testing)</section>
+        <snippet>Lines 947-976: Defines 6 acceptance criteria requiring 0.1% tolerance validation against PoB GUI. NFR-1: Calculations must complete in &lt;100ms with ±0.1% accuracy.</snippet>
+        <reason>Primary requirements source for tolerance thresholds and performance requirements</reason>
+      </doc>
+      <doc>
+        <path>docs/stories/story-1.5.md</path>
+        <title>Story 1.5: Execute Single Build Calculation</title>
+        <section>Completion Notes and Implementation Details</section>
+        <snippet>Lines 810-860: Real PoB calculations verified after 29 iterations of dependency resolution. Test pattern: must verify stats != fallback formulas. Windows LuaJIT cleanup exception is benign.</snippet>
+        <reason>Foundation for Story 1.6; establishes baseline calculation capability and test patterns</reason>
+      </doc>
+      <doc>
+        <path>docs/stories/story-1.7.md</path>
+        <title>Story 1.7: Load and Query Passive Tree Data</title>
+        <section>PassiveTree Integration</section>
+        <snippet>PassiveTree data required for accurate passive node stat calculations. Must be integrated with calculation engine.</snippet>
+        <reason>Passive tree data may be needed to fix calculation discrepancies</reason>
+      </doc>
+      <doc>
+        <path>docs/stories/story-1.6.md</path>
+        <title>Story 1.6: Validate Calculation Accuracy (Parity Testing)</title>
+        <section>CURRENT STATUS &amp; NEXT STEPS - Investigation Starting Points and Debugging Strategy</section>
+        <snippet>Lines 82-134: Files to examine (MinimalCalc.lua, pob_engine.py, build_07_witch_01.xml, Global.lua), debugging strategy (verify base stats, compare to PoB XML, check level scaling, investigate DPS). 14 real PoB builds table with build IDs and levels.</snippet>
+        <reason>Comprehensive investigation guidance for fixing calculation discrepancies; includes quick start commands, problem summary, and debugging steps</reason>
+      </doc>
+      <doc>
+        <path>docs/architecture/pob-engine-dependencies.md</path>
+        <title>PoB Engine Dependencies and Integration Architecture</title>
+        <section>Known Limitations and Future Work</section>
+        <snippet>Lines 701-711: Items/equipment use PoB defaults, skills/gems use defaults, configuration flags use PoB defaults. These are acceptable for passive-tree-only optimization (Epic 1 scope).</snippet>
+        <reason>Documents known limitations; however, current discrepancies are in BASE STATS which should work even without items/skills</reason>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/calculator/MinimalCalc.lua</path>
+        <kind>lua-module</kind>
+        <symbol>Calculate</symbol>
+        <lines>1-500</lines>
+        <reason>PRIMARY INVESTIGATION TARGET - Our PoB engine bootstrap. Check character base stats setup, verify data.characterConstants matches PoE 2, compare to official PoB source.</reason>
+      </artifact>
+      <artifact>
+        <path>src/calculator/pob_engine.py</path>
+        <kind>module</kind>
+        <symbol>PoBEngine.calculate</symbol>
+        <lines>253</lines>
+        <reason>Python to Lua interface. Verify build data is passed correctly to Lua, check result extraction logic, ensure character class and level are passed.</reason>
+      </artifact>
+      <artifact>
+        <path>src/parsers/pob_parser.py</path>
+        <kind>module</kind>
+        <symbol>parse_pob_code</symbol>
+        <lines>93, 148-179, 178</lines>
+        <reason>Updated for PoE 2 format support. Supports &lt;PathOfBuilding2&gt; root element, version 0_X for Early Access, extracts targetVersion correctly. Parser is WORKING.</reason>
+      </artifact>
+      <artifact>
+        <path>src/models/build_data.py</path>
+        <kind>dataclass</kind>
+        <symbol>BuildData, CharacterClass</symbol>
+        <lines>16</lines>
+        <reason>Added HUNTRESS character class. Model is WORKING. Check if all character classes have proper base stats defined.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/fixtures/parity_builds/build_07_witch_01.xml</path>
+        <kind>test-fixture</kind>
+        <symbol>PlayerStat</symbol>
+        <lines>N/A</lines>
+        <reason>Known failing build (simplest case - Witch L1). Compare PlayerStat values in XML (PoB GUI truth) to our calculated values. Use this to debug base stat discrepancies.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/fixtures/parity_builds/gui_baseline_stats.json</path>
+        <kind>test-data</kind>
+        <symbol>build_07_witch_01</symbol>
+        <lines>N/A</lines>
+        <reason>TRUE PoB GUI baselines extracted from XML. Reference for expected values: Life=65, Mana=67, TotalDPS=0.183</reason>
+      </artifact>
+      <artifact>
+        <path>tests/integration/test_gui_parity.py</path>
+        <kind>test</kind>
+        <symbol>TestGUIParityBasic.test_gui_parity_build</symbol>
+        <lines>37 test cases</lines>
+        <reason>TRUE GUI parity test suite. Run to verify fixes: pytest tests/integration/test_gui_parity.py -v</reason>
+      </artifact>
+      <artifact>
+        <path>external/pob-engine/src/Modules/CalcDefence.lua</path>
+        <kind>lua-module</kind>
+        <symbol>CalcDefence</symbol>
+        <lines>N/A</lines>
+        <reason>Official PoB source for Life/ES/Mana calculations. Reference for correct formulas and character base stats.</reason>
+      </artifact>
+      <artifact>
+        <path>external/pob-engine/src/Modules/CalcOffence.lua</path>
+        <kind>lua-module</kind>
+        <symbol>CalcOffence</symbol>
+        <lines>N/A</lines>
+        <reason>Official PoB source for DPS calculations. Reference for correct default attack DPS formulas.</reason>
+      </artifact>
+      <artifact>
+        <path>external/pob-engine/src/Data/Global.lua</path>
+        <kind>lua-data</kind>
+        <symbol>characterConstants</symbol>
+        <lines>N/A</lines>
+        <reason>May contain character base stats constants. Check if this defines Witch/Warrior/etc base Life/Mana/DPS values.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <python>
+        <package name="pytest" version=">=7.4.0" purpose="Test framework for parametrized parity tests" />
+        <package name="pytest-cov" version=">=4.1.0" purpose="Test coverage reporting" />
+        <package name="lupa" version=">=2.0" purpose="Python-LuaJIT bindings for PoB calculation engine integration" />
+        <package name="xmltodict" version="0.13.0" purpose="PoB XML parsing for build fixtures" />
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="tolerance" status="FAILING">
+All stat comparisons must pass 0.1% relative tolerance: abs(actual - expected) &lt;= abs(expected * 0.001).
+CURRENT STATUS: Failing with errors 10,000× over tolerance limit.
+Example: DPS error is 2192% (should be ≤0.1%)
+    </constraint>
+    <constraint type="testing" status="OK">
+Tests must detect fake data by verifying stats != fallback formulas (e.g., life != 100 + (level-1)*12).
+Fake data detection is WORKING - engine produces real calculations, not hardcoded values.
+Issue is that calculations are INCORRECT, not fake.
+    </constraint>
+    <constraint type="data-quality" status="OK">
+PoB GUI baseline stats recorded with precision from official PoB application v0.12.2.
+Baselines are AUTHENTIC and INDEPENDENT (extracted from PoB XML exports).
+No circular testing - comparing our engine to official PoB.
+    </constraint>
+    <constraint type="parser" status="FIXED">
+Parser must support PoE 2 format: &lt;PathOfBuilding2&gt; root element, version 0_X.
+Parser updated and WORKING (src/parsers/pob_parser.py:93, 148-179, 178).
+Huntress character class added to CharacterClass enum.
+    </constraint>
+    <constraint type="architecture" status="OK">
+Story 1.6 implementation is read-only on production modules.
+All changes are test infrastructure only (tests/*, docs/*).
+Parser changes were necessary for PoE 2 compatibility (acceptable).
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>calculate_build_stats</name>
+      <kind>function</kind>
+      <signature>calculate_build_stats(build: BuildData) -> BuildStats</signature>
+      <path>src/calculator/build_calculator.py</path>
+      <usage>Primary API under test. Calls pob_engine.calculate() which executes MinimalCalc.lua</usage>
+      <currentIssue>Produces incorrect results for DPS, Life, Mana. Must be debugged.</currentIssue>
+    </interface>
+    <interface>
+      <name>PoBEngine.calculate</name>
+      <kind>method</kind>
+      <signature>calculate(self, build: BuildData) -> Dict[str, Any]</signature>
+      <path>src/calculator/pob_engine.py:253</path>
+      <usage>Python to Lua bridge. Converts BuildData to Lua table, calls MinimalCalc.lua Calculate(), extracts results</usage>
+      <currentIssue>Verify character class, level, and base stats are passed correctly to Lua</currentIssue>
+    </interface>
+    <interface>
+      <name>parse_pob_code</name>
+      <kind>function</kind>
+      <signature>parse_pob_code(code: str) -> BuildData</signature>
+      <path>src/parsers/pob_parser.py</path>
+      <usage>Load PoB builds from test fixtures. WORKING correctly for PoE 2 format.</usage>
+      <currentIssue>No issues - parser is working correctly</currentIssue>
+    </interface>
+    <interface>
+      <name>MinimalCalc.lua:Calculate</name>
+      <kind>lua-function</kind>
+      <signature>Calculate(buildTable) -> statsTable</signature>
+      <path>src/calculator/MinimalCalc.lua</path>
+      <usage>Core calculation engine. Bootstraps PoB calculation modules and executes calcs.perform()</usage>
+      <currentIssue>PRIMARY SUSPECT - likely missing character base stats or incorrect constants for PoE 2</currentIssue>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+pytest framework with parametrized tests (@pytest.mark.parametrize).
+Integration tests in tests/integration/.
+Fixtures in tests/fixtures/parity_builds/.
+Test isolation (TRUE GUI parity tests independent of synthetic baseline tests).
+Markers for selective runs (@pytest.mark.gui_parity).
+Performance requirement: &lt;30s total suite execution (currently meeting this).
+TRUE GUI validation: baselines from official PoB application, not self-generated.
+    </standards>
+    <locations>
+      <location>tests/integration/test_gui_parity.py - TRUE GUI parity test suite (37 tests)</location>
+      <location>tests/fixtures/parity_builds/*.xml - 14 real PoB builds exported from GUI</location>
+      <location>tests/fixtures/parity_builds/gui_baseline_stats.json - TRUE PoB GUI baselines</location>
+      <location>tests/fixtures/parity_builds/process_gui_builds.py - Baseline extraction script</location>
+      <location>docs/stories/story-1.6.md - Main story with investigation guidance in CURRENT STATUS &amp; NEXT STEPS section</location>
+    </locations>
+    <ideas>
+      <idea ac="1,2,3,4" status="FAILING">test_gui_parity_build[build_07_witch_01] - Simplest failing case. Witch L1, no passives. Must fix FIRST before testing other builds.</idea>
+      <idea ac="4" status="NEEDED">Investigate MinimalCalc.lua character base stats - Compare our data.characterConstants.Witch to official PoB source. Likely missing or incorrect values for PoE 2.</idea>
+      <idea ac="4" status="NEEDED">Debug DPS calculation - Default attack DPS should be ~0.18 for L1 character, not 4.2. Check weapon defaults, attack speed, damage formulas.</idea>
+      <idea ac="4" status="NEEDED">Debug Life calculation - Witch L1 should have 65 Life (per PoB GUI), not 56. Check base life constant and level scaling formula.</idea>
+      <idea ac="4" status="NEEDED">Debug Mana calculation - Witch L1 should have 67 Mana (per PoB GUI), not 98. Check base mana constant and level scaling formula.</idea>
+      <idea ac="5" status="IN_PROGRESS">Compare build_07_witch_01.xml PlayerStat values to our BuildStats - Extract TRUE values from PoB XML: &lt;PlayerStat stat="Life" value="65"/&gt;, compare to our calculated stats.life=56</idea>
+      <idea ac="4" status="NEEDED">Check if PoE 2 uses different base stats than PoE 1 - Official PoB might have PoE 2 specific constants that we're missing. Verify PoB version compatibility.</idea>
+    </ideas>
+  </tests>
+
+  <investigation>
+    <title>Root Cause Investigation - Calculation Discrepancies</title>
+    <primaryQuestion>Why does our integrated PoB engine produce different results than official PoB GUI?</primaryQuestion>
+
+    <potentialCauses>
+      <cause priority="HIGH">Missing character base stats in MinimalCalc.lua for PoE 2 characters</cause>
+      <cause priority="HIGH">Incorrect character class constants (base Life, Mana, attributes)</cause>
+      <cause priority="MEDIUM">Wrong default weapon stats for unarmed/default attack</cause>
+      <cause priority="MEDIUM">PoE 2 vs PoE 1 formula differences not accounted for</cause>
+      <cause priority="LOW">Character class-specific stat scaling formulas missing</cause>
+    </potentialCauses>
+
+    <debuggingStrategy>
+      <step n="1">Start with simplest failing case: Witch Level 1, no passive nodes</step>
+      <step n="2">Extract TRUE values from build_07_witch_01.xml PlayerStat elements</step>
+      <step n="3">Compare to our calculated BuildStats values</step>
+      <step n="4">Examine MinimalCalc.lua character base stats setup</step>
+      <step n="5">Compare our constants to official PoB source (external/pob-engine/src/)</step>
+      <step n="6">Add logging to pob_engine.py:253 to inspect Lua input/output</step>
+      <step n="7">Fix base stats, rerun test, verify Witch L1 passes</step>
+      <step n="8">Run full suite to check if fix applies to all builds</step>
+    </debuggingStrategy>
+
+    <successCriteria>
+      <criterion>All 14 builds pass with ≤0.1% error on all stats</criterion>
+      <criterion>No test crashes or exceptions</criterion>
+      <criterion>Tests run cleanly: pytest tests/integration/test_gui_parity.py -v → 37 passed</criterion>
+    </successCriteria>
+  </investigation>
+</story-context>

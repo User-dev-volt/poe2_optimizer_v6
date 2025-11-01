@@ -1,0 +1,202 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>3</storyId>
+    <title>Auto-Detect Unallocated Passive Points</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-28</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-3-auto-detect-unallocated-passive-points.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to automatically calculate unallocated passive points from PoB build</iWant>
+    <soThat>users don't have to manually enter this value</soThat>
+    <tasks>
+- Task 1: Implement passive points formula for PoE 2 (AC: #1)
+  - Subtask 1.1: Research and validate PoE 2 passive points formula (level + 23 validated in prep sprint)
+  - Subtask 1.2: Create `get_max_passive_points(character_level: int) -> int` function
+  - Subtask 1.3: Unit test with various character levels (1, 50, 90, 100)
+
+- Task 2: Implement allocated points counting (AC: #2)
+  - Subtask 2.1: Add `count_allocated_nodes()` method to BuildData or utility function
+  - Subtask 2.2: Count nodes in `passive_nodes` Set
+  - Subtask 2.3: Unit test with sample builds (varying node counts)
+
+- Task 3: Calculate unallocated points with edge case handling (AC: #3, #5)
+  - Subtask 3.1: Implement `calculate_unallocated_points(build: BuildData) -> int` function
+  - Subtask 3.2: Handle negative results (ensure max(0, ...))
+  - Subtask 3.3: Document edge cases: quest rewards (+5), special nodes (travel nodes don't count), ascendancy points (separate budget)
+  - Subtask 3.4: Unit test edge cases
+
+- Task 4: Add unallocated_points property to BuildData model (AC: #1, #2, #3)
+  - Subtask 4.1: Add computed property `unallocated_points` to BuildData dataclass
+  - Subtask 4.2: Integration test with real PoB codes from test corpus
+
+- Task 5: Testing and validation (All ACs)
+  - Subtask 5.1: Validate formula with 10+ test cases from prep sprint
+  - Subtask 5.2: Test with PoB codes from test corpus (verify accuracy)
+  - Subtask 5.3: Document ~90% accuracy assumption and user override rationale
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+AC-2.3.1: Calculate `max_points = get_max_passive_points(character_level)` using the PoE 2 formula
+AC-2.3.2: Calculate `allocated_points = count_allocated_nodes(passive_tree)` from the build's passive node set
+AC-2.3.3: Calculate `unallocated_points = max(0, max_points - allocated_points)`
+AC-2.3.4: Display auto-detected value in UI (user can override if wrong)
+AC-2.3.5: Handle edge cases: quest rewards, special nodes, ascendancy points
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/tech-spec-epic-2.md" title="Epic Technical Specification: Core Optimization Engine">
+        <section name="Acceptance Criteria (Authoritative) - Story 2.3">
+          AC-2.3.1: Calculate max_points = get_max_passive_points(character_level)
+          AC-2.3.2: Calculate allocated_points = count_allocated_nodes(passive_tree)
+          AC-2.3.3: Calculate unallocated_points = max(0, max_points - allocated_points)
+          AC-2.3.4: Display auto-detected value in UI (user can override if wrong)
+          AC-2.3.5: Handle edge cases: quest rewards, special nodes, ascendancy points
+        </section>
+        <section name="Data Models and Contracts - BuildData">
+          BuildData dataclass contains passive_nodes (Set[int]), character_level, class_name.
+          Formula: max_points = level + 23 (PoE 2 formula). Story 2.3 adds unallocated_points property.
+        </section>
+      </doc>
+      <doc path="docs/validation/passive-points-formula-validation.md" title="PoE 2 Passive Points Formula Validation">
+        <section name="Validation Results">
+          Formula VALIDATED: level + 23
+          Breakdown: (level - 1) from leveling + 24 from quests
+          Total at Level 100: 123 passive skill points
+          Test coverage: 10 tests PASSED including edge cases
+        </section>
+        <section name="Known Edge Cases">
+          1. Formula assumes all quests completed (reasonable for endgame PoB exports)
+          2. Pathfinder Ascendancy bonus: +6 additional passive points (excluded from base formula, manual override)
+          3. Cruel difficulty: Out of MVP scope
+        </section>
+      </doc>
+      <doc path="docs/epics.md" title="Epic Breakdown - Story 2.3">
+        <section name="Story 2.3: Auto-Detect Unallocated Passive Points">
+          Priority: Must-have (MVP blocking)
+          Size: Small (2 story points)
+          PoE 2 formula: Level 1 starts with N points, +1 per level, +quests
+          Reference: FR-2.2 (Budget Constraint - Unallocated Points)
+        </section>
+      </doc>
+      <doc path="docs/architecture/epic-2-optimizer-design.md" title="Epic 2 Architecture - Budget State">
+        <section name="3.3 Budget State">
+          BudgetState dataclass tracks unallocated_available (initial unallocated points)
+          Story 2.3 provides auto-detection that populates this value
+          Used by: Budget Tracker (Story 2.4), Neighbor Generator (Story 2.2)
+        </section>
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document">
+        <section name="FR-2.2 Budget Constraint - Dual Input">
+          Users can specify budget constraints for optimization:
+          - Unallocated passive points (free allocations)
+          - Respec points available (costly deallocations)
+          Story 2.3 auto-detects unallocated points from build data
+        </section>
+      </doc>
+    </docs>
+    <code>
+      <artifact path="src/models/build_data.py" kind="model" symbol="BuildData" lines="40-77" reason="CRITICAL: Story 2.3 is ALREADY IMPLEMENTED. BuildData has allocated_point_count property (lines 61-64) and unallocated_points property (lines 67-77) with formula (level + 23). No implementation work needed - validation only."/>
+      <artifact path="src/models/build_data.py" kind="model" symbol="CharacterClass" lines="8-16" reason="Enum defining 7 PoE 2 character classes used in BuildData.character_class field"/>
+      <artifact path="src/models/optimization_config.py" kind="model" symbol="OptimizationConfiguration" lines="10-113" reason="Configuration model for optimization runs. Field: unallocated_points (int) populated from BuildData.unallocated_points. Story 2.3 provides the auto-detection."/>
+      <artifact path="src/calculator/passive_tree.py" kind="service" symbol="PassiveTreeGraph" lines="64-100" reason="Passive tree graph with connectivity validation. Methods: get_neighbors(), is_connected() for validating allocated nodes form connected tree."/>
+      <artifact path="tests/validation/test_passive_points_formula.py" kind="test" symbol="TestPassivePointsFormula" lines="20-122" reason="COMPREHENSIVE TEST SUITE ALREADY EXISTS. 10 tests covering all ACs: level 1, level 100, level 85, allocated nodes, fully allocated, over-allocated, formula breakdown, class consistency, edge cases. All tests PASSING."/>
+    </code>
+    <dependencies>
+      <python version="3.12.11" minimum="3.10+">Python runtime - Type hints, dataclasses, match statements</python>
+      <production>
+        <package name="xmltodict" version="0.13.0">XML parsing for PoB codes</package>
+        <package name="lupa" version=">=2.0">Python-LuaJIT bindings for PoB calculation engine</package>
+      </production>
+      <testing>
+        <package name="pytest" version=">=7.4.0">Test framework</package>
+        <package name="pytest-cov" version=">=4.1.0">Coverage reporting</package>
+        <package name="pytest-benchmark" version=">=4.0.0">Performance benchmarking</package>
+        <package name="pytest-xdist" version=">=3.5.0">Parallel test execution</package>
+        <package name="psutil" version=">=5.9.0">Memory usage monitoring</package>
+      </testing>
+      <external>
+        <submodule path="external/pob-engine" status="present">Path of Building PoE2 engine (Git submodule) - Passive tree data and calculation engine</submodule>
+      </external>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+1. IMPLEMENTATION ALREADY EXISTS: Story 2.3 functionality is complete from Epic 1 work
+2. Formula validated: level + 23 confirmed accurate for PoE 2 (see docs/validation/passive-points-formula-validation.md)
+3. Test coverage: 10 comprehensive tests already passing
+4. Edge cases documented: Quest completion assumption, Pathfinder bonus, Cruel difficulty
+5. Immutability: BuildData is immutable dataclass - use properties, not methods
+6. Type safety: All fields properly type-hinted (int, Set[int], etc.)
+7. AC-2.3.4 (UI override): Deferred to Epic 3 - this story focuses on calculation only
+8. Manual override capability needed in UI (future epic) for edge cases
+  </constraints>
+
+  <interfaces>
+    <interface name="BuildData.unallocated_points" kind="property" signature="@property unallocated_points(self) -> int" path="src/models/build_data.py:67-77">
+      Property that calculates unallocated points using formula: max(0, (level + 23) - len(passive_nodes))
+      Implementation ALREADY EXISTS - dev should verify this matches Story 2.3 ACs, no new code needed
+    </interface>
+    <interface name="BuildData.allocated_point_count" kind="property" signature="@property allocated_point_count(self) -> int" path="src/models/build_data.py:61-64">
+      Property that returns number of allocated passive points: len(self.passive_nodes)
+      Used by unallocated_points calculation
+    </interface>
+    <interface name="OptimizationConfiguration.unallocated_points" kind="field" signature="unallocated_points: int" path="src/models/optimization_config.py:54">
+      Field for budget constraint (free passive point allocations)
+      Populated from BuildData.unallocated_points in optimization workflow
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Framework: pytest >=7.4.0 with pytest-cov for coverage reporting
+      Target Coverage: 80%+ line coverage for new code (Epic 2 standard)
+      Test Organization: tests/unit/ for unit tests, tests/validation/ for formula validation, tests/integration/ for integration tests
+      Patterns: Test discovery via test_*.py files, Test* classes, test_* functions
+      Type Safety: All production code uses type hints (validated via mypy in PRD NFR-5)
+      Story 2.3 Note: Implementation ALREADY EXISTS - tests validate existing code, not new implementation
+    </standards>
+    <locations>
+      tests/validation/test_passive_points_formula.py - Comprehensive formula validation (10 tests PASSING)
+      tests/unit/ - Unit tests for individual functions/classes
+      tests/integration/ - Integration tests with PoB engine
+      pytest.ini - Test configuration and coverage settings
+    </locations>
+    <ideas>
+      AC-2.3.1: Validate get_max_passive_points formula
+        - Test: test_level_1_character() - EXISTING ✅
+        - Test: test_level_100_character() - EXISTING ✅
+        - Test: test_typical_endgame_level_85() - EXISTING ✅
+        - Test: test_formula_breakdown_level_50() - EXISTING ✅
+
+      AC-2.3.2: Validate allocated_points counting
+        - Test: test_with_allocated_nodes() - EXISTING ✅
+        - Test: BuildData.allocated_point_count property validation
+
+      AC-2.3.3: Validate unallocated_points calculation
+        - Test: test_fully_allocated_build() - EXISTING ✅
+        - Test: test_over_allocated_build() - EXISTING ✅ (defensive max(0, ...) clamping)
+
+      AC-2.3.4: UI display with user override
+        - Deferred to Epic 3 (UI implementation)
+        - Story 2.3 focuses on calculation only
+
+      AC-2.3.5: Edge case handling
+        - Test: test_formula_assumes_all_quests_completed() - EXISTING ✅
+        - Test: test_ascendancy_bonus_points_not_included() - EXISTING ✅
+        - Test: test_formula_consistency_across_classes() - EXISTING ✅
+
+      CRITICAL: All tests already exist and pass. Dev agent should:
+        1. Run existing tests to verify they still pass
+        2. Review test coverage for BuildData.unallocated_points property
+        3. Add any missing edge case tests if gaps found
+        4. Update story documentation with test results
+    </ideas>
+  </tests>
+</story-context>

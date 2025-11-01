@@ -1,0 +1,15 @@
+Collecting pytest-forked
+  Downloading pytest_forked-1.6.0-py3-none-any.whl.metadata (3.5 kB)
+Collecting py (from pytest-forked)
+  Downloading py-1.11.0-py2.py3-none-any.whl.metadata (2.8 kB)
+Requirement already satisfied: pytest>=3.10 in g:\miniconda3\lib\site-packages (from pytest-forked) (8.4.2)
+Requirement already satisfied: colorama>=0.4 in g:\miniconda3\lib\site-packages (from pytest>=3.10->pytest-forked) (0.4.6)
+Requirement already satisfied: iniconfig>=1 in g:\miniconda3\lib\site-packages (from pytest>=3.10->pytest-forked) (2.1.0)
+Requirement already satisfied: packaging>=20 in g:\miniconda3\lib\site-packages (from pytest>=3.10->pytest-forked) (24.2)
+Requirement already satisfied: pluggy<2,>=1.5 in g:\miniconda3\lib\site-packages (from pytest>=3.10->pytest-forked) (1.5.0)
+Requirement already satisfied: pygments>=2.7.2 in g:\miniconda3\lib\site-packages (from pytest>=3.10->pytest-forked) (2.19.1)
+Downloading pytest_forked-1.6.0-py3-none-any.whl (4.9 kB)
+Downloading py-1.11.0-py2.py3-none-any.whl (98 kB)
+Installing collected packages: py, pytest-forked
+
+Successfully installed py-1.11.0 pytest-forked-1.6.0

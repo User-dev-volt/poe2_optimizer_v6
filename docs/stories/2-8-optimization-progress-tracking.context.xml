@@ -1,0 +1,227 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>8</storyId>
+    <title>Optimization Progress Tracking</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-31</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-8-optimization-progress-tracking.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to track and report optimization progress during execution</iWant>
+    <soThat>users can see real-time updates about iteration count, best results, and budget usage</soThat>
+    <tasks>
+- Task 1: Implement ProgressTracker class (AC: #2.8.1, #2.8.2, #2.8.3, #2.8.4)
+  - Create src/optimizer/progress.py module
+  - Define ProgressTracker class with state tracking
+  - Implement iteration counter tracking
+  - Implement best metric tracking
+  - Implement improvement percentage calculation: (best - baseline) / baseline * 100
+  - Implement budget state tracking (unallocated_used, respec_used)
+  - Add time elapsed tracking using time.time()
+
+- Task 2: Implement progress callback interface (AC: #2.8.5)
+  - Define progress_callback function signature
+  - Parameters: iteration, best_metric, improvement_pct, budget_used, time_elapsed
+  - Accept optional callback in ProgressTracker.__init__()
+  - Implement callback invocation with proper parameter passing
+  - Handle None callback gracefully (no-op when not provided)
+
+- Task 3: Implement reporting frequency control (AC: #2.8.6)
+  - Implement should_report() method checking modulo 100
+  - Report on iterations: 100, 200, 300, etc.
+  - Always report on first iteration (iteration 1)
+  - Always report on final iteration (optimization complete)
+
+- Task 4: Integrate with hill climbing algorithm
+  - Initialize ProgressTracker in optimize_build() with callback parameter
+  - Calculate baseline metric before optimization loop
+  - Update ProgressTracker state on each iteration
+  - Invoke progress callback every 100 iterations
+  - Pass final progress update when optimization completes
+
+- Task 5: Unit testing (Testing Strategy - Unit Tests)
+  - Test ProgressTracker initialization
+  - Test iteration counter increments correctly
+  - Test best metric tracking (update when better value found)
+  - Test improvement percentage calculation with fixtures
+  - Test budget state tracking accuracy
+  - Test callback invocation frequency (every 100 iterations)
+  - Test callback parameter passing correctness
+  - Test None callback handling (no crash)
+
+- Task 6: Integration testing (Testing Strategy - Integration)
+  - Test progress tracking in full optimization run
+  - Verify callback invoked with real hill climbing data
+  - Verify time elapsed increases across iterations
+  - Verify budget usage reflects actual optimization state
+
+- Task 7: Console logging implementation (Open Question Q5 Resolution)
+  - Add basic console output for progress updates
+  - Format: "Iteration 300: +12.3% improvement, Budget: 8/15 U, 2/12 R, Elapsed: 45s"
+  - Enable for development visibility
+  - Use Python logging module at INFO level
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. AC-2.8.1: Track current iteration number throughout optimization process
+2. AC-2.8.2: Track best metric value found so far at each iteration
+3. AC-2.8.3: Track current improvement percentage versus baseline
+4. AC-2.8.4: Track budget usage (unallocated points used, respec points used)
+5. AC-2.8.5: Provide progress callback mechanism for UI updates
+6. AC-2.8.6: Report progress every 100 iterations (per FR-5.2 consistency)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Optimization Engine</title>
+        <section>Section 3.5 - Progress Tracking API</section>
+        <snippet>Defines ProgressTracker class structure with callback interface for real-time UI updates. Callback invoked every 100 iterations with iteration count, best metric, improvement percentage, budget usage, and elapsed time.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Optimization Engine</title>
+        <section>Section 3.7 - Performance Budget per Iteration</section>
+        <snippet>Progress tracking overhead: ~0.01ms per update. Target: optimization completes within 5 minutes (600 max iterations × 425ms/iteration = 255 seconds worst case).</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Optimization Engine</title>
+        <section>Section 12 - Test Strategy</section>
+        <snippet>Unit test coverage for ProgressTracker: initialization, iteration tracking, best metric tracking, improvement percentage calculation, callback invocation frequency (every 100 iterations), callback parameter passing, None callback handling.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>poe2_optimizer_v6 Product Requirements Document</title>
+        <section>FR-4.4 - Real-time progress reporting</section>
+        <snippet>System shall report optimization progress in real-time including iteration count, best result found, and estimated time remaining for UI feedback during long-running optimizations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>poe2_optimizer_v6 Product Requirements Document</title>
+        <section>FR-5.2 - Progress message consistency</section>
+        <snippet>Progress messages shall be reported at consistent intervals (every 100 iterations) to avoid UI performance degradation from excessive updates.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>poe2_optimizer_v6 - Epic Breakdown</title>
+        <section>Epic 2: Core Optimization Engine - Story 2.8</section>
+        <snippet>Story 2.8: Optimization Progress Tracking - Track iteration count, best metric, improvement percentage, and budget usage. Provide progress callback mechanism for UI updates every 100 iterations.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/optimizer/budget_tracker.py</path>
+        <kind>module</kind>
+        <symbol>BudgetState</symbol>
+        <lines>42-188</lines>
+        <reason>BudgetState dataclass provides budget tracking interface that ProgressTracker needs for callback data. Contains unallocated_available, unallocated_used, respec_available, respec_used fields.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/budget_tracker.py</path>
+        <kind>module</kind>
+        <symbol>create_budget_progress_data</symbol>
+        <lines>412-458</lines>
+        <reason>Helper function that creates budget data structure for progress callbacks. Shows pattern for formatting budget information for UI consumption.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/hill_climbing.py</path>
+        <kind>module</kind>
+        <symbol>optimize_build</symbol>
+        <lines>42-287</lines>
+        <reason>Main optimization entry point where ProgressTracker will be integrated. Current placeholder callback at lines 239-244 shows where progress updates should be invoked.</reason>
+      </artifact>
+      <artifact>
+        <path>src/models/optimization_config.py</path>
+        <kind>module</kind>
+        <symbol>OptimizationConfiguration</symbol>
+        <lines>N/A</lines>
+        <reason>Contains progress_callback field that ProgressTracker will use. Configuration object passed to optimize_build().</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="pytest" version=">=7.4.0">Testing framework</package>
+        <package name="pytest-cov" version=">=4.1.0">Code coverage measurement</package>
+        <package name="pytest-benchmark" version=">=4.0.0">Performance benchmarking</package>
+        <package name="time" version="stdlib">Time tracking for elapsed time calculation</package>
+        <package name="typing" version="stdlib">Type hints (Callable, Optional)</package>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Pure Python stdlib implementation (no external dependencies beyond time and typing)
+- Zero coupling to Epic 1 modules (calculator, models) - only BudgetState import for type hints
+- Module isolation: Pure utility module (state tracking + callback)
+- Thread-safe not required (single-threaded optimization per session)
+- Stateless between optimization runs (new instance per optimization)
+- Performance overhead: ~0.01ms per update (negligible vs 425ms/iteration budget)
+- Memory usage: &lt;1KB per ProgressTracker instance (no historical data accumulation)
+- Callback invoked synchronously (no queue buildup or async complexity)
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>ProgressTracker.__init__</name>
+      <kind>class constructor</kind>
+      <signature>def __init__(self, callback: Optional[Callable] = None)</signature>
+      <path>src/optimizer/progress.py</path>
+    </interface>
+    <interface>
+      <name>ProgressTracker.set_baseline</name>
+      <kind>method</kind>
+      <signature>def set_baseline(self, baseline_metric: float) -&gt; None</signature>
+      <path>src/optimizer/progress.py</path>
+    </interface>
+    <interface>
+      <name>ProgressTracker.update</name>
+      <kind>method</kind>
+      <signature>def update(self, iteration: int, best_metric: float, budget: BudgetState) -&gt; None</signature>
+      <path>src/optimizer/progress.py</path>
+    </interface>
+    <interface>
+      <name>ProgressTracker.should_report</name>
+      <kind>method</kind>
+      <signature>def should_report(self) -&gt; bool</signature>
+      <path>src/optimizer/progress.py</path>
+    </interface>
+    <interface>
+      <name>progress_callback</name>
+      <kind>callback function signature</kind>
+      <signature>def progress_callback(iteration: int, best_metric: float, improvement_pct: float, budget_used: dict, time_elapsed: float) -&gt; None</signature>
+      <path>Epic 3 UI will implement this interface</path>
+    </interface>
+    <interface>
+      <name>BudgetState</name>
+      <kind>dataclass</kind>
+      <signature>@dataclass BudgetState(unallocated_available: int, unallocated_used: int, respec_available: Optional[int], respec_used: int)</signature>
+      <path>src/optimizer/budget_tracker.py:42-188</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+Project uses pytest framework (>=7.4.0) with pytest-cov for coverage measurement and pytest-benchmark for performance testing. Tests organized by type: unit tests in tests/unit/optimizer/, integration tests in tests/integration/optimizer/. Test pattern: test_*.py files with test_* functions. Assertions use pytest patterns. Fixtures defined in conftest.py or inline using @pytest.fixture decorator.
+    </standards>
+    <locations>
+tests/unit/optimizer/test_progress.py (to be created)
+tests/integration/optimizer/test_progress_integration.py (to be created)
+    </locations>
+    <ideas>
+- AC-2.8.1: Unit test iteration tracking - verify counter increments correctly across multiple updates
+- AC-2.8.2: Unit test best metric tracking - verify best value updates only when improvement found, not on worse values
+- AC-2.8.3: Unit test improvement calculation - fixture-based validation of (best-baseline)/baseline * 100 formula, test edge cases (baseline=0, negative improvement)
+- AC-2.8.4: Unit test budget state tracking - verify budget dict contains all required keys with correct values from BudgetState
+- AC-2.8.5: Unit test callback invocation - verify callback called with correct parameter values, verify None callback doesn't crash
+- AC-2.8.6: Unit test reporting frequency - verify should_report() returns True at iterations 1, 100, 200, 300 and False at 50, 150, 250
+- Integration test: Full optimization run with mock callback to verify progress updates occur at expected intervals
+- Integration test: Verify time_elapsed increases monotonically across progress updates
+- Integration test: Verify budget_used dict matches actual BudgetTracker state during optimization
+    </ideas>
+  </tests>
+</story-context>

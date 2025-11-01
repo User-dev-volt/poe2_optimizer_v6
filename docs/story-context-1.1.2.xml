@@ -1,0 +1,244 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.2</storyId>
+    <title>Setup Lupa + LuaJIT Runtime</title>
+    <status>Approved</status>
+    <generatedAt>2025-10-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>d:\poe2_optimizer_v6\docs\stories\story-1.2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to embed LuaJIT in Python using Lupa</iWant>
+    <soThat>I can execute PoB's Lua calculation engine</soThat>
+    <tasks>
+- Task 1: Install and verify Lupa library (AC: #1)
+  - Add lupa==2.0 to requirements.txt with comment explaining LuaJIT integration purpose
+  - Install Lupa in development environment (`pip install lupa==2.0`)
+  - Verify installation with basic import test: `python -c "import lupa; print('Lupa OK')"`
+  - Document any platform-specific installation notes (Windows, macOS, Linux) in README.md
+  - Verify LuaJIT version bundled with Lupa (expected: LuaJIT 2.1+)
+
+- Task 2: Create calculator module foundation (AC: #2)
+  - Create src/calculator/ directory with __init__.py
+  - Create src/calculator/pob_engine.py with module docstring
+  - Add placeholder PoBCalculationEngine class (implementation in Stories 1.3-1.5)
+  - Document calculator module responsibility: Python-Lua bridge for PoB calculations
+
+- Task 3: Create comprehensive Lupa integration tests (AC: #2, #3, #4, #5)
+  - Create tests/integration/ directory with __init__.py
+  - Create tests/integration/test_lupa_basic.py
+  - Test 1: LuaRuntime initialization (AC-1.2.2)
+  - Test 2: Execute simple Lua expression (AC-1.2.3)
+  - Test 3: Access Lua global namespace (AC-1.2.4)
+  - Test 4: Call Lua function from Python (AC-1.2.5)
+  - Test 5: Complex Lua function with multiple return values
+  - Mark tests with @pytest.mark.slow (external dependency, slower execution)
+
+- Task 4: Test Python-Lua data type conversions (AC: #4, #5)
+  - Test: Python dict → Lua table conversion
+  - Test: Python list → Lua array conversion
+  - Test: Python int/float → Lua number conversion
+  - Test: Python string → Lua string conversion (including Unicode)
+  - Test: Lua table → Python dict conversion (return values)
+  - Test: nil handling (Lua nil → Python None)
+
+- Task 5: Performance baseline measurement (AC: #3)
+  - Create test: test_lua_performance_baseline measuring 1000 function calls
+  - Measure first-call compilation overhead (expected: ~200ms for Lua function compilation)
+  - Measure subsequent calls (expected: <1ms each after JIT compilation)
+  - Calculate mean, P95, P99 latencies
+  - Document baseline performance numbers for comparison in Story 1.8
+
+- Task 6: Error handling exploration (AC: #3)
+  - Test: Invalid Lua syntax raises LuaError
+  - Test: Python exception in Lua callback handling (if applicable)
+  - Document LuaError exception types for future error handling
+
+- Task 7: Documentation and validation (AC: All)
+  - Add Lupa installation instructions to README.md (platform-specific notes)
+  - Document LuaJIT version bundled with Lupa (verify in tests)
+  - Create tests/integration/README.md explaining integration test strategy
+  - Update requirements.txt with lupa==2.0 and inline comment
+  - Verify all 5 acceptance criteria pass via test execution
+  - Document any platform-specific issues encountered</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Lupa library installed and tested (`pip install lupa==2.0`)
+2. LuaJIT runtime initializes successfully in Python
+3. Can load and execute simple Lua scripts from Python
+4. Lua global namespace accessible from Python
+5. Python can call Lua functions and retrieve results
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Tech Spec Epic 1</title>
+        <section>Story 1.2: Setup Lupa + LuaJIT Runtime</section>
+        <snippet>Lines 876-885: AC-1.2.1-1.2.5 define the acceptance criteria for Lupa installation, LuaJIT runtime initialization, Lua script execution, global namespace access, and Python-Lua function calls. Test Method: Integration test (tests/integration/test_lupa_basic.py)</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Tech Spec Epic 1</title>
+        <section>Calculator Module API</section>
+        <snippet>Lines 354-386: PoBCalculationEngine class encapsulates Lupa/LuaJIT runtime with HeadlessWrapper.lua. Thread-local storage pattern: one instance per thread. get_pob_engine() returns thread-local PoBCalculationEngine instance for current thread with isolated state.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Tech Spec Epic 1</title>
+        <section>Dependencies</section>
+        <snippet>Lines 742-748: Lupa==2.0 required for Python-LuaJIT bindings for PoB engine integration. Lines 845-852: Python 3.10+ required (Lupa compatibility). Lupa 2.0 is pinned version for stability.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/solution-architecture.md</path>
+        <title>Solution Architecture</title>
+        <section>Calculator Component Architecture</section>
+        <snippet>Lines 714-741: Calculator component bridges Python and Lua (PoB calculation engine). PoBCalculationEngine uses thread-local singleton pattern (one engine per thread). Rationale: Lua state is not thread-safe. Python→Lua: Call loadBuildFromXML(xml_string) via Lupa. Performance: LuaJIT compilation (first call slower, subsequent calls fast).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/solution-architecture.md</path>
+        <title>Solution Architecture</title>
+        <section>Layered Architecture</section>
+        <snippet>Lines 642-674: Integration Layer (calculator/) sits between parsers/ (data layer) and optimizer/ (business logic). Calculator depends on parsers/, provides API to optimizer/. Strict layering enforced.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-3.1: Lupa + HeadlessWrapper Integration</section>
+        <snippet>Lines 393-398: System SHALL embed LuaJIT runtime via Lupa library in Python backend. System SHALL implement required stub functions (Deflate/Inflate using Python zlib, ConPrintf, etc.). Acceptance Criteria: PoB calculation engine loads without errors; stub functions prevent GUI dependencies.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-3.3: Batch Calculation Performance</section>
+        <snippet>Lines 405-426: System SHALL achieve 1000 calculations in &lt;1 second (target: 150-500ms). System SHALL reuse compiled Lua functions for batch operations (compile once, call 1000x). System SHALL limit memory footprint to &lt;100MB per optimization session.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Tech Spec Epic 1</title>
+        <section>Performance Requirements</section>
+        <snippet>Lines 516-554: NFR-1 Performance targets: Single calculation &lt;100ms. Batch: 1000 calculations &lt;1s (150-500ms). Story 1.2 establishes baseline. Story 1.8 optimizes to meet targets.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Tech Spec Epic 1</title>
+        <section>Error Handling Strategy</section>
+        <snippet>Lines 611-648: Calculation Errors (calculator/ module): Catch lupa.LuaError, implement 5-second timeout per calculation. Log technical details, raise user-friendly exception. Story 1.2 focuses on successful execution paths. Robust error handling added incrementally in Stories 1.3-1.5.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/models/build_data.py</path>
+        <kind>class</kind>
+        <symbol>BuildData</symbol>
+        <lines>39-75</lines>
+        <reason>BuildData model will be used in Story 1.5 to pass build configuration to calculator. Understanding the structure is essential for designing the calculator API.</reason>
+      </artifact>
+      <artifact>
+        <path>src/parsers/pob_parser.py</path>
+        <kind>module</kind>
+        <symbol>parse_pob_code</symbol>
+        <lines>N/A</lines>
+        <reason>Completed in Story 1.1. Parser provides BuildData objects that will feed into calculator in Story 1.5. Calculator module depends on parsers/ module (layered architecture).</reason>
+      </artifact>
+      <artifact>
+        <path>tests/unit/test_pob_parser.py</path>
+        <kind>test</kind>
+        <symbol>test_*</symbol>
+        <lines>N/A</lines>
+        <reason>Story 1.1 established testing patterns: comprehensive docstrings, type hints, pytest framework, 19/19 tests passing. Story 1.2 should follow same quality standards for integration tests.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="lupa" version="2.0" ecosystem="pip">Python-LuaJIT bindings for PoB engine integration</package>
+        <package name="pytest" version="&gt;=7.4.0" ecosystem="pip">Testing framework (already installed from Story 1.1)</package>
+        <package name="xmltodict" version="0.13.0" ecosystem="pip">PoB XML parsing (already installed from Story 1.1)</package>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="scope">Story 1.2 establishes Lupa integration foundation only. Do NOT attempt to load HeadlessWrapper.lua in this story (deferred to Story 1.4). Focus: Prove Lupa works with simple inline Lua scripts.</constraint>
+    <constraint type="architecture">calculator/ module is the Integration Layer, positioned between parsers/ (data layer) and optimizer/ (business logic). Strict layering: calculator/ depends on parsers/, but parsers/ has ZERO dependency on calculator/.</constraint>
+    <constraint type="architecture">Thread-local engine pattern will be implemented in Stories 1.4-1.5. Story 1.2 uses simple standalone LuaRuntime instances for testing only.</constraint>
+    <constraint type="testing">Integration tests (not unit tests) required - actual Lupa/LuaJIT interaction needed. Tests will be slower than Story 1.1 unit tests due to external C library dependency.</constraint>
+    <constraint type="testing">Use @pytest.mark.slow marker for integration tests to allow optional skipping during rapid development (pytest -m "not slow").</constraint>
+    <constraint type="performance">Story 1.2 establishes baseline performance measurements. Full optimization to meet NFR-1 targets (&lt;100ms per calculation) deferred to Story 1.8.</constraint>
+    <constraint type="error-handling">Story 1.2 focuses on successful execution paths. Basic error test sufficient (invalid Lua syntax raises LuaError). Robust error handling added incrementally in Stories 1.3-1.5.</constraint>
+    <constraint type="platform">Python 3.10+ required for Lupa compatibility. Lupa 2.0 includes bundled LuaJIT 2.1+ (no separate installation required on most platforms).</constraint>
+    <constraint type="quality">Follow quality standards from Story 1.1: comprehensive test coverage, docstrings with examples, defensive programming, type hints throughout, appropriate logging levels, fail-safe defaults.</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>BuildData</name>
+      <kind>dataclass</kind>
+      <signature>@dataclass BuildData(character_class: CharacterClass, level: int, ascendancy: Optional[str], passive_nodes: Set[int], items: List[Item], skills: List[Skill], tree_version: str, build_name: Optional[str], notes: Optional[str])</signature>
+      <path>src/models/build_data.py</path>
+      <usage>Will be consumed by calculator module in Story 1.5. Calculator will receive BuildData objects from parsers/ module and pass to PoB engine.</usage>
+    </interface>
+    <interface>
+      <name>LuaRuntime</name>
+      <kind>class</kind>
+      <signature>from lupa import LuaRuntime; lua = LuaRuntime(); lua.execute(code: str) -> Any; lua.eval(expr: str) -> Any; lua.globals() -> LuaGlobals</signature>
+      <path>lupa library (external)</path>
+      <usage>Primary interface for Python-Lua integration. Story 1.2 validates basic usage. Stories 1.4-1.5 will use for HeadlessWrapper.lua loading.</usage>
+    </interface>
+    <interface>
+      <name>PoBCalculationEngine (future)</name>
+      <kind>class</kind>
+      <signature>class PoBCalculationEngine: __init__() -> None; calculate(build: BuildData) -> BuildStats; cleanup() -> None</signature>
+      <path>src/calculator/pob_engine.py (placeholder in Story 1.2, implemented in Stories 1.4-1.5)</path>
+      <usage>Future API for calculator module. Story 1.2 creates placeholder class with docstring. Full implementation in Stories 1.3-1.5.</usage>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+Story 1.2 uses integration tests (not unit tests) because it requires actual Lupa/LuaJIT interaction. Tests follow pytest framework established in Story 1.1. Use @pytest.mark.slow marker for optional skipping during development. Test pyramid: integration tests are 30% of Epic 1 test suite. All tests must have comprehensive docstrings explaining what's being validated. Follow Story 1.1 quality standards: type hints, defensive programming, appropriate logging, fail-safe defaults.
+    </standards>
+    <locations>
+tests/integration/ - New directory for integration tests
+tests/integration/test_lupa_basic.py - Primary test file with 8-10 tests covering all ACs
+tests/integration/README.md - Integration test strategy documentation
+    </locations>
+    <ideas>
+      <test id="AC-1.2.2" description="Test LuaRuntime initialization">
+Verify LuaRuntime can be created without errors. Basic smoke test for Lupa installation.
+Code: from lupa import LuaRuntime; lua = LuaRuntime(); assert lua is not None
+      </test>
+      <test id="AC-1.2.3" description="Test execute simple Lua expression">
+Verify basic Lua script execution. Tests that Lua code can run and return values to Python.
+Code: lua = LuaRuntime(); result = lua.execute('return 2 + 2'); assert result == 4
+      </test>
+      <test id="AC-1.2.4" description="Test Lua global namespace access">
+Verify Python can access Lua global variables. Tests bidirectional state sharing.
+Code: lua = LuaRuntime(); lua.execute('myGlobal = 42'); assert lua.globals().myGlobal == 42
+      </test>
+      <test id="AC-1.2.5" description="Test call Lua function from Python">
+Verify Python can call Lua functions and retrieve results. Core integration pattern.
+Code: lua = LuaRuntime(); add_func = lua.eval('function(a, b) return a + b end'); result = add_func(10, 32); assert result == 42
+      </test>
+      <test id="Data-Conversion" description="Test Python dict to Lua table conversion">
+Verify Python dicts convert to Lua tables correctly. Critical for passing BuildData in Story 1.5.
+Code: lua.execute('function get_name(obj) return obj.name end'); py_dict = {"name": "Witch", "level": 90}; result = lua.globals().get_name(py_dict); assert result == "Witch"
+      </test>
+      <test id="Data-Conversion" description="Test Lua multiple return values">
+Verify Lua functions with multiple return values work correctly. Common Lua pattern.
+Code: multi_func = lua.eval('function() return 1, 2, 3 end'); result = multi_func(); assert result == (1, 2, 3)
+      </test>
+      <test id="Error-Handling" description="Test invalid Lua syntax raises LuaError">
+Basic error handling check. Verify invalid Lua raises expected exception type.
+Code: from lupa import LuaError; lua = LuaRuntime(); with pytest.raises(LuaError): lua.execute('this is not valid lua!!!')
+      </test>
+      <test id="Performance" description="Test Lua performance baseline">
+Measure 1000 function calls. Document first-call compilation overhead (~200ms) vs subsequent calls (&lt;1ms). Baseline for Story 1.8 optimization.
+Code: time first lua.execute(), then time 1000 calls, calculate mean/P95/P99
+      </test>
+    </ideas>
+  </tests>
+</story-context>

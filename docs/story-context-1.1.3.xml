@@ -1,0 +1,332 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.3</storyId>
+    <title>Implement Required Stub Functions</title>
+    <status>Approved</status>
+    <generatedAt>2025-10-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>d:\poe2_optimizer_v6\docs\stories\story-1.3.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to provide Python implementations of PoB's external dependencies</iWant>
+    <soThat>HeadlessWrapper.lua can run without PoB's GUI environment</soThat>
+    <tasks>
+      - Task 1: Create stub_functions.py module with Deflate, Inflate, ConPrintf, ConPrintTable, SpawnProcess, OpenURL
+      - Task 2: Create integration tests for stub functions (round-trip compression, error handling)
+      - Task 3: Integrate stubs with Lupa runtime in pob_engine.py
+      - Task 4: Test with simulated HeadlessWrapper calls from Lua context
+      - Task 5: Error handling and edge cases (invalid inputs, nil values)
+      - Task 6: Documentation and validation (export functions, usage examples)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1.3.1">
+      <description>Implement Deflate(data: bytes) -> bytes and Inflate(data: bytes) -> bytes using Python zlib</description>
+      <verification>Round-trip compression test passes; handles various data sizes (empty, <1KB, >100KB)</verification>
+    </criterion>
+    <criterion id="AC-1.3.2">
+      <description>Implement ConPrintf(*args) as no-op (or print to console for debugging)</description>
+      <verification>Function accepts varargs, logs to Python logging at DEBUG level, returns None</verification>
+    </criterion>
+    <criterion id="AC-1.3.3">
+      <description>Implement ConPrintTable(table) as no-op</description>
+      <verification>Function accepts Lua table objects from Lupa, logs table structure, returns None</verification>
+    </criterion>
+    <criterion id="AC-1.3.4">
+      <description>Implement SpawnProcess(*args) and OpenURL(url) as no-ops (headless mode)</description>
+      <verification>Functions return None without crashing, log warnings if called</verification>
+    </criterion>
+    <criterion id="AC-1.3.5">
+      <description>All stubs accessible from Lua global namespace via Lupa integration</description>
+      <verification>Lua code can call Deflate, Inflate, ConPrintf, ConPrintTable, SpawnProcess, OpenURL</verification>
+    </criterion>
+    <criterion id="AC-1.3.6">
+      <description>No errors when HeadlessWrapper.lua calls stub functions</description>
+      <verification>Simulated HeadlessWrapper calls complete without LuaError or Python exceptions</verification>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>D:\poe2_optimizer_v6/docs/tech-spec-epic-1.md</path>
+        <title>Technical Specification - Epic 1</title>
+        <section>Lines 105-108: Module/Service Breakdown</section>
+        <snippet>calculator/stub_functions.py - Python stubs for PoB Lua dependencies: Deflate(data: bytes) -> bytes, Inflate(data: bytes) -> bytes, ConPrintf(msg: str) -> None</snippet>
+        <relevance>Defines stub function signatures and module ownership in Integration Layer</relevance>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6/docs/tech-spec-epic-1.md</path>
+        <title>Technical Specification - Epic 1</title>
+        <section>Lines 316-386: Calculator Module API</section>
+        <snippet>Calculator module provides Python-Lua bridge for PoB calculations. Includes pob_engine.py (Lupa integration) and stub_functions.py (Python stubs)</snippet>
+        <relevance>Describes calculator module architecture and stub function role in the system</relevance>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6/docs/tech-spec-epic-1.md</path>
+        <title>Technical Specification - Epic 1</title>
+        <section>Lines 601-648: Error Handling Strategy</section>
+        <snippet>Calculation errors must use try/except blocks with CalculationError wrapping. Include original exception as context. Type checking for invalid inputs.</snippet>
+        <relevance>Defines error handling pattern for stub functions - type checking, exception wrapping, clear error messages</relevance>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6/docs/tech-spec-epic-1.md</path>
+        <title>Technical Specification - Epic 1</title>
+        <section>Lines 888-898: Story 1.3 Acceptance Criteria</section>
+        <snippet>AC-1.3.1: Implement Deflate/Inflate using zlib. AC-1.3.2-1.3.4: Implement console and system stubs as no-ops. AC-1.3.5: All stubs accessible from Lua globals. AC-1.3.6: No errors when HeadlessWrapper calls stubs. Test Method: Integration test with HeadlessWrapper.lua execution</snippet>
+        <relevance>Authoritative source for Story 1.3 acceptance criteria and test method</relevance>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6/docs/tech-spec-epic-1.md</path>
+        <title>Technical Specification - Epic 1</title>
+        <section>Lines 1055-1057: Assumption 5 - Python zlib compatibility</section>
+        <snippet>Assumption: Python zlib compatible with PoB's Lua Deflate/Inflate. Validation: Round-trip testing Python compress → Lua decompress → Python in Story 1.3</snippet>
+        <relevance>Identifies critical assumption to validate through round-trip compression tests with various data sizes</relevance>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6/docs/solution-architecture.md</path>
+        <title>Solution Architecture</title>
+        <section>Lines 328-336: Directory Structure - calculator/ module</section>
+        <snippet>calculator/ module: pob_engine.py (Lupa integration), stub_functions.py (Python stubs for Deflate, Inflate, ConPrintf), passive_tree.py, build_calculator.py</snippet>
+        <relevance>Shows stub_functions.py file location and relationship to other calculator components</relevance>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6/docs/solution-architecture.md</path>
+        <title>Solution Architecture</title>
+        <section>Lines 642-671: Layered Architecture Pattern</section>
+        <snippet>Integration Layer (calculator/) sits between Data Layer (parsers/) and Business Logic Layer (optimizer/). Upper layers depend on lower layers only. Lower layers NEVER depend on upper layers.</snippet>
+        <relevance>Defines architectural constraint: stub_functions.py has ZERO dependencies on parsers/, optimizer/, or web/ modules - Python stdlib only</relevance>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6/docs/solution-architecture.md</path>
+        <title>Solution Architecture</title>
+        <section>Lines 453-461: calculator/ Responsibility</section>
+        <snippet>calculator/ is Python-Lua bridge for PoB calculations. Dependencies: Lupa, external/pob-engine/. Testing: Integration tests with Lupa</snippet>
+        <relevance>Clarifies calculator module responsibility and testing strategy (integration tests required)</relevance>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6/docs/stories/story-1.2.md</path>
+        <title>Story 1.2: Setup Lupa + LuaJIT Runtime</title>
+        <section>Lines 225-242: Lessons Learned</section>
+        <snippet>What Worked: Comprehensive test coverage from day 1, docstrings with examples, type hints throughout, @pytest.mark.slow for Lupa tests. Apply to Story 1.3: Write integration tests alongside implementation, add docstrings to each function, handle edge cases defensively.</snippet>
+        <relevance>Proven patterns from Story 1.2 to apply in Story 1.3 implementation (test-driven, documentation-first approach)</relevance>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\src\calculator\pob_engine.py</path>
+        <kind>class</kind>
+        <symbol>PoBCalculationEngine</symbol>
+        <lines>35-131</lines>
+        <reason>Existing Lupa integration class where stub functions will be registered in Lua globals (Task 3). Contains _ensure_initialized() method that needs to inject stubs.</reason>
+      </artifact>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\src\calculator\pob_engine.py</path>
+        <kind>method</kind>
+        <symbol>PoBCalculationEngine._ensure_initialized</symbol>
+        <lines>79-93</lines>
+        <reason>Target method for registering stub functions in Lua global namespace via lua.globals(). Story 1.3 Task 3 will extend this method to inject Deflate, Inflate, ConPrintf, etc.</reason>
+      </artifact>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\src\calculator\__init__.py</path>
+        <kind>module</kind>
+        <symbol>__all__</symbol>
+        <lines>31-34</lines>
+        <reason>Module exports list that will be updated to include stub functions (Task 6). Currently exports only PoBCalculationEngine.</reason>
+      </artifact>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\src\models\build_data.py</path>
+        <kind>dataclass</kind>
+        <symbol>BuildData</symbol>
+        <lines>39-76</lines>
+        <reason>Data model that will eventually be passed to PoB calculations (Story 1.5). Stub functions support PoB code parsing/generation which uses BuildData.</reason>
+      </artifact>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\tests\integration\test_lupa_basic.py</path>
+        <kind>test</kind>
+        <symbol>test_*</symbol>
+        <lines>N/A</lines>
+        <reason>Story 1.2 integration tests demonstrating Lupa Python-Lua function call pattern. Provides template for Story 1.3 stub function integration tests.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="lupa" version=">=2.0" ecosystem="pip">
+          LuaJIT Python bindings for registering stub functions in Lua global namespace. Required for AC-1.3.5 (stubs accessible from Lua).
+        </package>
+        <package name="pytest" version=">=7.4.0" ecosystem="pip">
+          Testing framework for unit and integration tests. Required for all acceptance criteria verification.
+        </package>
+        <package name="xmltodict" version="==0.13.0" ecosystem="pip">
+          XML parsing library used by parsers/ module (Story 1.1). Indirect dependency - stub functions use stdlib only.
+        </package>
+        <stdlib name="zlib">
+          Python standard library compression module for Deflate/Inflate implementation (AC-1.3.1). No installation required.
+        </stdlib>
+        <stdlib name="logging">
+          Python standard library logging for ConPrintf, ConPrintTable, SpawnProcess, OpenURL debugging output (AC-1.3.2-1.3.4). No installation required.
+        </stdlib>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">
+      <rule>Layered Architecture: stub_functions.py is in Integration Layer with ZERO dependencies on upper layers (parsers/, optimizer/, web/)</rule>
+      <rationale>Maintains clean separation of concerns and prevents circular dependencies</rationale>
+      <reference>solution-architecture.md:642-671</reference>
+    </constraint>
+    <constraint type="architecture">
+      <rule>Python stdlib only: stub_functions.py depends ONLY on Python standard library (zlib, logging). NO external dependencies.</rule>
+      <rationale>Minimizes dependency complexity and ensures portability</rationale>
+      <reference>tech-spec-epic-1.md:105-106</reference>
+    </constraint>
+    <constraint type="scope">
+      <rule>Story 1.3 scope: Python stub functions ONLY. Do NOT load HeadlessWrapper.lua (that's Story 1.4).</rule>
+      <rationale>Clear story boundaries prevent scope creep. HeadlessWrapper loading happens in Story 1.4.</rationale>
+      <reference>story-1.3.md:254-264</reference>
+    </constraint>
+    <constraint type="security">
+      <rule>SpawnProcess and OpenURL MUST be no-ops (return None, log warning). NO actual process spawning or URL opening.</rule>
+      <rationale>Security: Prevent Lua code from executing arbitrary processes or opening URLs in headless mode</rationale>
+      <reference>tech-spec-epic-1.md:578-582</reference>
+    </constraint>
+    <constraint type="security">
+      <rule>All stub functions must validate input types and handle invalid inputs gracefully with TypeError or ValueError</rule>
+      <rationale>Defensive programming: Lua-Python boundary requires explicit type checking to prevent runtime errors</rationale>
+      <reference>tech-spec-epic-1.md:601-648</reference>
+    </constraint>
+    <constraint type="testing">
+      <rule>Integration tests MUST use @pytest.mark.slow marker when testing Lupa/Lua interactions</rule>
+      <rationale>Allows fast iteration during development by skipping slower Lupa tests when not needed</rationale>
+      <reference>story-1.2.md:225-242</reference>
+    </constraint>
+    <constraint type="implementation">
+      <rule>All stub functions require comprehensive docstrings with Args, Returns, Raises, and Example sections</rule>
+      <rationale>Documentation-first approach proven effective in Story 1.2. Docstrings guide implementation and testing.</rationale>
+      <reference>story-1.2.md:228-230, story-1.3.md:269-419</reference>
+    </constraint>
+    <constraint type="compatibility">
+      <rule>Deflate/Inflate must produce output compatible with Lua zlib library. Validate with round-trip tests.</rule>
+      <rationale>Critical assumption validation (Assumption 5): Python zlib must interoperate with PoB's Lua Deflate library</rationale>
+      <reference>tech-spec-epic-1.md:1055-1057</reference>
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Deflate</name>
+      <kind>function</kind>
+      <signature>Deflate(data: Union[bytes, str]) -> bytes</signature>
+      <path>src/calculator/stub_functions.py (NEW FILE)</path>
+      <purpose>Compress data using zlib (compatible with PoB's Lua Deflate library). Critical for PoB code parsing/generation.</purpose>
+    </interface>
+    <interface>
+      <name>Inflate</name>
+      <kind>function</kind>
+      <signature>Inflate(data: bytes) -> bytes</signature>
+      <path>src/calculator/stub_functions.py (NEW FILE)</path>
+      <purpose>Decompress zlib data (compatible with PoB's Lua Inflate). Critical for PoB code parsing/generation.</purpose>
+    </interface>
+    <interface>
+      <name>ConPrintf</name>
+      <kind>function</kind>
+      <signature>ConPrintf(*args) -> None</signature>
+      <path>src/calculator/stub_functions.py (NEW FILE)</path>
+      <purpose>No-op replacement for PoB console output. Logs to Python logging at DEBUG level for debugging.</purpose>
+    </interface>
+    <interface>
+      <name>ConPrintTable</name>
+      <kind>function</kind>
+      <signature>ConPrintTable(table) -> None</signature>
+      <path>src/calculator/stub_functions.py (NEW FILE)</path>
+      <purpose>No-op replacement for PoB table printing. Logs Lua table structure to Python logging at DEBUG level.</purpose>
+    </interface>
+    <interface>
+      <name>SpawnProcess</name>
+      <kind>function</kind>
+      <signature>SpawnProcess(*args) -> None</signature>
+      <path>src/calculator/stub_functions.py (NEW FILE)</path>
+      <purpose>Security no-op: Prevents Lua from spawning processes. Logs warning if called (unexpected behavior).</purpose>
+    </interface>
+    <interface>
+      <name>OpenURL</name>
+      <kind>function</kind>
+      <signature>OpenURL(url: str) -> None</signature>
+      <path>src/calculator/stub_functions.py (NEW FILE)</path>
+      <purpose>Security no-op: Prevents Lua from opening URLs. Logs warning if called (unexpected behavior).</purpose>
+    </interface>
+    <interface>
+      <name>PoBCalculationEngine._ensure_initialized</name>
+      <kind>method</kind>
+      <signature>_ensure_initialized(self) -> None</signature>
+      <path>src/calculator/pob_engine.py:79-93</path>
+      <purpose>Lazy initialization of Lua runtime. Story 1.3 Task 3: Extend to register stub functions in lua.globals().</purpose>
+    </interface>
+    <interface>
+      <name>lua.globals()</name>
+      <kind>lua-api</kind>
+      <signature>LuaRuntime.globals() -> LuaTable</signature>
+      <path>lupa.luajit21.LuaRuntime (external library)</path>
+      <purpose>Lupa API for accessing Lua global namespace. Used to inject Python stub functions: lua_globals.Deflate = Deflate</purpose>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      pytest 7.4+ framework with @pytest.mark.slow for Lupa integration tests. Unit tests (fast, no Lupa) test Python functions directly with various inputs, edge cases, and error conditions. Integration tests (slower, Lupa required) test Lua calling Python stubs via lua.globals() injection. Test organization: tests/unit/ for fast tests, tests/integration/ for Lupa tests. All tests require docstrings with acceptance criteria references. Coverage target: >90% for calculator module (critical path). Type hints required throughout tests for clarity.
+    </standards>
+    <locations>
+      <location>tests/unit/test_stub_functions_unit.py (NEW FILE)</location>
+      <location>tests/integration/test_stub_functions.py (NEW FILE)</location>
+      <location>tests/integration/test_headlesswrapper_stubs.py (NEW FILE)</location>
+      <location>tests/integration/test_lupa_basic.py (EXISTING - Story 1.2 foundation)</location>
+    </locations>
+    <ideas>
+      <test-idea criteria="AC-1.3.1">
+        <name>test_deflate_inflate_roundtrip</name>
+        <description>Round-trip compression: Deflate(data) -> Inflate(compressed) should equal original data. Test with empty, small (<1KB), and large (>100KB) data.</description>
+      </test-idea>
+      <test-idea criteria="AC-1.3.1">
+        <name>test_deflate_invalid_input_raises_type_error</name>
+        <description>Deflate rejects non-bytes/non-str input with TypeError. Test with int, list, None.</description>
+      </test-idea>
+      <test-idea criteria="AC-1.3.1">
+        <name>test_inflate_corrupted_data_raises_error</name>
+        <description>Inflate raises zlib.error for corrupted data. Test with b"not compressed data!!!" input.</description>
+      </test-idea>
+      <test-idea criteria="AC-1.3.2">
+        <name>test_conprintf_logs_messages</name>
+        <description>ConPrintf logs to Python logging at DEBUG level. Test varargs: no args, single arg, multiple args, various types. Use caplog fixture.</description>
+      </test-idea>
+      <test-idea criteria="AC-1.3.3">
+        <name>test_conprinttable_handles_lua_tables</name>
+        <description>ConPrintTable accepts Lua table via Lupa, logs structure. Create Lua table {name="Witch", level=90}, verify logging output.</description>
+      </test-idea>
+      <test-idea criteria="AC-1.3.4">
+        <name>test_spawnprocess_openurl_are_noops</name>
+        <description>SpawnProcess and OpenURL return None without crashing. Verify warning logs captured.</description>
+      </test-idea>
+      <test-idea criteria="AC-1.3.5">
+        <name>test_lua_can_call_python_stubs</name>
+        <description>Integration test: Register stubs in lua.globals(), call from Lua code. Test each stub function callable from Lua.</description>
+      </test-idea>
+      <test-idea criteria="AC-1.3.6">
+        <name>test_simulated_headlesswrapper_calls</name>
+        <description>Simulate HeadlessWrapper.lua calling stubs via inline Lua scripts. Test Deflate, Inflate, ConPrintf, ConPrintTable, SpawnProcess, OpenURL from Lua context. Verify no LuaError or Python exceptions.</description>
+      </test-idea>
+      <test-idea criteria="AC-1.3.1">
+        <name>test_deflate_reduces_size_for_typical_data</name>
+        <description>Verify Deflate compresses typical PoB XML data (repetitive structure). Ensure compressed size < original size for realistic inputs.</description>
+      </test-idea>
+      <test-idea criteria="All">
+        <name>test_edge_cases_none_values</name>
+        <description>Test all stubs handle None/nil inputs gracefully without crashing. ConPrintf(None), ConPrintTable(None), etc.</description>
+      </test-idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,220 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>6</storyId>
+    <title>Metric Selection and Evaluation</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-6-metric-selection-and-evaluation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to support multiple optimization goals (DPS, EHP, balanced)</iWant>
+    <soThat>users can optimize for their playstyle</soThat>
+    <tasks>
+      <task id="1" description="Implement metrics calculation module">
+        <acceptanceCriteria>AC-2.6.1, AC-2.6.2, AC-2.6.3, AC-2.6.4, AC-2.6.5</acceptanceCriteria>
+        <subtasks>
+          <subtask id="1.1">Create src/optimizer/metrics.py module</subtask>
+          <subtask id="1.2">Implement calculate_metric(build: BuildData, metric_type: str) -&gt; float function</subtask>
+          <subtask id="1.3">Implement DPS metric calculation (extract total_dps from BuildStats)</subtask>
+          <subtask id="1.4">Implement EHP metric calculation (Life + ES + mitigation formula)</subtask>
+          <subtask id="1.5">Implement balanced metric calculation (60% DPS, 40% EHP weighted average)</subtask>
+          <subtask id="1.6">Implement normalization logic for cross-metric comparison</subtask>
+        </subtasks>
+      </task>
+      <task id="2" description="Add unit tests for metrics module">
+        <acceptanceCriteria>AC-2.6.1, AC-2.6.2, AC-2.6.3, AC-2.6.4, AC-2.6.5</acceptanceCriteria>
+        <subtasks>
+          <subtask id="2.1">Test DPS metric with mocked BuildStats</subtask>
+          <subtask id="2.2">Test EHP metric with mocked BuildStats</subtask>
+          <subtask id="2.3">Test balanced metric with mocked BuildStats</subtask>
+          <subtask id="2.4">Test normalization ensures comparable scales</subtask>
+          <subtask id="2.5">Test error handling for invalid metric types</subtask>
+          <subtask id="2.6">Test error handling for failed PoB calculations (return -infinity)</subtask>
+        </subtasks>
+      </task>
+      <task id="3" description="Add integration tests with real PoB calculations">
+        <acceptanceCriteria>AC-2.6.4</acceptanceCriteria>
+        <subtasks>
+          <subtask id="3.1">Test DPS metric with 2-3 real test builds from corpus</subtask>
+          <subtask id="3.2">Test EHP metric with 2-3 real test builds from corpus</subtask>
+          <subtask id="3.3">Test balanced metric with 2-3 real test builds from corpus</subtask>
+          <subtask id="3.4">Verify metrics correctly use Epic 1 calculate_build_stats() API</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-2.6.1">Support metric: "Maximize DPS" (total DPS output)</criterion>
+    <criterion id="AC-2.6.2">Support metric: "Maximize EHP" (effective hit points)</criterion>
+    <criterion id="AC-2.6.3">Support metric: "Balanced" (weighted: 60% DPS, 40% EHP)</criterion>
+    <criterion id="AC-2.6.4">Extract correct stats from PoB calculation results</criterion>
+    <criterion id="AC-2.6.5">Normalize metrics for comparison (DPS and EHP have different scales)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/tech-spec-epic-2.md" title="Epic 2 Technical Specification">
+        <section name="APIs and Interfaces - Metrics API">
+          Comprehensive metrics API specification (lines 277-299). Defines calculate_metric() function signature,  parameters (BuildData, metric_type), return type (float), and exception handling. Specifies three metric types: "dps" (raw total DPS from PoB), "ehp" (Life + ES + mitigation formula), "balanced" (60% DPS normalized + 40% EHP normalized weighted average). Includes error handling: ValueError for unknown metric_type, CalculationError returns -infinity for failed PoB calculations.
+        </section>
+        <section name="Data Models - BuildStats">
+          BuildStats data model structure (lines 131-217). Contains all calculated statistics returned by Epic 1: total_dps, life, energy_shield, evasion, etc. Story 2.6 must extract correct stats from this model for metric calculations.
+        </section>
+        <section name="Acceptance Criteria">
+          Authoritative acceptance criteria for Story 2.6 (lines 640-647). Five criteria: AC-2.6.1 (Support DPS metric), AC-2.6.2 (Support EHP metric), AC-2.6.3 (Support balanced metric with 60/40 weighting), AC-2.6.4 (Extract correct stats from PoB results), AC-2.6.5 (Normalize metrics for comparison).
+        </section>
+        <section name="Traceability Mapping">
+          Test approach for Story 2.6 acceptance criteria (lines 701-705). Unit tests: extract total_dps from BuildStats, Life+ES+mitigation formula, 60/40 weighted average, normalization logic. Integration tests: real PoB calculations with test corpus builds.
+        </section>
+      </doc>
+      <doc path="docs/epics.md" title="Epics Breakdown">
+        <section name="Story 2.6: Metric Selection and Evaluation">
+          High-level story description (lines 374-395). Defines user story, acceptance criteria, and technical notes. Specifies DPS extraction from Build.calcs.TotalDPS, EHP calculation from Life/ES/resistances/armor, weighted metric normalization to 0-100 scale. References FR-2.1 for detailed metric formulas. Priority: Must-have (MVP blocking), Size: Medium (3 story points).
+        </section>
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document">
+        <section name="FR-2.1: Optimization Goal Dropdown">
+          Product requirement for optimization goal selection (line 318). System SHALL provide dropdown with three predefined goals: "Maximize Total DPS" (default), "Maximize Effective HP (EHP)", "Maximize DPS while maintaining current EHP" (balanced). Only one goal per session. Clear descriptions required for user understanding.
+        </section>
+      </doc>
+      <doc path="docs/solution-architecture.md" title="Solution Architecture">
+        <section name="Component Architecture - Optimizer Module">
+          High-level architecture for optimizer module (Section 7.3). Defines objective functions: Maximize DPS (score = total_dps), Maximize EHP (score = effective_hp), Balanced (score = 0.7 * (dps/100k) + 0.3 * (ehp/50k)). Note: Tech spec uses 60/40 weighting which supersedes this 70/30 weighting.
+        </section>
+      </doc>
+      <doc path="docs/architecture/epic-2-optimizer-design.md" title="Epic 2 Optimizer Architecture">
+        <section name="Module Structure - Metrics Module">
+          Detailed metrics module design (Section 4.4, lines 298-348). Specifies calculate_metric() function, normalization strategy, key responsibilities (invoke PoB calculator, extract stats, normalize metrics, handle errors). Performance considerations: PoB calculation ~2ms per build (bottleneck), no caching viable (unique mutations).
+        </section>
+        <section name="Normalization Strategy">
+          Normalization approach for balanced metric. DPS typical range: 10,000-1,000,000. EHP typical range: 5,000-50,000. Normalize both to 0-100 scale relative to baseline. Apply weights: 60% DPS, 40% EHP. Ensures DPS and EHP improvements are comparable despite different scales.
+        </section>
+      </doc>
+    </docs>
+    <code>
+      <artifact path="src/models/build_data.py" kind="model" symbol="BuildData" lines="40-78" reason="Input model for metric calculations. Contains passive_nodes, character_class, level, items, skills. Story 2.6 passes BuildData to Epic 1 calculator API to get stats for metric evaluation.">
+        Key properties: passive_nodes (Set[int]), character_class (CharacterClass enum), level (int), unallocated_points (property). Immutable dataclass - use dataclasses.replace() for modifications.
+      </artifact>
+      <artifact path="src/models/build_stats.py" kind="model" symbol="BuildStats" lines="8-157" reason="Output model from Epic 1 calculator containing all calculated stats. Story 2.6 extracts total_dps for DPS metric, life+energy_shield for EHP metric.">
+        Critical fields for Story 2.6: total_dps (float), effective_hp (float), life (int), energy_shield (int), resistances (Dict[str, int]). Validated in __post_init__ (no NaN/infinity). Has to_dict() method for serialization.
+      </artifact>
+      <artifact path="src/calculator/build_calculator.py" kind="service" symbol="calculate_build_stats" lines="74-155" reason="Primary Epic 1 API that Story 2.6 must call to get BuildStats for metric calculation. Thread-safe, uses thread-local PoBCalculationEngine.">
+        Signature: calculate_build_stats(build: BuildData) -> BuildStats. Performance: ~2ms per call (Story 1.8 validated). Raises CalculationError or CalculationTimeout on failures. Thread-local pattern ensures concurrent safety.
+      </artifact>
+      <artifact path="src/calculator/build_calculator.py" kind="service" symbol="get_pob_engine" lines="46-71" reason="Thread-local engine accessor. Story 2.6 should use calculate_build_stats() instead of calling engine directly, but this shows the thread-local pattern used.">
+        Thread-local storage pattern: one LuaRuntime per thread. Safe for concurrent calculations. First call per thread takes ~200ms (Lua compilation), subsequent calls <100ms.
+      </artifact>
+      <artifact path="src/optimizer/__init__.py" kind="module" symbol="__init__" lines="1-10" reason="Optimizer module exports. Story 2.6 will add metrics module exports here.">
+        Current exports: BudgetTracker, BudgetState, hill_climbing functions. Story 2.6 will need to add: calculate_metric and related exports.
+      </artifact>
+      <artifact path="tests/unit/optimizer/test_budget_tracker.py" kind="test" symbol="TestBudgetTracker" lines="1-50" reason="Example of existing optimizer test structure. Story 2.6 tests should follow same patterns: pytest fixtures, clear test organization, comprehensive coverage.">
+        Test organization pattern: Test fixtures for mock data, test classes grouping related tests, descriptive test names, comprehensive boundary condition coverage. Target: 80%+ line coverage.
+      </artifact>
+      <artifact path="tests/fixtures/optimization_builds" kind="test-data" symbol="corpus" lines="N/A" reason="Test corpus builds (22 builds from poeninja). Story 2.6 integration tests should use 2-3 builds from this corpus for real PoB calculation validation.">
+        Contains real player builds for testing. Use for AC-2.6.4 validation (real PoB calculations with test builds from corpus).
+      </artifact>
+    </code>
+    <dependencies>
+      <python version="3.12.11">
+        Python 3.12+ runtime. Story 2.6 uses Python stdlib only (no new external dependencies). Requires dataclasses, typing, logging modules (all built-in).
+      </python>
+      <package name="lupa" version=">=2.0" ecosystem="python">
+        Python-LuaJIT bindings. Inherited from Epic 1. Story 2.6 does NOT directly use lupa (that's calculator module's job), but metrics.py indirectly depends on it via calculate_build_stats() API.
+      </package>
+      <package name="pytest" version=">=7.4.0" ecosystem="python">
+        Testing framework. Story 2.6 Task 2 requires pytest for unit tests (AC #1-#5), Task 3 for integration tests (AC #4).
+      </package>
+      <package name="pytest-cov" version=">=4.1.0" ecosystem="python">
+        Coverage reporting. Story 2.6 target: 60% unit test coverage, 30% integration test coverage per tech spec.
+      </package>
+      <internal-dependency module="src.calculator.build_calculator" symbol="calculate_build_stats">
+        Epic 1 API. Story 2.6 metrics module MUST call this to get BuildStats for metric evaluation. Performance: 2ms per call. Thread-safe.
+      </internal-dependency>
+      <internal-dependency module="src.models.build_data" symbol="BuildData">
+        Input model for metrics. Immutable dataclass with passive_nodes, character_class, level, etc.
+      </internal-dependency>
+      <internal-dependency module="src.models.build_stats" symbol="BuildStats">
+        Output model from calculator. Story 2.6 extracts total_dps, life, energy_shield for metric calculations.
+      </internal-dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="performance">Metric calculation must be ~0.01ms (negligible vs 2ms PoB calc)</constraint>
+    <constraint type="performance">Memory target: &lt;100MB during optimization (Epic 1 baseline: 45MB)</constraint>
+    <constraint type="architecture">No modifications to Epic 1 APIs (read-only dependency)</constraint>
+    <constraint type="architecture">No external dependencies beyond Epic 1 + Python stdlib</constraint>
+    <constraint type="error-handling">Invalid metric_type: Raise ValueError with clear message</constraint>
+    <constraint type="error-handling">PoB calculation failure: Log error, return -infinity (reject bad neighbor)</constraint>
+    <constraint type="formula">EHP = Life + Energy Shield (base formula for MVP, full mitigation deferred)</constraint>
+    <constraint type="formula">Balanced = 0.6 × normalized_dps + 0.4 × normalized_ehp</constraint>
+    <constraint type="normalization">Normalize to 0-1 scale: normalized = (current - baseline) / baseline</constraint>
+  </constraints>
+  <interfaces>
+    <interface name="calculate_build_stats" kind="function" path="src/calculator/calculator.py">
+      <signature>calculate_build_stats(build: BuildData) -&gt; BuildStats</signature>
+      <description>Epic 1 API for calculating build statistics via PoB engine. Returns BuildStats with total_dps, life, energy_shield, etc. Performance: 2ms per call. Reliability: 0% error rate on test corpus.</description>
+    </interface>
+    <interface name="BuildData" kind="dataclass" path="src/models/build_data.py">
+      <signature>@dataclass BuildData (immutable build representation)</signature>
+      <description>Input model for metric calculation. Contains passive_nodes (Set[int]), character_level, class_name, items, skills, etc. Immutable - use dataclasses.replace() for modifications.</description>
+    </interface>
+    <interface name="BuildStats" kind="dataclass" path="src/models/build_data.py">
+      <signature>@dataclass BuildStats (calculation results)</signature>
+      <description>Output model from calculate_build_stats(). Contains: total_dps (float), life (int), energy_shield (int), evasion (int), armour (int), resistances (dict), block_chance (float), etc. Story 2.6 extracts total_dps for DPS metric, life+energy_shield for EHP metric.</description>
+    </interface>
+    <interface name="calculate_metric" kind="function" path="src/optimizer/metrics.py">
+      <signature>calculate_metric(build: BuildData, metric_type: str) -&gt; float</signature>
+      <description>Primary API for Story 2.6. Calculates optimization metric for a build. metric_type: "dps" | "ehp" | "balanced". Returns float (higher = better). Raises ValueError for invalid metric_type. Returns -infinity for failed PoB calculations (logged, not crash).</description>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      Testing framework: pytest >= 7.4.0 with pytest-cov for coverage reporting.
+
+      Test organization pattern (from existing optimizer tests):
+      - Test fixtures for mock data (@pytest.fixture decorators)
+      - Test classes grouping related tests (class TestMetricCalculation:)
+      - Descriptive test names (test_dps_metric_extracts_total_dps_from_build_stats)
+      - Comprehensive boundary condition coverage
+      - Mock calculator for fast unit tests (return predefined BuildStats)
+      - Real calculator for integration tests (limit to 5-10 builds, slow but accurate)
+
+      Coverage targets (Tech Spec Epic 2):
+      - Unit tests: 60% coverage target (mocked BuildStats, test metric calculations in isolation)
+      - Integration tests: 30% coverage target (real PoB calculations with 2-3 test builds)
+      - Validation: Ensure metrics correctly guide optimization (test with known optimal builds)
+
+      Error handling standards:
+      - Invalid metric_type: Raise ValueError with clear message (test with pytest.raises)
+      - PoB calculation failure: Log error, return -infinity (test with mock that raises CalculationError)
+      - Graceful degradation: Failed neighbor evaluation doesn't crash optimizer
+    </standards>
+    <locations>
+      <location>tests/unit/optimizer/test_metrics.py</location>
+      <location>tests/integration/optimizer/test_metrics_integration.py</location>
+      <location>tests/fixtures/optimization_builds/ (test corpus for integration tests)</location>
+    </locations>
+    <ideas>
+      <test-group name="Unit Tests - Task 2" coverage="AC #1, #2, #3, #4, #5">
+        <test id="2.1" ac="AC-2.6.1">Test DPS metric with mocked BuildStats - extract total_dps from BuildStats</test>
+        <test id="2.2" ac="AC-2.6.2">Test EHP metric with mocked BuildStats - Life + ES formula (baseline MVP)</test>
+        <test id="2.3" ac="AC-2.6.3">Test balanced metric with mocked BuildStats - 60/40 weighted average</test>
+        <test id="2.4" ac="AC-2.6.5">Test normalization ensures comparable scales - verify DPS/EHP normalized to same range</test>
+        <test id="2.5" ac="AC-2.6.1, AC-2.6.2, AC-2.6.3">Test error handling for invalid metric types - ValueError raised</test>
+        <test id="2.6" ac="AC-2.6.4">Test error handling for failed PoB calculations - return -infinity, log error</test>
+      </test-group>
+      <test-group name="Integration Tests - Task 3" coverage="AC #4">
+        <test id="3.1" ac="AC-2.6.4">Test DPS metric with 2-3 real test builds from corpus - real PoB calculations</test>
+        <test id="3.2" ac="AC-2.6.4">Test EHP metric with 2-3 real test builds from corpus - real PoB calculations</test>
+        <test id="3.3" ac="AC-2.6.4">Test balanced metric with 2-3 real test builds from corpus - real PoB calculations</test>
+        <test id="3.4" ac="AC-2.6.4">Verify metrics correctly use Epic 1 calculate_build_stats() API - no direct engine calls</test>
+      </test-group>
+    </ideas>
+  </tests>
+</story-context>

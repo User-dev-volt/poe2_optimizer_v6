@@ -1,0 +1,271 @@
+{
+  "_metadata": {
+    "pob_version": "69b825bda1733288a3ea3b1018a1c328900a4924",
+    "generator": "generate_expected_stats.py",
+    "note": "Baseline stats generated from integrated PoB calculation engine. For true GUI parity, manually record stats from official PoB application."
+  },
+  "build_01_witch_90": {
+    "character_class": "Witch",
+    "level": 90,
+    "stats": {
+      "total_dps": 4.2,
+      "life": 1124,
+      "energy_shield": 0,
+      "mana": 454,
+      "effective_hp": 1124.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_02_warrior_75": {
+    "character_class": "Warrior",
+    "level": 75,
+    "stats": {
+      "total_dps": 6.0,
+      "life": 980,
+      "energy_shield": 0,
+      "mana": 358,
+      "effective_hp": 980.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_03_ranger_60": {
+    "character_class": "Ranger",
+    "level": 60,
+    "stats": {
+      "total_dps": 4.8,
+      "life": 764,
+      "energy_shield": 0,
+      "mana": 298,
+      "effective_hp": 764.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_04_monk_30": {
+    "character_class": "Monk",
+    "level": 30,
+    "stats": {
+      "total_dps": 4.8,
+      "life": 416,
+      "energy_shield": 0,
+      "mana": 190,
+      "effective_hp": 416.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_05_mercenary_100": {
+    "character_class": "Mercenary",
+    "level": 100,
+    "stats": {
+      "total_dps": 4.8,
+      "life": 1244,
+      "energy_shield": 0,
+      "mana": 458,
+      "effective_hp": 1244.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_06_sorceress_90": {
+    "character_class": "Sorceress",
+    "level": 90,
+    "stats": {
+      "total_dps": 4.2,
+      "life": 1124,
+      "energy_shield": 0,
+      "mana": 454,
+      "effective_hp": 1124.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_07_witch_01": {
+    "character_class": "Witch",
+    "level": 1,
+    "stats": {
+      "total_dps": 4.2,
+      "life": 56,
+      "energy_shield": 0,
+      "mana": 98,
+      "effective_hp": 56.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_08_warrior_30": {
+    "character_class": "Warrior",
+    "level": 30,
+    "stats": {
+      "total_dps": 6.0,
+      "life": 440,
+      "energy_shield": 0,
+      "mana": 178,
+      "effective_hp": 440.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_09_ranger_90": {
+    "character_class": "Ranger",
+    "level": 90,
+    "stats": {
+      "total_dps": 4.8,
+      "life": 1124,
+      "energy_shield": 0,
+      "mana": 418,
+      "effective_hp": 1124.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_10_monk_60": {
+    "character_class": "Monk",
+    "level": 60,
+    "stats": {
+      "total_dps": 4.8,
+      "life": 776,
+      "energy_shield": 0,
+      "mana": 310,
+      "effective_hp": 776.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_11_mercenary_75": {
+    "character_class": "Mercenary",
+    "level": 75,
+    "stats": {
+      "total_dps": 4.8,
+      "life": 944,
+      "energy_shield": 0,
+      "mana": 358,
+      "effective_hp": 944.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  },
+  "build_12_sorceress_60": {
+    "character_class": "Sorceress",
+    "level": 60,
+    "stats": {
+      "total_dps": 4.2,
+      "life": 764,
+      "energy_shield": 0,
+      "mana": 334,
+      "effective_hp": 764.0,
+      "resistances": {
+        "fire": -60,
+        "cold": -60,
+        "lightning": -60,
+        "chaos": 0
+      },
+      "armour": 0,
+      "evasion": 7,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 0.0
+    }
+  }
+}

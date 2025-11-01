@@ -1,0 +1,17 @@
+# Path of Building PoE2 Engine Version
+
+## Current Version
+Commit: 69b825bda1733288a3ea3b1018a1c328900a4924
+Tag: v0.12.2-61-g69b825bda
+Repository: https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2.git
+Date Pinned: 2025-10-12
+
+## File Structure (Key Files for Integration)
+- HeadlessWrapper.lua: external/pob-engine/src/HeadlessWrapper.lua
+- PassiveTree.lua: external/pob-engine/src/Classes/PassiveTree.lua
+- Data Files: external/pob-engine/src/Data/*.lua
+
+## Notes
+- This version is for Path of Exile 2 (PoE2)
+- Submodule initialized at: external/pob-engine/
+- To update: git submodule update --remote external/pob-engine

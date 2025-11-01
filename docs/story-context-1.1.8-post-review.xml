@@ -1,0 +1,197 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1.1</epicId>
+    <storyId>1.8</storyId>
+    <title>Batch Calculation Optimization</title>
+    <status>Ready for Review (APPROVED via Course Correction)</status>
+    <generatedAt>2025-10-27</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>d:\poe2_optimizer_v6\docs\stories\story-1.8.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to calculate 1000+ builds efficiently</iWant>
+    <soThat>optimization completes in reasonable time</soThat>
+    <tasks>
+      <task id="1" status="complete">Profile Current Calculation Performance - Establish baseline metrics using pytest-benchmark and cProfile</task>
+      <task id="2" status="complete">Implement Lua Function Pre-compilation - Cache compiled Calculate function during engine initialization</task>
+      <task id="3" status="complete">Implement Build Object Reuse - Pre-convert passive tree to Lua table format once, reuse across calculations</task>
+      <task id="4" status="complete">Memory Management and Leak Detection - Implement explicit Lua GC and memory monitoring</task>
+      <task id="5" status="complete">Create Performance Benchmark Tests - Comprehensive test suite with latency, batch, and memory tests</task>
+      <task id="6" status="complete">Optimize Hot Paths - Profile-driven optimization, fixed mutation bug, achieved 8x improvement</task>
+      <task id="7" status="complete">Integration with Story 1.5 Calculation API - Validate backward compatibility (11/11 tests pass)</task>
+      <task id="8" status="complete">Documentation and Performance Validation - Update docs, verify all ACs met</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1.8.1" status="met">Batch calculate 1000 builds in &lt;2 seconds (APPROVED target via course correction, achieved 2.0s)</criterion>
+    <criterion id="AC-1.8.2" status="met">Pre-compile Lua functions (compile once, call 1000x) - Implemented in pob_engine.py:148-155</criterion>
+    <criterion id="AC-1.8.3" status="met">Reuse Build objects where possible - Tree data cached as Python dict, converted to fresh Lua table per call</criterion>
+    <criterion id="AC-1.8.4" status="met">Memory usage &lt;100MB during batch processing - Achieved 45.84 MB actual usage</criterion>
+    <criterion id="AC-1.8.5" status="met">No memory leaks - Verified with explicit Lua GC and 10+ batch runs</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>D:\poe2_optimizer_v6\docs\PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR-1: Performance</section>
+        <snippet>System SHALL handle 10 concurrent optimizations on 2-core, 4GB RAM VPS. System SHALL maintain &lt;1s calculation performance (1000 calcs) under normal load (1-5 concurrent users).</snippet>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6\docs\PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-3.3: Batch Calculation Performance</section>
+        <snippet>Per optimization session (single user): 1000 calculations in &lt;1 second (target: 150-500ms). Hardware baseline: Standard VPS (2 CPU cores, 4GB RAM) or equivalent serverless function.</snippet>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6\docs\tech-spec-epic-1.md</path>
+        <title>Technical Specification - Epic 1</title>
+        <section>Performance Targets (lines 518-526)</section>
+        <snippet>Single calculation latency: &lt;100ms (95th percentile). Batch calculation (1000 iters): 150-500ms (mean). Parse overhead: &lt;500ms (95th percentile). Memory per session: &lt;100MB (max). Lua compilation (first call): &lt;200ms (max).</snippet>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6\docs\tech-spec-epic-1.md</path>
+        <title>Technical Specification - Epic 1</title>
+        <section>calculate_build_stats() API (lines 322-340)</section>
+        <snippet>Primary API for Epic 2 (optimization algorithm). Performance: Single call &lt;100ms, Batch (1000 calls) 150-500ms total. Raises CalculationError if PoB engine fails, CalculationTimeout if exceeds 5s.</snippet>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6\docs\solution-architecture.md</path>
+        <title>Solution Architecture</title>
+        <section>Integration Layer - Calculator Module</section>
+        <snippet>Calculator module (src/calculator/) serves as Integration Layer bridging Lupa/LuaJIT with Python. Provides PoB engine bridge and stat calculations for optimization algorithm.</snippet>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6\docs\research\LupaLibraryDeepResearch.md</path>
+        <title>Lupa Library Integration Patterns</title>
+        <section>Performance Optimization Patterns</section>
+        <snippet>Pre-compile functions and cache references. Use local variables over globals (20x faster access). Minimize Python↔Lua boundary crossings. Avoid table creation in loops - reuse cached structures. Profile before optimizing to identify true bottlenecks.</snippet>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6\docs\stories\story-1.8-blocker-analysis.md</path>
+        <title>Story 1.8 Blocker Analysis</title>
+        <section>Performance Analysis and Solution</section>
+        <snippet>8x performance improvement achieved (16.3s → 2.0s). Root cause: 96.8% execution time is Lua-side (PoB calculation engine). Solution: Cache Python dict, convert to fresh Lua table each call to avoid mutation bugs. Fixed critical Lua table mutation causing crashes.</snippet>
+      </doc>
+      <doc>
+        <path>D:\poe2_optimizer_v6\docs\stories\story-1.8-second-review.md</path>
+        <title>Story 1.8 Second Review</title>
+        <section>Security and Best Practices Validation</section>
+        <snippet>Security review confirms zero vulnerabilities (pip-audit clean). Implementation demonstrates strong adherence to Lupa/LuaJIT best practices (2025): pre-compilation, local variable caching, table reuse patterns. All 5 acceptance criteria met with 2.0s batch performance approved via course correction.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\src\calculator\pob_engine.py</path>
+        <kind>class</kind>
+        <symbol>PoBCalculationEngine</symbol>
+        <lines>47-94</lines>
+        <reason>Main calculation engine wrapper implementing Story 1.8 optimizations: pre-compiled Lua functions (_lua_calculate_func at line 92), cached tree data (_tree_data_lua at line 93)</reason>
+      </artifact>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\src\calculator\pob_engine.py</path>
+        <kind>method</kind>
+        <symbol>PoBCalculationEngine._ensure_initialized()</symbol>
+        <lines>148-155</lines>
+        <reason>Task 2 implementation: Pre-compiles Calculate() function and caches reference to avoid globals lookup overhead on each calculation call</reason>
+      </artifact>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\src\calculator\pob_engine.py</path>
+        <kind>method</kind>
+        <symbol>PoBCalculationEngine tree caching</symbol>
+        <lines>157-164</lines>
+        <reason>Task 3 implementation: Caches passive tree as Python dict (not Lua table) to eliminate 69.5% bottleneck while avoiding mutation bugs</reason>
+      </artifact>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\src\calculator\pob_engine.py</path>
+        <kind>method</kind>
+        <symbol>PoBCalculationEngine.collect_garbage()</symbol>
+        <lines>483-500</lines>
+        <reason>Task 4 implementation: Explicit Lua garbage collection to prevent memory leaks during batch operations (AC-1.8.5)</reason>
+      </artifact>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\src\calculator\build_calculator.py</path>
+        <kind>function</kind>
+        <symbol>calculate_build_stats()</symbol>
+        <lines>74-84</lines>
+        <reason>Primary API for Epic 2 optimization algorithm. Unchanged signature maintains backward compatibility with Stories 1.5, 1.6. Internal optimizations transparent to callers.</reason>
+      </artifact>
+      <artifact>
+        <path>D:\poe2_optimizer_v6\tests\performance\test_batch_calculation.py</path>
+        <kind>test class</kind>
+        <symbol>TestBaselinePerformance</symbol>
+        <lines>55-186</lines>
+        <reason>Task 5 implementation: Comprehensive performance test suite covering single latency, batch 1000, memory usage, and leak detection (validates all 5 acceptance criteria)</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="lupa" version="2.6+">LuaJIT bindings for Python - Core dependency for PoB calculation engine integration</package>
+        <package name="pytest-benchmark" version="4.0+">Performance benchmarking framework - Task 1 &amp; 5 baseline and regression testing</package>
+        <package name="psutil" version="5.9+">Process and system monitoring - Task 4 memory usage tracking and leak detection</package>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint category="architecture">Layered Architecture: Calculator module is Integration Layer bridging PoB Lua engine with Python. Must not add new components, only optimize existing implementation.</constraint>
+    <constraint category="compatibility">Backward Compatibility: calculate_build_stats() API signature unchanged. All Story 1.5 integration tests (11/11) and Story 1.6 parity tests must continue passing.</constraint>
+    <constraint category="threading">Thread-Local Isolation: Each optimization thread requires isolated LuaRuntime instance via get_pob_engine() factory pattern for Epic 2 concurrency.</constraint>
+    <constraint category="performance">Performance Floor: 96.8% of execution time is Lua-side (PoB calculation engine). Further optimization requires Lua-side changes (deferred beyond MVP scope).</constraint>
+    <constraint category="memory">Memory Management: Batch operations must stay under 100MB memory growth (AC-1.8.4). Explicit Lua GC required to prevent leaks (AC-1.8.5).</constraint>
+    <constraint category="correctness">No Functional Changes: Story 1.8 is performance-only optimization. All calculation results must remain identical to pre-optimization baseline.</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>calculate_build_stats</name>
+      <kind>function</kind>
+      <signature>calculate_build_stats(build: BuildData) -&gt; BuildStats</signature>
+      <path>src/calculator/build_calculator.py:74</path>
+      <description>Primary API for Epic 2 optimization algorithm. Thread-safe via get_pob_engine(). Performance: Single call &lt;100ms, Batch (1000 calls) 2.0s (approved target post-course correction).</description>
+    </interface>
+    <interface>
+      <name>get_pob_engine</name>
+      <kind>function</kind>
+      <signature>get_pob_engine() -&gt; PoBCalculationEngine</signature>
+      <path>src/calculator/build_calculator.py:68</path>
+      <description>Thread-local factory for PoBCalculationEngine instances. Returns thread-specific engine to ensure LuaRuntime isolation for concurrent optimization sessions (Epic 2 requirement).</description>
+    </interface>
+    <interface>
+      <name>PoBCalculationEngine.calculate</name>
+      <kind>method</kind>
+      <signature>calculate(build: BuildData) -&gt; BuildStats</signature>
+      <path>src/calculator/pob_engine.py</path>
+      <description>Low-level calculation method using pre-compiled Lua functions and cached tree data. Converts build to Lua, executes Calculate(), returns BuildStats. Used by calculate_build_stats() wrapper.</description>
+    </interface>
+    <interface>
+      <name>PoBCalculationEngine.collect_garbage</name>
+      <kind>method</kind>
+      <signature>collect_garbage() -&gt; None</signature>
+      <path>src/calculator/pob_engine.py:483</path>
+      <description>Task 4: Explicit Lua garbage collection for batch operations. Call after large batches to prevent memory accumulation. Executes Lua collectgarbage('collect') command.</description>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      Story 1.8 uses pytest with pytest-benchmark for performance testing and psutil for memory monitoring. Performance tests measure mean/median/P95/P99 latency with spec-aligned thresholds (2.0s for batch 1000, 100ms for single calculation). Memory tests track RSS growth and verify no leaks over repeated runs. Tests marked with @pytest.mark.slow for long-running scenarios. Integration tests validate backward compatibility with Stories 1.5 (11/11 tests) and 1.6 (parity testing). Windows LuaJIT cleanup exception is known infrastructure issue from Story 1.6 - tests run via manual execution as documented workaround.
+    </standards>
+    <locations>
+      <location>tests/performance/</location>
+      <location>tests/integration/ (Story 1.5 integration tests)</location>
+      <location>tests/parity/ (Story 1.6 parity tests)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-1.8.1">Regression test: Verify batch 1000 calculations complete in &lt;2.1s (approved target with 5% margin). Use pytest-benchmark with --benchmark-compare for regression detection across commits.</idea>
+      <idea ac="AC-1.8.2">Unit test: Verify _lua_calculate_func is cached after initialization and reused across multiple calculate() calls. Mock Lua runtime to count function lookup calls.</idea>
+      <idea ac="AC-1.8.3">Unit test: Verify _tree_data_lua dict is cached and fresh Lua table created each call. Test that mutations don't corrupt cached dict (regression prevention for Task 3 bug).</idea>
+      <idea ac="AC-1.8.4">Stress test: Run batch 10,000 calculations and verify peak memory &lt;100MB. Use psutil to track RSS at 1000-iteration intervals, fail if threshold exceeded.</idea>
+      <idea ac="AC-1.8.5">Leak test: Run 50 batches (50,000 calculations) with explicit GC after each batch. Verify memory returns to within 10MB of baseline after final GC.</idea>
+      <idea ac="All">Integration test: Run full Story 1.5 test suite after optimization changes to validate backward compatibility. Expected: 11/11 tests pass.</idea>
+      <idea ac="Second Review">Security test: Run pip-audit on requirements.txt and verify zero vulnerabilities in lupa, pytest-benchmark, psutil dependencies. Automate in CI/CD when available.</idea>
+    </ideas>
+  </tests>
+</story-context>

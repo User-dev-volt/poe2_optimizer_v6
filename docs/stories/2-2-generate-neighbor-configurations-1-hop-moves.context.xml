@@ -1,0 +1,268 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2.2</storyId>
+    <title>Generate Neighbor Configurations (1-Hop Moves)</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-28</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-2-generate-neighbor-configurations-1-hop-moves.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to generate valid neighbor passive tree configurations</iWant>
+    <soThat>hill climbing can explore the optimization space</soThat>
+    <tasks>
+      - Task 1: Implement `generate_neighbors()` function skeleton (AC: #1-5)
+        - Subtask 1.1: Create `neighbor_generator.py` module in `src/optimizer/`
+        - Subtask 1.2: Define function signature accepting BuildData, PassiveTreeGraph, BudgetState
+        - Subtask 1.3: Define TreeMutation dataclass with mutation_type, nodes_added, nodes_removed, budget costs
+        - Subtask 1.4: Set up return structure (List[TreeMutation])
+
+      - Task 2: Implement "add node" neighbor generation (AC: #1, #3, #4, #5)
+        - Subtask 2.1: Identify all unallocated nodes that are adjacent to allocated nodes
+        - Subtask 2.2: For each candidate, validate tree connectivity using PassiveTreeGraph.is_connected()
+        - Subtask 2.3: Check budget availability (unallocated_used + 1 &lt;= unallocated_available)
+        - Subtask 2.4: Create TreeMutation objects with mutation_type="add", unallocated_cost=1
+        - Subtask 2.5: Prioritize candidates by node type (Notable &gt; Keystone &gt; Small &gt; Travel)
+        - Subtask 2.6: Limit to top 100-150 add neighbors if count exceeds threshold
+
+      - Task 3: Implement "swap node" neighbor generation (AC: #2, #3, #4, #5)
+        - Subtask 3.1: Identify all allocated nodes that can be removed (non-critical to tree connectivity)
+        - Subtask 3.2: For each removable node, find unallocated nodes that become connectable
+        - Subtask 3.3: Validate resulting tree connectivity after swap (remove old, add new)
+        - Subtask 3.4: Check respec budget availability (respec_used + 1 &lt;= respec_available or unlimited)
+        - Subtask 3.5: Create TreeMutation objects with mutation_type="swap", respec_cost=1
+        - Subtask 3.6: Prioritize swaps by improvement potential (Notable → Notable &gt; Travel → Notable)
+        - Subtask 3.7: Limit to top 50-100 swap neighbors if count exceeds threshold
+
+      - Task 4: Implement budget-aware prioritization strategy (AC: #5, Epic 2 Story 2.5 integration)
+        - Subtask 4.1: Add prioritize_adds parameter (bool, default=True)
+        - Subtask 4.2: If prioritize_adds=True, generate all add neighbors first
+        - Subtask 4.3: If prioritize_adds=True, only generate swap neighbors if unallocated budget exhausted
+        - Subtask 4.4: Implement node value scoring (Notable=3, Keystone=2, Small=1, Travel=0)
+        - Subtask 4.5: Sort candidates by value score descending before limiting count
+
+      - Task 5: Implement edge case handling (AC: #3, #4)
+        - Subtask 5.1: Handle case where no unallocated budget remains (return empty add neighbors)
+        - Subtask 5.2: Handle case where no respec budget remains (return empty swap neighbors)
+        - Subtask 5.3: Handle case where no valid neighbors exist (return empty list)
+        - Subtask 5.4: Validate that all returned mutations respect budget constraints
+        - Subtask 5.5: Log warning if neighbor generation produces 0 neighbors (convergence indicator)
+
+      - Task 6: Write unit tests for neighbor generation (AC: #1-5)
+        - Subtask 6.1: Test add neighbor generation with simple tree (10 nodes, 5 unallocated budget)
+        - Subtask 6.2: Test swap neighbor generation with simple tree (10 nodes, 5 respec budget)
+        - Subtask 6.3: Test connectivity validation (verify all neighbors have connected trees)
+        - Subtask 6.4: Test budget enforcement (add neighbors respect unallocated, swaps respect respec)
+        - Subtask 6.5: Test prioritization (Notable nodes appear before Travel nodes in results)
+        - Subtask 6.6: Test neighbor count limiting (verify ≤200 neighbors returned even with large tree)
+        - Subtask 6.7: Test edge cases (no budget, no valid moves, fully optimized tree)
+        - Subtask 6.8: Test free-first strategy (prioritize_adds=True generates adds before swaps)
+
+      - Task 7: Write integration tests with real PassiveTreeGraph (AC: #3)
+        - Subtask 7.1: Load real PoE 2 passive tree from Epic 1 data files
+        - Subtask 7.2: Test with realistic build (100 allocated nodes, 15 unallocated, 10 respec)
+        - Subtask 7.3: Verify all generated neighbors are valid builds (connectivity, budget)
+        - Subtask 7.4: Measure performance (target: ≤20ms per generate_neighbors() call)
+        - Subtask 7.5: Verify is_connected() call count stays within bounds (≤1000 per iteration)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    - AC-2.2.1: Generate "add node" neighbors: add any unallocated connected node
+    - AC-2.2.2: Generate "swap node" neighbors: remove 1 node, add 1 connected node
+    - AC-2.2.3: Validate all neighbors are valid (connected tree, within budget)
+    - AC-2.2.4: Limit neighbor count to reasonable size (50-200 per iteration)
+    - AC-2.2.5: Prioritize high-value nodes (Notable/Keystone over travel nodes)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/tech-spec-epic-2.md" title="Epic 2 Technical Specification">
+        <section>APIs and Interfaces - Neighbor Generation API</section>
+        <snippet>Defines generate_neighbors() function signature accepting BuildData, PassiveTreeGraph, BudgetState. Returns List[TreeMutation] with strategies for add node (allocate unallocated connected node) and swap node (remove 1, add 1). Implements prioritize_adds parameter for free-first optimization strategy. Limit: Top 100 by value.</snippet>
+      </doc>
+      <doc path="docs/tech-spec-epic-2.md" title="Epic 2 Technical Specification">
+        <section>Data Models - TreeMutation</section>
+        <snippet>TreeMutation dataclass with mutation_type ("add" | "swap"), nodes_added (Set[int]), nodes_removed (Set[int]), unallocated_cost, respec_cost fields. Includes apply() method to generate new BuildData. All mutations validated for tree connectivity before creation.</snippet>
+      </doc>
+      <doc path="docs/architecture/epic-2-optimizer-design.md" title="Epic 2 Architecture Design">
+        <section>Section 4.2 - Neighbor Generator</section>
+        <snippet>Module implements tree mutation strategies with connectivity validation. Add strategy: allocate any unallocated node adjacent to current tree. Swap strategy: deallocate one node, allocate one new node. Prioritization by node value: Notable=3, Keystone=2, Small=1, Travel=0. Performance target: generate 100-200 neighbors within 20ms budget.</snippet>
+      </doc>
+      <doc path="docs/PRD.md" title="Product Requirements Document">
+        <section>Epic 2 - Core Optimization Engine</section>
+        <snippet>Hill climbing algorithm with neighbor generation (1-hop node additions/swaps). Dual budget constraint enforcement (unallocated points + respec points). Neighbor space assumption: 1-hop generation produces 50-200 neighbors per iteration, manageable for optimization within 5-minute timeout.</snippet>
+      </doc>
+      <doc path="docs/performance/passive-tree-performance-report.md" title="Passive Tree Performance Report">
+        <section>Story 2.2 Optimization Impact</section>
+        <snippet>PassiveTreeGraph.is_connected() validated at 0.0185ms average (27x faster than 0.5ms target). Budget allows 100-1000 connectivity checks (2-20ms) within 20ms neighbor generation target. Current BFS implementation exceeds requirements, no optimization needed.</snippet>
+      </doc>
+      <doc path="docs/testing-coverage.md" title="Testing Coverage Guide">
+        <section>Configuration and Standards</section>
+        <snippet>Uses pytest with pytest-cov for coverage reporting. Source directory: src/, configured in pytest.ini. Current Epic 1 baseline: 63% overall coverage with calculator/passive_tree.py at 92% coverage. Testing framework includes pytest-benchmark for performance validation.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact path="src/calculator/passive_tree.py" kind="service" symbol="PassiveTreeGraph" lines="63-130">
+        <reason>Provides tree structure and is_connected() method for connectivity validation. Critical dependency for validating all generated neighbors maintain connected tree property. Performance: 0.0185ms average per call.</reason>
+      </artifact>
+      <artifact path="src/calculator/passive_tree.py" kind="service" symbol="PassiveTreeGraph.is_connected" lines="94-109">
+        <reason>BFS connectivity validation used to verify add/swap mutations produce valid trees. Accepts from_node, to_node, allocated set. Returns bool. Essential for AC-2.2.3 (validate all neighbors are valid).</reason>
+      </artifact>
+      <artifact path="src/calculator/passive_tree.py" kind="service" symbol="PassiveTreeGraph.get_neighbors" lines="82-92">
+        <reason>Returns set of node IDs adjacent to given node. Used to identify candidate nodes for "add" mutations (unallocated nodes adjacent to allocated tree).</reason>
+      </artifact>
+      <artifact path="src/calculator/passive_tree.py" kind="model" symbol="PassiveNode" lines="27-59">
+        <reason>Contains node metadata including is_keystone, is_notable flags needed for AC-2.2.5 prioritization (Notable/Keystone &gt; Small &gt; Travel). Node value scoring depends on these properties.</reason>
+      </artifact>
+      <artifact path="src/models/build_data.py" kind="model" symbol="BuildData" lines="39-76">
+        <reason>Immutable build representation with passive_nodes (Set[int]) field. TreeMutation.apply() consumes BuildData and returns new BuildData. Character level property used for budget calculations.</reason>
+      </artifact>
+      <artifact path="src/models/build_data.py" kind="model" symbol="BuildData.unallocated_points" lines="65-76">
+        <reason>Property calculates available unallocated points: (level + 23) - allocated_point_count. Used by budget validation to determine if "add" mutations are allowed (AC-2.2.1).</reason>
+      </artifact>
+      <artifact path="src/optimizer/hill_climbing.py" kind="service" symbol="optimize_build" lines="1-50">
+        <reason>Main optimization loop that will call generate_neighbors(). Consumer of this story's deliverable. Integration point where neighbor_generator.py plugs into the optimization algorithm.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="pytest" version="&gt;=7.4.0">Unit test framework</package>
+        <package name="pytest-cov" version="&gt;=4.1.0">Coverage reporting</package>
+        <package name="pytest-benchmark" version="&gt;=4.0.0">Performance testing (validate 20ms target)</package>
+        <package name="psutil" version="&gt;=5.9.0">System utilities</package>
+      </python>
+      <internal>
+        <module>src.calculator.passive_tree::PassiveTreeGraph</module>
+        <module>src.models.build_data::BuildData</module>
+        <module>src.optimizer.budget_tracker::BudgetState (Story 2.4 - not yet implemented)</module>
+      </internal>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <architectural>
+      <constraint>Zero modifications to Epic 1 code (calculator, parsers, models are stable APIs)</constraint>
+      <constraint>No circular dependencies (optimizer depends on calculator, not vice versa)</constraint>
+      <constraint>Module location: src/optimizer/neighbor_generator.py (follows established module structure)</constraint>
+      <constraint>All TreeMutation objects must be validated for connectivity BEFORE creation (no invalid mutations allowed)</constraint>
+    </architectural>
+    <performance>
+      <constraint>Target: 20ms total for neighbor generation per iteration (within 400ms iteration budget)</constraint>
+      <constraint>Limit neighbors to 50-200 to control PoB calculation overhead in main loop</constraint>
+      <constraint>is_connected() calls budget: 100-1000 connectivity checks = 2-20ms (validated achievable)</constraint>
+      <constraint>Prioritization required: Notable=3, Keystone=2, Small=1, Travel=0 value scoring</constraint>
+    </performance>
+    <functional>
+      <constraint>All neighbors MUST maintain connected tree property (no orphan nodes)</constraint>
+      <constraint>All neighbors MUST respect budget constraints (validated before inclusion)</constraint>
+      <constraint>Add mutations consume unallocated budget only (unallocated_cost=1, respec_cost=0)</constraint>
+      <constraint>Swap mutations consume respec budget only (unallocated_cost=0, respec_cost=1)</constraint>
+      <constraint>prioritize_adds=True: generate ALL add neighbors first, swaps only if unallocated exhausted</constraint>
+    </functional>
+    <data>
+      <constraint>BuildData immutability: use dataclasses.replace() for modifications, never mutate in-place</constraint>
+      <constraint>TreeMutation.apply() must return NEW BuildData instance (immutable pattern)</constraint>
+      <constraint>Return type: List[TreeMutation] sorted by value (highest value first)</constraint>
+    </data>
+  </constraints>
+  <interfaces>
+    <api name="generate_neighbors" kind="function">
+      <signature>
+def generate_neighbors(
+    build: BuildData,
+    tree: PassiveTreeGraph,
+    budget: BudgetState,
+    prioritize_adds: bool = True
+) -> List[TreeMutation]:
+      </signature>
+      <description>Main API for neighbor generation. Returns valid tree mutations sorted by node value. Implements add (free budget) and swap (respec budget) strategies with connectivity validation.</description>
+      <path>src/optimizer/neighbor_generator.py</path>
+    </api>
+    <api name="TreeMutation" kind="dataclass">
+      <signature>
+@dataclass
+class TreeMutation:
+    mutation_type: str                  # "add" | "swap"
+    nodes_added: Set[int]               # Nodes to allocate
+    nodes_removed: Set[int]             # Nodes to deallocate
+    unallocated_cost: int               # Budget cost: free points
+    respec_cost: int                    # Budget cost: respec points
+
+    def apply(self, build: BuildData) -> BuildData:
+        """Apply mutation to build, return new BuildData."""
+      </signature>
+      <description>Data model representing a single tree modification. Validated for connectivity before creation. apply() method returns new immutable BuildData instance.</description>
+      <path>src/optimizer/neighbor_generator.py</path>
+    </api>
+    <api name="PassiveTreeGraph.is_connected" kind="method">
+      <signature>
+def is_connected(self, from_node: int, to_node: int, allocated: Set[int]) -> bool:
+      </signature>
+      <description>BFS connectivity validation from Epic 1. Checks if path exists from from_node to to_node using only allocated nodes. Performance: 0.0185ms average. Used to validate all generated neighbors.</description>
+      <path>src/calculator/passive_tree.py:94-109</path>
+    </api>
+    <api name="PassiveTreeGraph.get_neighbors" kind="method">
+      <signature>
+def get_neighbors(self, node_id: int) -> Set[int]:
+      </signature>
+      <description>Returns set of node IDs adjacent to given node. Used to identify candidate nodes for add mutations (unallocated nodes adjacent to allocated tree).</description>
+      <path>src/calculator/passive_tree.py:82-92</path>
+    </api>
+    <api name="BudgetState" kind="dataclass">
+      <signature>
+@dataclass
+class BudgetState:
+    unallocated_available: int
+    unallocated_used: int
+    respec_available: Optional[int]     # None = unlimited
+    respec_used: int
+      </signature>
+      <description>Budget tracking state from Story 2.4 (dependency). Used to validate if mutations fit within budget constraints. Note: Story 2.4 not yet implemented - may need stub for testing.</description>
+      <path>src/optimizer/budget_tracker.py (Story 2.4)</path>
+    </api>
+  </interfaces>
+  <tests>
+    <standards>
+Project uses pytest as test framework with pytest-cov for coverage reporting (configured in pytest.ini). Test organization follows three-tier structure: unit tests (tests/unit/), integration tests (tests/integration/), and performance tests (tests/performance/). Current Epic 1 baseline: 63% overall coverage with passive_tree.py at 92%. Story 2.2 should achieve similar high coverage (&gt;85%) with comprehensive unit and integration tests. Performance tests should use pytest-benchmark to validate 20ms neighbor generation target. All tests must use Epic 1's established fixtures pattern (see tests/fixtures/) for test data.
+    </standards>
+    <locations>
+      <location>tests/unit/optimizer/test_neighbor_generator.py (new file for this story)</location>
+      <location>tests/integration/optimizer/test_neighbor_generator.py (new file for this story)</location>
+      <location>tests/performance/ (for 20ms performance validation using pytest-benchmark)</location>
+      <location>tests/fixtures/optimization_builds/ (existing test corpus with real PoE2 builds)</location>
+    </locations>
+    <ideas>
+      <test_idea ac="AC-2.2.1" category="unit">
+Test add neighbor generation with simple tree (10 nodes, 5 unallocated budget). Verify all generated mutations have mutation_type="add", unallocated_cost=1, respec_cost=0. Verify only adjacent unallocated nodes are included as candidates.
+      </test_idea>
+      <test_idea ac="AC-2.2.2" category="unit">
+Test swap neighbor generation with simple tree (10 nodes, 5 respec budget). Verify all generated mutations have mutation_type="swap", unallocated_cost=0, respec_cost=1. Verify removed nodes are non-critical to connectivity.
+      </test_idea>
+      <test_idea ac="AC-2.2.3" category="integration">
+Test connectivity validation: for all returned neighbors, apply mutation to build and verify PassiveTreeGraph.is_connected() returns True for resulting tree. No invalid neighbors should be returned.
+      </test_idea>
+      <test_idea ac="AC-2.2.4" category="unit">
+Test neighbor count limiting with large tree (200 allocated nodes, 50 candidates). Verify return list length ≤200 regardless of candidate count. Test boundary conditions (exactly 50, exactly 200, 1000 candidates).
+      </test_idea>
+      <test_idea ac="AC-2.2.5" category="unit">
+Test prioritization: create tree with mix of node types (Notable, Keystone, Small, Travel). Verify Notable nodes appear before Travel nodes in returned list. Verify value scoring: Notable=3, Keystone=2, Small=1, Travel=0.
+      </test_idea>
+      <test_idea ac="AC-2.2.5" category="unit">
+Test free-first strategy (prioritize_adds=True): verify all add neighbors generated before any swap neighbors. Test with unallocated budget available vs exhausted scenarios.
+      </test_idea>
+      <test_idea ac="AC-2.2.3, AC-2.2.4" category="unit">
+Test edge cases: no unallocated budget (returns empty add list), no respec budget (returns empty swap list), no valid neighbors (returns empty list). Verify graceful handling without exceptions.
+      </test_idea>
+      <test_idea ac="AC-2.2.1-2.2.5" category="integration">
+Load real PoE 2 passive tree from Epic 1 data files. Test with realistic build (100 allocated nodes, 15 unallocated, 10 respec). Verify all neighbors are valid builds and performance target met (&lt;20ms per call).
+      </test_idea>
+      <test_idea ac="Performance" category="performance">
+Use pytest-benchmark to measure generate_neighbors() performance across build sizes (50, 100, 150 allocated nodes). Target: ≤20ms per call. Verify is_connected() call count ≤1000 per iteration.
+      </test_idea>
+    </ideas>
+  </tests>
+</story-context>

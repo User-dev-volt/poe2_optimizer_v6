@@ -1,0 +1,316 @@
+{
+  "_metadata": {
+    "pob_version": "0.12.2",
+    "source": "Official Path of Building GUI (PoE 2)",
+    "date_recorded": "2025-10-21",
+    "note": "TRUE GUI parity baseline - stats calculated by official PoB application and extracted from exported XML files"
+  },
+  "build_01_witch_90": {
+    "character_class": "Witch",
+    "level": 90,
+    "stats": {
+      "total_dps": 1.134588,
+      "effective_hp": 872.13826500793,
+      "life": 1187,
+      "mana": 441,
+      "energy_shield": 0,
+      "evasion": 297,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_02_warrior_75": {
+    "character_class": "Warrior",
+    "level": 75,
+    "stats": {
+      "total_dps": 0.913752,
+      "effective_hp": 745.02797027636,
+      "life": 1014,
+      "mana": 361,
+      "energy_shield": 0,
+      "evasion": 252,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_03_ranger_60": {
+    "character_class": "Ranger",
+    "level": 60,
+    "stats": {
+      "total_dps": 1.0143,
+      "effective_hp": 594.40594472739,
+      "life": 809,
+      "mana": 298,
+      "energy_shield": 0,
+      "evasion": 207,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_04_monk_30": {
+    "character_class": "Monk",
+    "level": 30,
+    "stats": {
+      "total_dps": 0.640681125,
+      "effective_hp": 316.67362444686,
+      "life": 431,
+      "mana": 181,
+      "energy_shield": 0,
+      "evasion": 117,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_05_mercenary_100": {
+    "character_class": "Mercenary",
+    "level": 100,
+    "stats": {
+      "total_dps": 1.032436125,
+      "effective_hp": 970.59363780579,
+      "life": 1321,
+      "mana": 466,
+      "energy_shield": 0,
+      "evasion": 327,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_06_sorceress_90": {
+    "character_class": "Sorceress",
+    "level": 90,
+    "stats": {
+      "total_dps": 1.134588,
+      "effective_hp": 872.13826500793,
+      "life": 1187,
+      "mana": 441,
+      "energy_shield": 0,
+      "evasion": 297,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_07_witch_01": {
+    "character_class": "Witch",
+    "level": 1,
+    "stats": {
+      "total_dps": 0.183183,
+      "effective_hp": 47.758203222843,
+      "life": 65,
+      "mana": 67,
+      "energy_shield": 0,
+      "evasion": 30,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_08_warrior_30": {
+    "character_class": "Warrior",
+    "level": 30,
+    "stats": {
+      "total_dps": 0.589280125,
+      "effective_hp": 328.42948985556,
+      "life": 447,
+      "mana": 172,
+      "energy_shield": 0,
+      "evasion": 117,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_09_ranger_90": {
+    "character_class": "Ranger",
+    "level": 90,
+    "stats": {
+      "total_dps": 1.1648,
+      "effective_hp": 872.13826500793,
+      "life": 1187,
+      "mana": 424,
+      "energy_shield": 0,
+      "evasion": 297,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_10_monk_60": {
+    "character_class": "Monk",
+    "level": 60,
+    "stats": {
+      "total_dps": 0.861322,
+      "effective_hp": 594.40594472739,
+      "life": 809,
+      "mana": 307,
+      "energy_shield": 0,
+      "evasion": 207,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_11_mercenary_75": {
+    "character_class": "Mercenary",
+    "level": 75,
+    "stats": {
+      "total_dps": 0.9400405,
+      "effective_hp": 739.15003757201,
+      "life": 1006,
+      "mana": 361,
+      "energy_shield": 0,
+      "evasion": 252,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_12_sorceress_30": {
+    "character_class": "Sorceress",
+    "level": 30,
+    "stats": {
+      "total_dps": 0.673463,
+      "effective_hp": 316.67362444686,
+      "life": 431,
+      "mana": 189,
+      "energy_shield": 0,
+      "evasion": 117,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_13_huntress_01": {
+    "character_class": "Huntress",
+    "level": 1,
+    "stats": {
+      "total_dps": 0.44296875,
+      "effective_hp": 47.758203222843,
+      "life": 65,
+      "mana": 50,
+      "energy_shield": 0,
+      "evasion": 30,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  },
+  "build_14_huntress_90": {
+    "character_class": "Huntress",
+    "level": 90,
+    "stats": {
+      "total_dps": 1.456,
+      "effective_hp": 872.13826500793,
+      "life": 1187,
+      "mana": 424,
+      "energy_shield": 0,
+      "evasion": 297,
+      "armour": 0,
+      "block_chance": 0.0,
+      "spell_block_chance": 0.0,
+      "movement_speed": 1.0,
+      "resistances": {
+        "fire": -50,
+        "cold": -50,
+        "lightning": -50,
+        "chaos": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,265 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>4</storyId>
+    <title>Implement Dual Budget Constraint Tracking</title>
+    <status>drafted</status>
+    <generatedAt>2025-10-28</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-4-implement-dual-budget-constraint-tracking.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>separate tracking for unallocated points and respec points with hard budget enforcement</iWant>
+    <soThat>the optimization algorithm never exceeds either budget constraint and prioritizes cost-effective improvements</soThat>
+    <tasks>
+      <task id="1" acs="2.4.1, 2.4.2">
+        <description>Implement BudgetState data model</description>
+        <subtasks>
+          <subtask id="1.1">Create BudgetState dataclass with fields: unallocated_available, unallocated_used, respec_available, respec_used</subtask>
+          <subtask id="1.2">Implement can_allocate(count) method returning bool</subtask>
+          <subtask id="1.3">Implement can_respec(count) method with unlimited support (None check)</subtask>
+          <subtask id="1.4">Add validation to ensure counters never go negative</subtask>
+        </subtasks>
+      </task>
+      <task id="2" acs="2.4.3, 2.4.4, 2.4.5">
+        <description>Implement BudgetTracker class</description>
+        <subtasks>
+          <subtask id="2.1">Create BudgetTracker class wrapping BudgetState</subtask>
+          <subtask id="2.2">Implement can_apply_mutation(mutation: TreeMutation) -> bool checking both budgets</subtask>
+          <subtask id="2.3">Implement apply_mutation(mutation: TreeMutation) updating counters</subtask>
+          <subtask id="2.4">Add budget validation with AssertionError on overrun (fail-fast)</subtask>
+        </subtasks>
+      </task>
+      <task id="3" acs="2.4.6">
+        <description>Implement budget reporting</description>
+        <subtasks>
+          <subtask id="3.1">Implement get_budget_summary() -> dict returning usage breakdown</subtask>
+          <subtask id="3.2">Add budget info to progress callback data structure</subtask>
+          <subtask id="3.3">Format budget display strings for logging and UI</subtask>
+        </subtasks>
+      </task>
+      <task id="4" acs="all">
+        <description>Write unit tests</description>
+        <subtasks>
+          <subtask id="4.1">Test can_allocate() boundary conditions (0, available, available+1)</subtask>
+          <subtask id="4.2">Test can_respec() with limited and unlimited budgets</subtask>
+          <subtask id="4.3">Test budget enforcement prevents overspend</subtask>
+          <subtask id="4.4">Test apply_mutation() correctly updates both counters</subtask>
+          <subtask id="4.5">Test budget summary format matches expected output</subtask>
+        </subtasks>
+      </task>
+      <task id="5" acs="2.4.5">
+        <description>Integration with neighbor generator</description>
+        <subtasks>
+          <subtask id="5.1">Modify neighbor generator to accept BudgetState parameter</subtask>
+          <subtask id="5.2">Filter out mutations that exceed budget before returning neighbor list</subtask>
+          <subtask id="5.3">Add integration test verifying no budget violations during generation</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="2.4.1">
+      <description>Track unallocated_available and unallocated_used (free allocations)</description>
+      <details>
+        - System maintains counter for unallocated points budget
+        - System tracks how many unallocated points have been spent
+        - Counter never goes negative
+      </details>
+    </ac>
+    <ac id="2.4.2">
+      <description>Track respec_available and respec_used (costly deallocations)</description>
+      <details>
+        - System maintains counter for respec points budget
+        - System tracks how many respec points have been spent
+        - Supports None value for unlimited respec budget
+        - Counter never goes negative
+      </details>
+    </ac>
+    <ac id="2.4.3">
+      <description>Enforce: unallocated_used &lt;= unallocated_available</description>
+      <details>
+        - System validates before applying any mutation that adds nodes
+        - System rejects mutations that would exceed unallocated budget
+        - Hard stop prevents budget overrun
+      </details>
+    </ac>
+    <ac id="2.4.4">
+      <description>Enforce: respec_used &lt;= respec_available (or unlimited if None)</description>
+      <details>
+        - System validates before applying any mutation that removes nodes
+        - System rejects mutations that would exceed respec budget
+        - If respec_available is None, no limit enforced (unlimited mode)
+      </details>
+    </ac>
+    <ac id="2.4.5">
+      <description>Prevent moves that exceed either budget</description>
+      <details>
+        - Before generating or accepting any neighbor mutation, system checks both budgets
+        - Mutations that violate either constraint are filtered out during neighbor generation
+        - Algorithm never proposes moves it cannot afford
+      </details>
+    </ac>
+    <ac id="2.4.6">
+      <description>Log budget usage in optimization progress</description>
+      <details>
+        - Progress updates include current budget consumption
+        - Format: "Budget: 8/15 unallocated, 3/12 respec" or "Budget: 0/0 unallocated, 5/unlimited respec"
+        - Final result includes complete budget breakdown
+      </details>
+    </ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-2.2: Budget Constraint (Unallocated Points + Respec Points)</section>
+        <snippet>System SHALL provide budget input with clear UI for TWO types of points: Primary Input - Unallocated Passive Points, and secondary respec points budget.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-4.3: Budget Enforcement (Dual Constraint)</section>
+        <snippet>System SHALL track and enforce TWO separate budget constraints: Unallocated Points Constraint (count new node allocations) and Respec Points Constraint (count node deallocations).</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Data Models and Contracts - BudgetState</section>
+        <snippet>BudgetState dataclass tracks budget consumption with fields: unallocated_available, unallocated_used, respec_available (Optional[int]), respec_used. Includes can_allocate() and can_respec() methods for budget validation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>APIs and Interfaces - Budget Tracking API</section>
+        <snippet>BudgetTracker class manages dual budget constraints with methods: can_apply_mutation(), apply_mutation(), get_budget_summary(). Enforces hard budget limits with AssertionError on violations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Story 2.4: Implement Dual Budget Constraint Tracking (AC-2.4.1 through AC-2.4.6)</section>
+        <snippet>Track unallocated and respec budgets separately. Enforce constraints before mutations. Support unlimited respec mode (None value). Log budget usage in progress updates.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/epic-2-optimizer-design.md</path>
+        <title>Epic 2 Architecture Design</title>
+        <section>4.3 Budget Tracker (Story 2.4)</section>
+        <snippet>Module: optimizer/budget_tracker.py. Pure state management with zero dependencies. Manages dual budget constraints, provides budget availability queries, generates usage reports. Invariants: unallocated_used &lt;= unallocated_available, respec_used &lt;= respec_available.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture/epic-2-optimizer-design.md</path>
+        <title>Epic 2 Architecture Design</title>
+        <section>3.3 Budget State - Data Model</section>
+        <snippet>BudgetState dataclass with unallocated_available/used and respec_available/used fields. Methods: can_allocate(count) checks unallocated budget, can_respec(count) supports unlimited mode (None check).</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Epic 2: Core Optimization Engine</section>
+        <snippet>Implement hill climbing algorithm with dual budget constraint enforcement (unallocated points + respec points). Budget constraints never exceeded with hard stop enforcement.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/optimizer/neighbor_generator.py</path>
+        <kind>module</kind>
+        <symbol>BudgetState</symbol>
+        <lines>37-80</lines>
+        <reason>Simplified BudgetState currently exists here. Story 2.4 will create full implementation in budget_tracker.py and migrate neighbor_generator to use it.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/neighbor_generator.py</path>
+        <kind>module</kind>
+        <symbol>TreeMutation</symbol>
+        <lines>83-100+</lines>
+        <reason>Data model representing tree modifications. BudgetTracker.can_apply_mutation() will validate TreeMutation cost fields.</reason>
+      </artifact>
+      <artifact>
+        <path>src/models/optimization_config.py</path>
+        <kind>module</kind>
+        <symbol>OptimizationConfiguration</symbol>
+        <lines>10-113</lines>
+        <reason>Input config includes budget parameters: unallocated_points and respec_points. Story 2.4 BudgetTracker initialized from these values.</reason>
+      </artifact>
+      <artifact>
+        <path>src/models/optimization_config.py</path>
+        <kind>module</kind>
+        <symbol>OptimizationResult</symbol>
+        <lines>116-264</lines>
+        <reason>Output result tracks budget usage: unallocated_used and respec_used fields. Story 2.4 BudgetTracker populates these values.</reason>
+      </artifact>
+      <artifact>
+        <path>src/optimizer/hill_climbing.py</path>
+        <kind>module</kind>
+        <symbol>optimize_build</symbol>
+        <lines>unknown</lines>
+        <reason>Main optimization loop will integrate BudgetTracker: initialize, check before mutations, update after accepts.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="dataclasses">Built-in Python 3.10+ - Used for BudgetState and BudgetTracker data models</package>
+        <package name="typing">Built-in Python 3.10+ - Type hints (Optional[int] for unlimited respec mode)</package>
+      </python>
+      <note>Story 2.4 has ZERO external dependencies. Pure Python stdlib implementation.</note>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architectural">Pure state management module with zero external dependencies (no imports from calculator or Epic 1 modules)</constraint>
+    <constraint type="integration">BudgetState must remain compatible with neighbor_generator.py current usage until migration complete</constraint>
+    <constraint type="defensive">Defense-in-depth: Budget checked at generation time AND before applying mutations</constraint>
+    <constraint type="reliability">Fail-fast with AssertionError if budget enforcement fails (indicates algorithm bug, not user error)</constraint>
+    <constraint type="testing">Unit tests must cover boundary conditions: 0 budget, at limit, over limit, unlimited mode (None)</constraint>
+    <constraint type="data">BudgetState counters never go negative (validation in __post_init__ or setter methods)</constraint>
+    <constraint type="immutability">TreeMutation cost fields (unallocated_cost, respec_cost) are immutable - BudgetTracker reads but never modifies them</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>TreeMutation</name>
+      <kind>dataclass</kind>
+      <signature>@dataclass TreeMutation: mutation_type: str, nodes_added: Set[int], nodes_removed: Set[int], unallocated_cost: int, respec_cost: int</signature>
+      <path>src/optimizer/neighbor_generator.py:83-100+</path>
+      <usage>BudgetTracker.can_apply_mutation(mutation) checks mutation.unallocated_cost and mutation.respec_cost against budget</usage>
+    </interface>
+    <interface>
+      <name>OptimizationConfiguration</name>
+      <kind>dataclass</kind>
+      <signature>@dataclass OptimizationConfiguration: build, metric, unallocated_points: int, respec_points: Optional[int], max_iterations, max_time_seconds, convergence_patience, progress_callback</signature>
+      <path>src/models/optimization_config.py:10-113</path>
+      <usage>BudgetTracker initialized with config.unallocated_points and config.respec_points</usage>
+    </interface>
+    <interface>
+      <name>OptimizationResult.budget_usage</name>
+      <kind>dict field</kind>
+      <signature>{'unallocated_used': int, 'respec_used': int}</signature>
+      <path>src/models/optimization_config.py:249-251</path>
+      <usage>BudgetTracker.get_budget_summary() returns dict matching this format for OptimizationResult population</usage>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>pytest framework with AC-based test organization. Unit tests mock external dependencies. Integration tests use real PassiveTreeGraph. Coverage target: 80%+ line coverage per Epic 2 test strategy. Test file naming: test_budget_tracker.py (unit), test_budget_integration.py (integration). Fixtures defined in conftest.py for reusable test data. All AC IDs explicitly referenced in test docstrings.</standards>
+    <locations>
+      <location>tests/unit/optimizer/test_budget_tracker.py - Unit tests for BudgetState and BudgetTracker classes</location>
+      <location>tests/integration/optimizer/test_budget_integration.py - Integration tests with neighbor_generator and hill_climbing</location>
+      <location>tests/unit/optimizer/ - Existing pattern for optimizer unit tests</location>
+      <location>tests/integration/optimizer/ - Existing pattern for optimizer integration tests</location>
+    </locations>
+    <ideas>
+      <idea ac="2.4.1">Test BudgetState.unallocated_available initialization with various values (0, 10, 100). Test unallocated_used starts at 0. Test incrementing unallocated_used. Test validation prevents negative values.</idea>
+      <idea ac="2.4.2">Test BudgetState.respec_available with limited budget (10), unlimited budget (None), and zero budget (0). Test respec_used tracking. Test validation prevents negative values.</idea>
+      <idea ac="2.4.3">Test can_allocate() boundary conditions: unallocated_used=0 (can allocate), unallocated_used=available (cannot), unallocated_used=available-1 (can allocate 1). Test apply_mutation rejects when budget exceeded.</idea>
+      <idea ac="2.4.4">Test can_respec() with limited budget (same boundaries as AC 2.4.3). Test unlimited mode (respec_available=None) always returns True. Test apply_mutation handles unlimited mode correctly.</idea>
+      <idea ac="2.4.5">Integration test: Generate 100 neighbors, apply all via BudgetTracker, verify no budget violations. Test neighbor_generator filters mutations exceeding budget before returning list.</idea>
+      <idea ac="2.4.6">Test get_budget_summary() format matches: {'unallocated_used': X, 'unallocated_available': Y, 'respec_used': Z, 'respec_available': W}. Test format_budget_string() produces "Budget: 8/15 unallocated, 3/12 respec" and "Budget: 0/0 unallocated, 5/unlimited respec".</idea>
+      <idea ac="all">Test AssertionError raised on budget overrun in apply_mutation (fail-fast validation). Test edge case: swap mutation with unallocated_cost=1 and respec_cost=1 (dual budget consumption).</idea>
+    </ideas>
+  </tests>
+</story-context>
