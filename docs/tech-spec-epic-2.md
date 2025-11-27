@@ -13,6 +13,23 @@ Epic 2 implements the core optimization engine that transforms the passive tree 
 
 Building on Epic 1's proven 2ms-per-calculation performance and 0% calculation error rate, Epic 2 introduces an intelligent iterative search algorithm that evaluates thousands of potential tree configurations to discover improvements users would never find through manual experimentation. The target outcome is 5-15% median improvement in user-selected metrics (DPS, EHP, or balanced) while completing within 5 minutes and never exceeding budget constraints—delivering 3+ hours of manual optimization value in under 30 seconds of automated computation.
 
+---
+
+## ⚠️ IMPORTANT: Windows LuaJIT Fatal Exception (Known & Accepted)
+
+**Windows Fatal Exception 0xe24c4a02 is a KNOWN platform limitation, NOT a bug in Epic 2!**
+
+- **Status:** Documented and accepted in ADR-003 (Epic 1, Story 2.7)
+- **Occurs:** During cleanup AFTER calculations complete successfully
+- **Impact:** None - calculations are correct before crash
+- **Mitigation:** Use `pytest -n auto --dist=loadfile` for batch calculations
+- **Epic 2 Usage:** Story 2.9 completed with this workaround (DPS=311.7 verified)
+- **Reference:** `docs/decisions/ADR-003-windows-luajit-cleanup-mitigation.md`
+
+For Epic 2 validation and optimization runs, use pytest-xdist process isolation pattern. All tests pass correctly before the cleanup crash occurs.
+
+---
+
 ## Objectives and Scope
 
 ### In Scope

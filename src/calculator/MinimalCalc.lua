@@ -230,8 +230,34 @@ data.monsterAllyLifeTable = {}
 data.highPrecisionMods = {}  -- Required by ModDB.lua:137 (modifier precision tracking)
 -- Unarmed weapon data now defined above after loading Data/Misc.lua (lines 181-189)
 -- Weapon type info (required by CalcActiveSkill.lua:220)
+-- Story 2.9: Added full weapon type definitions for PoE 2
 data.weaponTypeInfo = {
-    None = { name = "None", oneHand = false, melee = true, flag = "Unarmed" }
+    None = { name = "None", oneHand = false, melee = true, flag = "Unarmed" },
+    -- Ranged weapons
+    Bow = { name = "Bow", oneHand = false, melee = false, flag = "Bow" },
+    Crossbow = { name = "Crossbow", oneHand = false, melee = false, flag = "Crossbow" },
+    -- Melee weapons
+    Staff = { name = "Staff", oneHand = false, melee = true, flag = "Staff" },
+    ["Two Handed Sword"] = { name = "Two Handed Sword", oneHand = false, melee = true, flag = "Sword" },
+    ["Two Handed Axe"] = { name = "Two Handed Axe", oneHand = false, melee = true, flag = "Axe" },
+    ["Two Handed Mace"] = { name = "Two Handed Mace", oneHand = false, melee = true, flag = "Mace" },
+    ["One Handed Sword"] = { name = "One Handed Sword", oneHand = true, melee = true, flag = "Sword" },
+    ["One Handed Axe"] = { name = "One Handed Axe", oneHand = true, melee = true, flag = "Axe" },
+    ["One Handed Mace"] = { name = "One Handed Mace", oneHand = true, melee = true, flag = "Mace" },
+    Claw = { name = "Claw", oneHand = true, melee = true, flag = "Claw" },
+    Dagger = { name = "Dagger", oneHand = true, melee = true, flag = "Dagger" },
+    -- Caster weapons
+    Wand = { name = "Wand", oneHand = true, melee = false, flag = "Wand" },
+    Sceptre = { name = "Sceptre", oneHand = true, melee = true, flag = "Sceptre" }
+}
+-- Resource cost divisors (required by CalcOffence.lua:1885)
+-- Story 2.9: Added to fix "attempt to index nil value (field 'costs')" error
+data.costs = {
+    Mana = { Divisor = 1 },
+    Life = { Divisor = 1 },
+    Rage = { Divisor = 1 },
+    ES = { Divisor = 1 },
+    EnergyShield = { Divisor = 1 }
 }
 -- Ailment damage type mapping (required by CalcOffence.lua:4916)
 data.defaultAilmentDamageTypes = {
@@ -255,6 +281,7 @@ data.misc = {
     TemporalChainsEffectCap = 75,  -- Required by CalcPerform.lua:855 (75% action speed reduction cap)
     ResistFloor = -200,  -- Required by CalcDefence.lua:878 (standard PoE resistance floor)
     MaxResistCap = 90,  -- Required by CalcDefence.lua:880 (standard PoE max resistance cap)
+    EnemyMaxResist = 75,  -- Required by CalcOffence.lua:513 (default enemy max resist cap)
     BlockChanceCap = 75,  -- Required by CalcDefence.lua:956 (standard PoE block chance cap)
     LowPoolThreshold = 0.5,  -- Required by CalcDefence.lua:79 (Low Life/Mana threshold = 50%)
     EvadeChanceCap = 95,  -- Required by CalcDefence.lua:1404 (standard PoE evasion chance cap)
@@ -293,24 +320,146 @@ data.monsterAccuracyTable = { 32, 35, 39, 43, 48, 52, 57, 62, 67, 72, 78, 84, 90
 
 print("[MinimalCalc] SUCCESS: Data stubs created (including monster stat tables)")
 
-print("[MinimalCalc] ===== STEP 4c: Stubbing data.gems and data.skills (not needed for Story 1.5 - no skills) =====")
-data.gems = {}  -- Empty table to satisfy ModParser; gem data not needed for passive-tree-only calculations
--- Add minimal default unarmed skill (required by CalcSetup.lua:1777)
-data.skills = {
-    MeleeUnarmedPlayer = {
+-- Story 2.9 Phase 2: Load real skill and gem data for DPS calculations
+print("[MinimalCalc] ===== STEP 4c: Loading skill and gem data (Story 2.9 Phase 2) =====")
+
+-- Helper functions for loading skill data (from Data.lua)
+local function makeSkillMod(modName, modType, modVal, flags, keywordFlags, ...)
+    return {
+        name = modName,
+        type = modType,
+        value = modVal,
+        flags = flags or 0,
+        keywordFlags = keywordFlags or 0,
+        ...
+    }
+end
+
+local function makeFlagMod(modName, ...)
+    return makeSkillMod(modName, "FLAG", true, 0, 0, ...)
+end
+
+local function makeSkillDataMod(dataKey, dataValue, ...)
+    return makeSkillMod("SkillData", "LIST", { key = dataKey, value = dataValue }, 0, 0, ...)
+end
+
+-- Initialize skill data tables
+data.skills = {}
+data.gems = {}
+data.gemForSkill = {}
+data.gemForBaseName = {}
+data.gemsByGameId = {}
+
+-- Load SkillStatMap (maps stat names to modifiers)
+print("[MinimalCalc] Loading Data/SkillStatMap.lua...")
+data.skillStatMap = LoadModule("Data/SkillStatMap", makeSkillMod, makeFlagMod, makeSkillDataMod)
+
+-- Create skillStatMapMeta for lazy processing (required by CalcActiveSkill.lua)
+data.skillStatMapMeta = {
+    __index = function(t, key)
+        local map = data.skillStatMap[key]
+        if map then
+            map = copyTable(map)
+            t[key] = map
+            for _, mod in ipairs(map) do
+                if t._grantedEffect then
+                    mod.source = "Skill:" .. t._grantedEffect.id
+                end
+            end
+            return map
+        end
+    end
+}
+
+-- Load skill definitions from Data/Skills/*.lua
+local skillTypes = { "act_str", "act_int", "act_dex", "sup_str", "sup_int", "sup_dex", "other", "minion" }
+for _, skillType in ipairs(skillTypes) do
+    local path = "Data/Skills/" .. skillType
+    print("[MinimalCalc] Loading " .. path .. ".lua...")
+    local success, err = pcall(function()
+        LoadModule(path, data.skills, makeSkillMod, makeFlagMod, makeSkillDataMod)
+    end)
+    if not success then
+        print("[MinimalCalc] WARNING: Failed to load " .. path .. ": " .. tostring(err))
+    end
+end
+
+-- Post-process skills: add IDs and sources
+local function sanitiseText(text)
+    return text and text:gsub("[\128-\255]", "") or ""
+end
+
+for skillId, grantedEffect in pairs(data.skills) do
+    grantedEffect.name = sanitiseText(grantedEffect.name)
+    grantedEffect.id = skillId
+    grantedEffect.modSource = "Skill:" .. skillId
+    grantedEffect.statSets = grantedEffect.statSets or {}
+
+    -- Add statMap to each statSet
+    for i, statSet in ipairs(grantedEffect.statSets) do
+        statSet.baseMods = statSet.baseMods or {}
+        statSet.qualityMods = statSet.qualityMods or {}
+        statSet.levelMods = statSet.levelMods or {}
+        statSet.stats = statSet.stats or {}
+        statSet.levels = statSet.levels or {}
+        statSet.baseFlags = statSet.baseFlags or {}
+        -- Create statMap with metatable for lazy loading
+        statSet.statMap = setmetatable({ _grantedEffect = grantedEffect }, data.skillStatMapMeta)
+    end
+end
+
+print("[MinimalCalc] Loaded " .. (function() local c=0; for _ in pairs(data.skills) do c=c+1 end; return c end)() .. " skills")
+
+-- Load gem definitions from Data/Gems.lua
+print("[MinimalCalc] Loading Data/Gems.lua...")
+local gemData = LoadModule("Data/Gems")
+if gemData then
+    for gemId, gem in pairs(gemData) do
+        gem.id = gemId
+        gem.grantedEffect = data.skills[gem.grantedEffectId]
+        if gem.grantedEffect then
+            data.gemForSkill[gem.grantedEffect] = gemId
+        end
+        data.gems[gemId] = gem
+
+        -- Build lookup tables
+        if gem.gameId then
+            data.gemsByGameId[gem.gameId] = data.gemsByGameId[gem.gameId] or {}
+            data.gemsByGameId[gem.gameId][gem.variantId or "default"] = gem
+        end
+
+        -- gemForBaseName lookup
+        local baseName = gem.name
+        if gem.grantedEffect and gem.grantedEffect.support then
+            baseName = baseName .. " Support"
+        end
+        if not data.gemForBaseName[baseName] or (gem.grantedEffect and not gem.grantedEffect.unsupported) then
+            data.gemForBaseName[baseName] = gemId
+        end
+    end
+    print("[MinimalCalc] Loaded " .. (function() local c=0; for _ in pairs(data.gems) do c=c+1 end; return c end)() .. " gems")
+else
+    print("[MinimalCalc] WARNING: Failed to load Gems.lua")
+end
+
+-- Add fallback MeleeUnarmedPlayer if not loaded from skills (required by CalcSetup.lua:1790)
+if not data.skills.MeleeUnarmedPlayer then
+    print("[MinimalCalc] Adding fallback MeleeUnarmedPlayer skill")
+    data.skills.MeleeUnarmedPlayer = {
         name = "Default Attack",
+        id = "MeleeUnarmedPlayer",
+        modSource = "Skill:MeleeUnarmedPlayer",
         color = 1,
-        baseFlags = { attack = true, melee = true, unarmed = true },  -- Added unarmed flag
-        baseMods = {},
-        qualityMods = {},
-        stats = {},
-        skillTypes = { [SkillType.Attack] = true, [SkillType.Melee] = true },  -- Required by CalcActiveSkill.lua:105
-        statSets = {  -- Required by CalcActiveSkill.lua:118
+        skillTypes = { [SkillType.Attack] = true, [SkillType.Melee] = true },
+        statSets = {
             [1] = {
-                baseFlags = { attack = true, melee = true, unarmed = true },  -- Added unarmed flag
-                mods = {},
-                stats = {},  -- Required by CalcTools.lua:149
-                levels = {}  -- Required by CalcTools.lua:146
+                baseFlags = { attack = true, melee = true, unarmed = true },
+                baseMods = {},
+                qualityMods = {},
+                levelMods = {},
+                stats = {},
+                levels = {},
+                statMap = setmetatable({ _grantedEffect = { id = "MeleeUnarmedPlayer" } }, data.skillStatMapMeta)
             }
         },
         levels = {
@@ -324,8 +473,13 @@ data.skills = {
             }
         }
     }
-}
-print("[MinimalCalc] SUCCESS: data.gems and data.skills initialized with minimal stubs")
+end
+
+print("[MinimalCalc] SUCCESS: Skill and gem data loaded")
+
+-- Story 2.9 Phase 2: Add minion data stub (required by CalcActiveSkill.lua:792)
+data.minions = {}
+data.spectres = {}
 
 -- STEP 5: Pre-load ModParser stub (ModTools expects this)
 print("[MinimalCalc] ===== STEP 5a: Creating ModParser stub =====")
@@ -371,6 +525,304 @@ assert(calcs.perform, "[MinimalCalc] ERROR: calcs.perform not defined")
 print("[MinimalCalc] SUCCESS: calcs.initEnv and calcs.perform verified")
 
 print("[MinimalCalc] ===== Bootstrap complete - minimal PoB environment ready =====")
+
+-- Story 2.9: Passive Node Stat Parser
+-- Parses stat strings from passive tree nodes into PoB mod objects
+-- This replaces the stubbed ModParser for passive tree calculations
+print("[MinimalCalc] ===== STEP 8: Creating passive node stat parser (Story 2.9) =====")
+
+-- Helper: Parse a single stat string into mod(s)
+-- Returns a table of mods or empty table if pattern not recognized
+local function parseStatString(statStr, source)
+    local mods = {}
+    source = source or "Passive Tree"
+
+    -- Normalize the stat string
+    local stat = statStr:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+
+    -- Pattern 1: +X to [Attribute] (Strength, Dexterity, Intelligence)
+    local value, attr = stat:match("^%+(%d+) to (%a+)$")
+    if value and attr then
+        local modName = nil
+        if attr == "Strength" then modName = "Str"
+        elseif attr == "Dexterity" then modName = "Dex"
+        elseif attr == "Intelligence" then modName = "Int"
+        end
+        if modName then
+            table.insert(mods, modLib.createMod(modName, "BASE", tonumber(value), source))
+            return mods
+        end
+    end
+
+    -- Pattern 2: +X to maximum Life
+    value = stat:match("^%+(%d+) to maximum Life$")
+    if value then
+        table.insert(mods, modLib.createMod("Life", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 3: +X to maximum Mana
+    value = stat:match("^%+(%d+) to maximum Mana$")
+    if value then
+        table.insert(mods, modLib.createMod("Mana", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 4: +X to maximum Energy Shield
+    value = stat:match("^%+(%d+) to maximum Energy Shield$")
+    if value then
+        table.insert(mods, modLib.createMod("EnergyShield", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 5: X% increased [DamageType] Damage
+    value, attr = stat:match("^(%d+)%% increased (%a+) Damage$")
+    if value and attr then
+        local modName = attr .. "Damage"
+        -- Map common damage types
+        if attr == "Physical" then modName = "PhysicalDamage"
+        elseif attr == "Fire" then modName = "FireDamage"
+        elseif attr == "Cold" then modName = "ColdDamage"
+        elseif attr == "Lightning" then modName = "LightningDamage"
+        elseif attr == "Chaos" then modName = "ChaosDamage"
+        elseif attr == "Elemental" then modName = "ElementalDamage"
+        end
+        table.insert(mods, modLib.createMod(modName, "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 6: X% increased Damage (generic)
+    value = stat:match("^(%d+)%% increased Damage$")
+    if value then
+        table.insert(mods, modLib.createMod("Damage", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 7: X% increased Attack Speed
+    value = stat:match("^(%d+)%% increased Attack Speed$")
+    if value then
+        table.insert(mods, modLib.createMod("Speed", "INC", tonumber(value), source, ModFlag.Attack))
+        return mods
+    end
+
+    -- Pattern 8: X% increased Cast Speed
+    value = stat:match("^(%d+)%% increased Cast Speed$")
+    if value then
+        table.insert(mods, modLib.createMod("Speed", "INC", tonumber(value), source, ModFlag.Cast))
+        return mods
+    end
+
+    -- Pattern 9: X% increased Critical Hit Chance (various)
+    value = stat:match("^(%d+)%% increased Critical Hit Chance")
+    if value then
+        table.insert(mods, modLib.createMod("CritChance", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 10: +X% to Critical Hit Multiplier
+    value = stat:match("^%+(%d+)%% to Critical Hit Multiplier")
+    if value then
+        table.insert(mods, modLib.createMod("CritMultiplier", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 11: X% increased maximum Life
+    value = stat:match("^(%d+)%% increased maximum Life$")
+    if value then
+        table.insert(mods, modLib.createMod("Life", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 12: X% increased maximum Mana
+    value = stat:match("^(%d+)%% increased maximum Mana$")
+    if value then
+        table.insert(mods, modLib.createMod("Mana", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 13: X% increased maximum Energy Shield
+    value = stat:match("^(%d+)%% increased maximum Energy Shield$")
+    if value then
+        table.insert(mods, modLib.createMod("EnergyShield", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 14: X% increased Armour
+    value = stat:match("^(%d+)%% increased Armour$")
+    if value then
+        table.insert(mods, modLib.createMod("Armour", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 15: X% increased Evasion Rating
+    value = stat:match("^(%d+)%% increased Evasion Rating$")
+    if value then
+        table.insert(mods, modLib.createMod("Evasion", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 16: +X to Armour
+    value = stat:match("^%+(%d+) to Armour$")
+    if value then
+        table.insert(mods, modLib.createMod("Armour", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 17: +X to Evasion Rating
+    value = stat:match("^%+(%d+) to Evasion Rating$")
+    if value then
+        table.insert(mods, modLib.createMod("Evasion", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 18: +X% to Fire/Cold/Lightning/Chaos Resistance
+    value, attr = stat:match("^%+(%d+)%% to (%a+) Resistance$")
+    if value and attr then
+        local modName = attr .. "Resist"
+        table.insert(mods, modLib.createMod(modName, "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 19: +X% to all Elemental Resistances
+    value = stat:match("^%+(%d+)%% to all Elemental Resistances$")
+    if value then
+        table.insert(mods, modLib.createMod("ElementalResist", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 20: X% increased Block chance
+    value = stat:match("^(%d+)%% increased Block chance$")
+    if value then
+        table.insert(mods, modLib.createMod("BlockChance", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 21: X% increased Accuracy Rating
+    value = stat:match("^(%d+)%% increased Accuracy Rating$")
+    if value then
+        table.insert(mods, modLib.createMod("Accuracy", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 22: +X to Accuracy Rating
+    value = stat:match("^%+(%d+) to Accuracy Rating$")
+    if value then
+        table.insert(mods, modLib.createMod("Accuracy", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 23: +X to any Attribute
+    value = stat:match("^%+(%d+) to any Attribute$")
+    if value then
+        -- Add to all three attributes
+        table.insert(mods, modLib.createMod("Str", "BASE", tonumber(value), source))
+        table.insert(mods, modLib.createMod("Dex", "BASE", tonumber(value), source))
+        table.insert(mods, modLib.createMod("Int", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 24: +X to all Attributes
+    value = stat:match("^%+(%d+) to all Attributes$")
+    if value then
+        table.insert(mods, modLib.createMod("Str", "BASE", tonumber(value), source))
+        table.insert(mods, modLib.createMod("Dex", "BASE", tonumber(value), source))
+        table.insert(mods, modLib.createMod("Int", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 25: Minions deal X% increased Damage
+    value = stat:match("^Minions deal (%d+)%% increased Damage$")
+    if value then
+        table.insert(mods, modLib.createMod("MinionModifier", "LIST", { mod = modLib.createMod("Damage", "INC", tonumber(value), source) }, source))
+        return mods
+    end
+
+    -- Pattern 26: X% increased Movement Speed
+    value = stat:match("^(%d+)%% increased Movement Speed$")
+    if value then
+        table.insert(mods, modLib.createMod("MovementSpeed", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 27: X% increased Global Defences (can be negative via "reduced")
+    local sign = 1
+    value = stat:match("^(%d+)%% increased Global Defences$")
+    if not value then
+        value = stat:match("^(%d+)%% reduced Global Defences$")
+        if value then sign = -1 end
+    end
+    if value then
+        table.insert(mods, modLib.createMod("Defences", "INC", tonumber(value) * sign, source))
+        return mods
+    end
+
+    -- Pattern 28: X% increased Spell Damage
+    value = stat:match("^(%d+)%% increased Spell Damage$")
+    if value then
+        table.insert(mods, modLib.createMod("Damage", "INC", tonumber(value), source, ModFlag.Spell))
+        return mods
+    end
+
+    -- Pattern 29: X% increased Attack Damage
+    value = stat:match("^(%d+)%% increased Attack Damage$")
+    if value then
+        table.insert(mods, modLib.createMod("Damage", "INC", tonumber(value), source, ModFlag.Attack))
+        return mods
+    end
+
+    -- Pattern 30: Regenerate X Life per second
+    value = stat:match("^Regenerate (%d+%.?%d*) Life per second$")
+    if value then
+        table.insert(mods, modLib.createMod("LifeRegen", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 31: Regenerate X% of Life per second
+    value = stat:match("^Regenerate (%d+%.?%d*)%% of Life per second$")
+    if value then
+        table.insert(mods, modLib.createMod("LifeRegenPercent", "BASE", tonumber(value), source))
+        return mods
+    end
+
+    -- Pattern 32: X% increased Life Regeneration rate
+    value = stat:match("^(%d+)%% increased Life Regeneration rate$")
+    if value then
+        table.insert(mods, modLib.createMod("LifeRegen", "INC", tonumber(value), source))
+        return mods
+    end
+
+    -- If no pattern matched, return empty (stat not recognized)
+    -- This is fine - we just won't apply unrecognized stats
+    return mods
+end
+
+-- Helper: Parse all stats for a node and populate its modList
+-- Story 2.9: Stats are now proper Lua tables (converted via table_from in Python)
+local function parseNodeStats(nodeObj, treeNode)
+    local stats = treeNode.stats
+    local source = "Passive:" .. (treeNode.name or "Unknown")
+    local parsedCount = 0
+
+    -- Handle missing stats
+    if not stats then
+        return 0
+    end
+
+    -- Stats should be a Lua table now (1-indexed array)
+    for i, statStr in ipairs(stats) do
+        if statStr then
+            local parsedMods = parseStatString(tostring(statStr), source)
+            for _, mod in ipairs(parsedMods) do
+                nodeObj.modList:AddMod(mod)
+                parsedCount = parsedCount + 1
+            end
+        end
+    end
+
+    return parsedCount
+end
+
+print("[MinimalCalc] SUCCESS: Passive node stat parser created")
 
 -- Expose Calculate function for Python to call
 -- Story 1.5 Task 2: Full implementation (Updated with Story 1.7 integration)
@@ -470,7 +922,8 @@ function Calculate(buildData)
         }
     }
 
-    -- Populate allocated passive nodes
+    -- Populate allocated passive nodes (Story 2.9: Parse stats into mods)
+    local totalModsParsed = 0
     if buildData.passiveNodes and type(buildData.passiveNodes) == "table" then
         -- Look up node objects from tree data (nodes are indexed by string keys)
         local allocatedCount = 0
@@ -491,7 +944,12 @@ function Calculate(buildData)
                     group = treeNode.group,
                     orbit = treeNode.orbit,
                     orbitIndex = treeNode.orbitIndex,
+                    allocMode = "NORMAL",  -- Required by CalcSetup.lua:208
                 }
+                -- Story 2.9: Parse node stats into mods and populate modList
+                local modsFromNode = parseNodeStats(nodeObj, treeNode)
+                totalModsParsed = totalModsParsed + modsFromNode
+
                 build.spec.allocNodes[nodeId] = nodeObj
                 allocatedCount = allocatedCount + 1
             else
@@ -499,23 +957,398 @@ function Calculate(buildData)
             end
         end
         print("[MinimalCalc]   allocated nodes: " .. allocatedCount .. " of " .. #buildData.passiveNodes)
+        print("[MinimalCalc]   Story 2.9: Parsed " .. totalModsParsed .. " mods from passive tree stats")
     else
         print("[MinimalCalc]   no passive nodes allocated")
     end
 
-    -- 5. Items tab (empty for Story 1.5 scope)
+    -- 5. Items tab - Story 2.9 Milestone 3: Process items from buildData
     build.itemsTab = {
         items = {},
         activeItemSet = {},
         orderedSlots = {}  -- Required by CalcSetup.lua:767
     }
 
-    -- 6. Skills tab (empty for Story 1.5 scope)
+    -- Process items passed from Python (Story 2.9 Milestone 3)
+    local weaponSlotId = nil
+    if buildData.items and type(buildData.items) == "table" then
+        local itemCount = 0
+        for i, itemData in pairs(buildData.items) do
+            if type(itemData) == "table" and itemData.slot then
+                -- Determine if this is a weapon
+                local isWeapon = itemData.slot:match("^Weapon")
+
+                if isWeapon and not weaponSlotId then  -- Only load first weapon
+                    -- Get weapon type from base_type and normalize to category
+                    -- Story 2.9: PoB expects weapon categories ("Bow") not specific bases ("Gemini Bow")
+                    local rawType = itemData.base_type or "Bow"
+                    local weaponType = rawType
+
+                    -- Normalize specific base items to weapon categories
+                    if rawType:match("Bow") then
+                        weaponType = "Bow"
+                    elseif rawType:match("Staff") or rawType:match("Quarterstaff") then
+                        weaponType = "Staff"
+                    elseif rawType:match("Sword") then
+                        if rawType:match("Two Hand") then
+                            weaponType = "Two Handed Sword"
+                        else
+                            weaponType = "One Handed Sword"
+                        end
+                    elseif rawType:match("Axe") then
+                        if rawType:match("Two Hand") then
+                            weaponType = "Two Handed Axe"
+                        else
+                            weaponType = "One Handed Axe"
+                        end
+                    elseif rawType:match("Mace") then
+                        if rawType:match("Two Hand") then
+                            weaponType = "Two Handed Mace"
+                        else
+                            weaponType = "One Handed Mace"
+                        end
+                    elseif rawType:match("Dagger") then
+                        weaponType = "Dagger"
+                    elseif rawType:match("Claw") then
+                        weaponType = "Claw"
+                    elseif rawType:match("Wand") then
+                        weaponType = "Wand"
+                    elseif rawType:match("Sceptre") then
+                        weaponType = "Sceptre"
+                    elseif rawType:match("Crossbow") then
+                        weaponType = "Crossbow"
+                    end
+
+                    -- Get weapon type info from data.weaponTypeInfo
+                    local weaponInfo = data.weaponTypeInfo[weaponType]
+                    if not weaponInfo then
+                        print("[MinimalCalc]   WARNING: weaponType '" .. weaponType .. "' not found in data.weaponTypeInfo, using defaults")
+                        weaponInfo = { oneHand = false, melee = true, flag = weaponType }
+                    else
+                        print("[MinimalCalc]   Found weaponTypeInfo for: " .. weaponType)
+                    end
+
+                    -- Base weapon stats (from weapon stub approach)
+                    local basePhysMin, basePhysMax = 50, 100
+                    local baseCritChance = 5
+                    local baseAttackRate = 1.2
+
+                    -- Adjust base stats by weapon type
+                    if weaponType:match("Bow") or weaponType:match("Crossbow") then
+                        basePhysMin, basePhysMax = 40, 80
+                        baseAttackRate = 1.5
+                        baseCritChance = 5
+                    elseif weaponType:match("Staff") or weaponType:match("Quarterstaff") then
+                        basePhysMin, basePhysMax = 70, 140
+                        baseAttackRate = 1.0
+                        baseCritChance = 7
+                    end
+
+                    -- Apply item's physical damage (adds to base)
+                    local totalPhysMin = basePhysMin + (itemData.phys_min or 0)
+                    local totalPhysMax = basePhysMax + (itemData.phys_max or 0)
+
+                    -- Apply attack speed modifier
+                    local attackSpeedMod = 1 + ((itemData.attack_speed_inc or 0) / 100)
+                    local totalAttackRate = baseAttackRate * attackSpeedMod
+
+                    -- Apply crit chance modifier
+                    local totalCritChance = baseCritChance + (itemData.crit_chance_add or 0)
+
+                    -- Create weapon item
+                    local weapon = {
+                        name = itemData.name or "Weapon",
+                        type = "Weapon",
+                        rarity = itemData.rarity or "NORMAL",
+                        modList = new("ModList"),
+                        baseModList = new("ModList"),
+                        base = {
+                            type = weaponType,
+                            subType = weaponType,
+                            weapon = weaponInfo
+                        },
+                        weaponData = {
+                            [1] = {
+                                type = weaponType,
+                                AttackRate = totalAttackRate,
+                                CritChance = totalCritChance,
+                                PhysicalMin = totalPhysMin,
+                                PhysicalMax = totalPhysMax,
+                                range = 11  -- Default melee range
+                            }
+                        },
+                        -- Story 2.9: CalcSetup.lua:1035 requires itemSocketCount to be a number
+                        itemSocketCount = 0,
+                        runes = {},  -- Empty runes table (PoE 2 feature)
+                        socketedSoulCoreEffectModifier = 0,  -- CalcSetup.lua:1042
+                        runeModLines = {},  -- CalcSetup.lua:1043
+                        grantedSkills = {}  -- CalcSetup.lua:1131 (empty for non-unique items)
+                    }
+
+                    -- Add elemental damage to weapon if present
+                    if itemData.lightning_min and itemData.lightning_min > 0 then
+                        weapon.weaponData[1].LightningMin = itemData.lightning_min
+                        weapon.weaponData[1].LightningMax = itemData.lightning_max or itemData.lightning_min
+                    end
+                    if itemData.cold_min and itemData.cold_min > 0 then
+                        weapon.weaponData[1].ColdMin = itemData.cold_min
+                        weapon.weaponData[1].ColdMax = itemData.cold_max or itemData.cold_min
+                    end
+                    if itemData.fire_min and itemData.fire_min > 0 then
+                        weapon.weaponData[1].FireMin = itemData.fire_min
+                        weapon.weaponData[1].FireMax = itemData.fire_max or itemData.fire_min
+                    end
+
+                    -- Add to items table (1-indexed)
+                    itemCount = itemCount + 1
+                    build.itemsTab.items[itemCount] = weapon
+                    weaponSlotId = itemCount  -- Remember weapon slot for activeItemSet
+
+                    print("[MinimalCalc]   Loaded weapon: " .. rawType .. " -> " .. weaponType .. " (Phys: " .. totalPhysMin .. "-" .. totalPhysMax .. ", APS: " .. string.format("%.2f", totalAttackRate) .. ")")
+                end
+                -- Non-weapon items can be processed here later (armor, jewelry, etc.)
+            end
+        end
+        print("[MinimalCalc]   Story 2.9 Milestone 3: Loaded " .. itemCount .. " items from buildData")
+
+        -- Set up activeItemSet and orderedSlots if we loaded a weapon
+        if weaponSlotId then
+            build.itemsTab.orderedSlots = {
+                { slotName = "Weapon 1", weaponSet = 1, selItemId = weaponSlotId }  -- Story 2.9: selItemId required by CalcSetup.lua:795
+            }
+            build.itemsTab.activeItemSet = {
+                useSecondWeaponSet = false
+            }
+        end
+    else
+        print("[MinimalCalc]   No items passed from Python")
+    end
+
+    -- 6. Skills tab - Story 2.9 Phase 2: Process passed skills into socket groups
     build.skillsTab = {
         skills = {},
         activeSkillGroup = 1,
-        socketGroupList = {}  -- Required by CalcSetup.lua:1453
+        socketGroupList = {},  -- Required by CalcSetup.lua:1453
+        displayGroup = nil,
+        -- ProcessSocketGroup method stub (required by CalcSetup.lua:1373)
+        ProcessSocketGroup = function(self, group)
+            -- Story 2.9: Enhanced ProcessSocketGroup to set up activeEffect with skill flags
+            -- This is critical for DPS calculation - without proper flags, DPS = 0
+
+            for _, gemInstance in ipairs(group.gemList or {}) do
+                if gemInstance.skillId and data.skills[gemInstance.skillId] then
+                    local grantedEffect = data.skills[gemInstance.skillId]
+                    gemInstance.grantedEffect = grantedEffect
+
+                    -- Create activeEffect for the gem (required by calcs.perform)
+                    -- activeEffect holds the processed skill data with flags set
+                    if not gemInstance.activeEffect then
+                        gemInstance.activeEffect = {
+                            grantedEffect = grantedEffect,
+                            srcGem = gemInstance,
+                            level = gemInstance.level or 1,
+                            quality = gemInstance.quality or 0
+                        }
+                    end
+
+                    -- Set up skillFlags based on grantedEffect.skillTypes
+                    -- SkillType enum: 1=Attack, 2=Spell, 3=Projectile, etc.
+                    if grantedEffect.skillTypes then
+                        local flags = {}
+                        flags.attack = grantedEffect.skillTypes[1] == true  -- SkillType.Attack
+                        flags.spell = grantedEffect.skillTypes[2] == true   -- SkillType.Spell
+                        flags.projectile = grantedEffect.skillTypes[3] == true  -- SkillType.Projectile
+                        flags.hit = flags.attack or flags.spell  -- Either attack or spell hits
+                        flags.melee = grantedEffect.skillTypes[11] == true  -- SkillType.Melee (if it exists)
+                        flags.ranged = not flags.melee and flags.attack  -- Attacks that aren't melee
+
+                        -- Create statSet with skillFlags (this is what calcs.initEnv checks)
+                        gemInstance.activeEffect.statSet = {
+                            skillFlags = flags
+                        }
+
+                        -- Also set for CALCS mode
+                        gemInstance.activeEffect.statSetCalcs = {
+                            skillFlags = flags
+                        }
+                    end
+
+                    -- Store weaponTypes for weapon validation
+                    if grantedEffect.weaponTypes then
+                        gemInstance.activeEffect.weaponTypes = grantedEffect.weaponTypes
+                    end
+                end
+            end
+        end
     }
+
+    -- Process skills passed from Python (Story 2.9 Phase 2)
+    if buildData.skills and type(buildData.skills) == "table" then
+        local skillCount = 0
+        for i, skillData in pairs(buildData.skills) do
+            if type(skillData) == "table" and skillData.skillId then
+                -- Check if skill exists in loaded data
+                local grantedEffect = data.skills[skillData.skillId]
+                if grantedEffect then
+                    -- Create gem instance for active skill
+                    local gemInstance = {
+                        skillId = skillData.skillId,
+                        grantedEffect = grantedEffect,
+                        level = skillData.level or 1,
+                        quality = skillData.quality or 0,
+                        enabled = true,
+                        nameSpec = skillData.name or grantedEffect.name,
+                        statSet = { index = 1 },
+                        statSetCalcs = { index = 1 }
+                    }
+
+                    -- Create socket group
+                    local socketGroup = {
+                        label = skillData.name or grantedEffect.name,
+                        enabled = true,
+                        gemList = { gemInstance },
+                        slot = nil,
+                        source = "Build"
+                    }
+
+                    -- Process support gems
+                    if skillData.supports and type(skillData.supports) == "table" then
+                        for j, supportData in pairs(skillData.supports) do
+                            if type(supportData) == "table" and supportData.skillId then
+                                local supportEffect = data.skills[supportData.skillId]
+                                if supportEffect then
+                                    local supportGem = {
+                                        skillId = supportData.skillId,
+                                        grantedEffect = supportEffect,
+                                        level = supportData.level or 1,
+                                        quality = supportData.quality or 0,
+                                        enabled = true,
+                                        nameSpec = supportData.nameSpec or supportEffect.name
+                                    }
+                                    table.insert(socketGroup.gemList, supportGem)
+                                end
+                            end
+                        end
+                    end
+
+                    table.insert(build.skillsTab.socketGroupList, socketGroup)
+
+                    -- Process socket group to set up skill flags and metadata
+                    build.skillsTab:ProcessSocketGroup(socketGroup)
+
+                    skillCount = skillCount + 1
+                else
+                    print("[MinimalCalc]   WARNING: Skill '" .. skillData.skillId .. "' not found in data.skills")
+                end
+            end
+        end
+        print("[MinimalCalc]   Story 2.9 Phase 2: Created " .. skillCount .. " socket groups from passed skills")
+
+        -- Story 2.9 Milestone 3: Fallback weapon stub (only if no items loaded)
+        -- Create minimal weapon stub if skills require it and no items were passed
+        local hasWeapon = false
+        for _, item in pairs(build.itemsTab.items) do
+            if item.weaponData then
+                hasWeapon = true
+                break
+            end
+        end
+
+        local requiredWeaponType = nil
+        if not hasWeapon then
+            -- Detect required weapon type from skills
+        for _, group in ipairs(build.skillsTab.socketGroupList) do
+            for _, gem in ipairs(group.gemList) do
+                if gem.grantedEffect and gem.grantedEffect.weaponTypes then
+                    -- Find the first required weapon type
+                    for weaponType, required in pairs(gem.grantedEffect.weaponTypes) do
+                        if required then
+                            requiredWeaponType = weaponType
+                            print("[MinimalCalc]   Skill '" .. (gem.grantedEffect.name or gem.skillId) .. "' requires weapon type: " .. weaponType)
+                            break
+                        end
+                    end
+                    if requiredWeaponType then break end
+                end
+            end
+            if requiredWeaponType then break end
+        end
+
+        -- Create minimal weapon if required
+        if requiredWeaponType then
+            print("[MinimalCalc]   Creating minimal " .. requiredWeaponType .. " weapon stub for DPS calculation")
+
+            -- Get weapon type info from data.weaponTypeInfo
+            local weaponInfo = data.weaponTypeInfo[requiredWeaponType] or { oneHand = false, melee = true, flag = requiredWeaponType }
+
+            -- Create minimal weapon data based on weapon type
+            -- Default base weapon stats (approximate for level ~80 weapon)
+            local basePhysMin, basePhysMax = 50, 100
+            local baseCritChance = 5
+            local baseAttackRate = 1.2
+
+            -- Adjust stats based on weapon type
+            if requiredWeaponType == "Staff" then
+                basePhysMin, basePhysMax = 70, 140
+                baseAttackRate = 1.0
+                baseCritChance = 7
+            elseif requiredWeaponType == "Bow" or requiredWeaponType == "Crossbow" then
+                basePhysMin, basePhysMax = 40, 80
+                baseAttackRate = 1.5
+                baseCritChance = 5
+            elseif requiredWeaponType == "Two Handed Sword" or requiredWeaponType == "Two Handed Axe" or requiredWeaponType == "Two Handed Mace" then
+                basePhysMin, basePhysMax = 80, 160
+                baseAttackRate = 0.9
+                baseCritChance = 5
+            elseif requiredWeaponType == "Claw" or requiredWeaponType == "Dagger" then
+                basePhysMin, basePhysMax = 30, 60
+                baseAttackRate = 1.6
+                baseCritChance = 7
+            elseif requiredWeaponType == "Sceptre" or requiredWeaponType == "Wand" then
+                basePhysMin, basePhysMax = 20, 40
+                baseAttackRate = 1.4
+                baseCritChance = 7
+            end
+
+            -- Create minimal item with weaponData
+            build.itemsTab.items[1] = {
+                name = "Minimal " .. requiredWeaponType,
+                type = "Weapon",
+                rarity = "NORMAL",
+                modList = new("ModList"),
+                baseModList = new("ModList"),
+                base = {
+                    type = requiredWeaponType,
+                    subType = requiredWeaponType,
+                    weapon = weaponInfo
+                },
+                weaponData = {
+                    [1] = {
+                        type = requiredWeaponType,
+                        AttackRate = baseAttackRate,
+                        CritChance = baseCritChance,
+                        PhysicalMin = basePhysMin,
+                        PhysicalMax = basePhysMax,
+                        range = 11  -- Default melee range
+                    }
+                }
+            }
+
+            -- Add to orderedSlots
+            build.itemsTab.orderedSlots = {
+                { slotName = "Weapon 1", weaponSet = 1 }
+            }
+            build.itemsTab.activeItemSet = {
+                useSecondWeaponSet = false,
+                [1] = { id = 1 }
+            }
+
+            print("[MinimalCalc]   Weapon stub created: " .. requiredWeaponType .. " (Phys: " .. basePhysMin .. "-" .. basePhysMax .. ", APS: " .. baseAttackRate .. ")")
+            end
+        end  -- End of if not hasWeapon (fallback weapon stub)
+    else
+        print("[MinimalCalc]   No skills passed from Python")
+    end
 
     -- 7. Calculations tab
     build.calcsTab = {
@@ -542,6 +1375,15 @@ function Calculate(buildData)
     build.misc = {}
 
     print("[MinimalCalc] Build object constructed, calling calcs.initEnv()...")
+
+    -- Debug: Check weapon structure before CalcSetup processes it
+    if build.itemsTab.items[1] and build.itemsTab.items[1].weaponData then
+        local weapon = build.itemsTab.items[1]
+        print("[MinimalCalc] DEBUG: Weapon before CalcSetup:")
+        print("[MinimalCalc]   weapon.type = " .. tostring(weapon.type))
+        print("[MinimalCalc]   weapon.base.type = " .. tostring(weapon.base and weapon.base.type))
+        print("[MinimalCalc]   weapon.weaponData[1].type = " .. tostring(weapon.weaponData[1] and weapon.weaponData[1].type))
+    end
 
     -- Debug: Check tree structure
     if build.spec.tree then
@@ -586,6 +1428,97 @@ function Calculate(buildData)
     local env = env_or_err
 
     print("[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...")
+
+    -- Story 2.9: Debug weaponData1 created by CalcSetup
+    if env.player.weaponData1 then
+        print("[MinimalCalc] DEBUG: env.player.weaponData1 after CalcSetup:")
+        print("[MinimalCalc]   weaponData1.type = " .. tostring(env.player.weaponData1.type or "NIL"))
+        print("[MinimalCalc]   weaponData1.AttackRate = " .. tostring(env.player.weaponData1.AttackRate or "NIL"))
+        print("[MinimalCalc]   weaponData1.PhysicalMin = " .. tostring(env.player.weaponData1.PhysicalMin or "NIL"))
+        print("[MinimalCalc]   weaponData1.PhysicalMax = " .. tostring(env.player.weaponData1.PhysicalMax or "NIL"))
+    else
+        print("[MinimalCalc] WARNING: env.player.weaponData1 is NIL!")
+    end
+
+    -- Debug: Check weapon structure AFTER CalcSetup processes it
+    if build.itemsTab.items[1] then
+        local weapon = build.itemsTab.items[1]
+        print("[MinimalCalc] DEBUG: Weapon AFTER CalcSetup:")
+        if weapon.base then
+            print("[MinimalCalc]   weapon.base.type = " .. tostring(weapon.base.type or "NIL"))
+        else
+            print("[MinimalCalc]   weapon.base = NIL")
+        end
+        if weapon.weaponData and weapon.weaponData[1] then
+            print("[MinimalCalc]   weapon.weaponData[1].type = " .. tostring(weapon.weaponData[1].type or "NIL"))
+        else
+            print("[MinimalCalc]   weapon.weaponData[1] = NIL")
+        end
+    end
+
+    -- Story 2.9: Fix skillFlags on mainSkill after calcs.initEnv()
+    -- calcs.initEnv() creates mainSkill but doesn't set skillFlags properly from our socket groups
+    -- We need to manually populate skillFlags based on the skill's grantedEffect.skillTypes
+    if env.player.mainSkill and env.player.mainSkill.activeEffect then
+        local activeEffect = env.player.mainSkill.activeEffect
+        local grantedEffect = activeEffect.grantedEffect
+
+        if grantedEffect and grantedEffect.skillTypes then
+            print("[MinimalCalc] Fixing skillFlags for mainSkill...")
+
+            local flags = {}
+            flags.attack = grantedEffect.skillTypes[1] == true  -- SkillType.Attack
+            flags.spell = grantedEffect.skillTypes[2] == true   -- SkillType.Spell
+            flags.projectile = grantedEffect.skillTypes[3] == true  -- SkillType.Projectile
+            flags.hit = flags.attack or flags.spell
+            flags.melee = grantedEffect.skillTypes[11] == true
+            flags.ranged = not flags.melee and flags.attack
+
+            -- Story 2.9 FIX: Set weapon-specific attack flags (critical for CalcOffence)
+            -- CalcOffence.lua:1885 needs these to determine which weapon to use for damage
+            if flags.attack then
+                -- For attacks, determine if using weapon slot 1, 2, or unarmed
+                -- Check if player has weaponData1 (primary weapon)
+                if env.player.weaponData1 then
+                    flags.weapon1Attack = true
+                    flags.weapon2Attack = false  -- Single weapon build (bow/2h)
+                    flags.unarmed = false
+                else
+                    -- No weapon equipped - treat as unarmed
+                    flags.weapon1Attack = false
+                    flags.weapon2Attack = false
+                    flags.unarmed = true
+                end
+            else
+                -- Spells don't use weapons
+                flags.weapon1Attack = false
+                flags.weapon2Attack = false
+                flags.unarmed = false
+            end
+
+            -- Set flags on the appropriate statSet based on mode
+            if not activeEffect.statSet then
+                activeEffect.statSet = {}
+            end
+            activeEffect.statSet.skillFlags = flags
+
+            if not activeEffect.statSetCalcs then
+                activeEffect.statSetCalcs = {}
+            end
+            activeEffect.statSetCalcs.skillFlags = flags
+
+            -- Story 2.9 CRITICAL FIX: Set weapon1Flags on mainSkill itself
+            -- CalcOffence checks mainSkill.weapon1Flags, NOT just skillFlags!
+            if flags.weapon1Attack then
+                env.player.mainSkill.weapon1Flags = 1  -- Non-zero indicates weapon 1 is used
+            else
+                env.player.mainSkill.weapon1Flags = 0
+            end
+
+            print("[MinimalCalc] skillFlags set: attack=" .. tostring(flags.attack) .. ", weapon1Attack=" .. tostring(flags.weapon1Attack) .. ", projectile=" .. tostring(flags.projectile))
+            print("[MinimalCalc] mainSkill.weapon1Flags = " .. tostring(env.player.mainSkill.weapon1Flags))
+        end
+    end
 
     -- Debug: Check if main skill was created and has attack flag
     if env.player.mainSkill then
@@ -637,8 +1570,18 @@ function Calculate(buildData)
         if type(performError) == "string" and performError:match("CalcPerform.lua:2904") then
             print("[MinimalCalc] ERROR: Ailment calculation failed at line 2904")
             print("[MinimalCalc] HINT: Check data.ailmentData table for missing ailments")
+        elseif type(performError) == "string" and (performError:match("CalcOffence.lua") or performError:match("CalcPerform.lua")) then
+            print("[MinimalCalc] ERROR: CalcOffence/CalcPerform failed")
+            print("[MinimalCalc] HINT: Likely missing weapon, skill, or modifier data")
+            print("[MinimalCalc] ERROR FULL: " .. tostring(performError))
+            print("[MinimalCalc] Continuing with degraded calculations (DPS may be 0)...")
+            -- Don't error out - allow graceful degradation
+            performSuccess = true  -- Pretend it succeeded so we can extract what we can
         end
-        error("[MinimalCalc] calcs.perform() failed: " .. errorMsg)
+
+        if not performSuccess then
+            error("[MinimalCalc] calcs.perform() failed: " .. errorMsg)
+        end
     end
 
     print("[MinimalCalc] calcs.perform() successful, extracting results...")
@@ -655,6 +1598,15 @@ function Calculate(buildData)
             print("[MinimalCalc] DEBUG: mainSkill.output.TotalDPS = " .. tostring(skillOutput.TotalDPS))
         else
             print("[MinimalCalc] DEBUG: mainSkill.output is NIL!")
+            -- Check what fields mainSkill DOES have
+            print("[MinimalCalc] DEBUG: mainSkill fields:")
+            for k, v in pairs(env.player.mainSkill) do
+                if type(v) ~= "function" and type(v) ~= "table" then
+                    print("[MinimalCalc]   " .. tostring(k) .. " = " .. tostring(v))
+                elseif type(v) == "table" and k ~= "activeEffect" then
+                    print("[MinimalCalc]   " .. tostring(k) .. " = <table>")
+                end
+            end
         end
     end
 

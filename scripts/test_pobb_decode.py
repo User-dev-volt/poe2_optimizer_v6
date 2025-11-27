@@ -1,0 +1,25 @@
+"""Test decoding a known pobb.in build"""
+import base64
+import zlib
+
+# This is the base64 string from hRn2ApGTu-5z that I saw in WebFetch
+test_base64 = "eNrtPWtz2siyn5dfMZeqvbVbwbbeQr7OOYUfxE7smIAdJ_mwqUEaQLGQiCSMyVb---2eEZLASAhcp9Zna7NVXpjp7pnp6e7pnkdz9O_HsUceWBi5gf-6Lu9LdcJ8O3Bcf_i6fnvT3mvW__2v2lGHxqPrwfHU9bBG-VftlyP-hXjsgXmv66ZRJ7ZHo-g9HbPX9S71hyysExrZzHdOsopTRh02Z3US03DI4o-LhqWvMhAY0ZDaMQsvkWhrGgdXgQNIcTgFjDF1_V5g37P4TRhMJ9DZOnlw2UzAXFx1rrs3dejYL0cdj85Z2ItpTCL487reggHSITulY_gLWNSbAkqz2ZT2LcnULN1o1g9KUY-nYRTvgt-bMOakKMq-qiqFsJ2QnQ0GzI7dB3YSuvHJiPp21p6-rxdhroHW9ptaGfjV1IvdiefiNC16VwR__oR6s3AQN0FMvdNOLwVVZck09iVT1iXgmFqOF8QpnlQEeefGo2MP2LpDK4h7MfTdmO2I3AncKPCfMb48auEQT6aeB3pWCbbLIhY-0Nhd7lYx7WDcd_2duNcKGb0eCBntUsedRlcsDlmU0dkvxL2iPj0Jomx-TbMMtMNCMB3xEoa0AaHH7ACsTR5FNq19Q9GNCk2tJ1DY5qU7YNUhtxpOgrBtb3Ybx1mvKtzWhHfrUBdsbDXIXjD1KkLGOStXaLpO2WMmOLpSrHDf85CKXAh54ceVmn0IUHs3D4PbkLPzTtZLybD2paZuqLIlm4XLQ2c0j1ybelf00R1Px2DOb-g9yxqUZalZLFnDUeyDMSpCtpTC_rbdkO2AdhJ4zi5oIxpEhUM0pBLT5Prn1Hdatj0FB2Se40uzcG5PaXjvsyiqaqDB4FbGQG3OdUJRSrwL-xChL3w78xPKyN76YdKdSg0gSheUF72gvscq42TNJEYgJ7JSeWND5ictzqtx6pIxe_QG5rBLY1ZtscgWLEsq5S0C53lbSnUNb0voL2NswSZEXM8mWd8vXem25FRv4oKjmFFX1XLINeM3K6OsMkAHB7ZpKnJT0nRZLiRz5rNwOO-NXOY5FdakHPSCeyd0UoUVIAx57EpCsdzcVoKdR91y2rr5IKUUan2fChX77IFG-XVKVjWrnGECIc8r8DALJZSBUw8oDlsJNmSjOGIKvmG85G2J1wrHwTSsOO0CuNKELxZaESl2mTO1q63sadx37EGIuzKOzVjQT8_bCrUVx9S-Pw2cIauKwhvZCmO5f73pZALajhJRlQA6ELB8ujkfb6944cmgr0GgK-k1uhrVG8igKzeQuk_VW1lBqT4W9H9WmlGrQFduIZ3PK7AYY7DWfHfjKsj5EvtS2fZGxGDa10aOhXsVbQiFK8W1HLBifN0JZjDkEe5BRdtBg3-ZMbewKyHzf8wr018Cr9TAme-Apwq8rNzGKsa6Zo6ng0FE7GDcp_ElyMXrep30oUx8PqYh7oQ1yDn4gp5DggG5GU19h4UNcuH7fA8Cam-C0KdOQHqjIG6QO9d3yCm2C9YWvOuICWIfAy-mrk2uwCdOWr9xx7AARNEpjSlxkpjoIw1d6scK3-2LGA3tERJoU8_rg_3CHmal_BvfIWy7XszCUyjDppEtqxRlpIgNHx3wjUz8dDGeBGFM2CP-r0PDeP66PqBexAQgLwE6Uez6fLsFrKjn1XGks5bzgC3dBIEXLZAInUyY7yzRuAkZI3RhE23sBB88fiFjGkGv50LLIhxNbv_0wuE88APoAAadmqU3tKZpqg292ZS1hqI3lYaiaQ1D0iW9oeqWJMNfRdUaqtU0G5qhNo2GYRhSw5A1A-osAGzosimZANc0mw3FkAz4Cx4XkGtaFtCTdVNpqJKqyQ1D0QwoV01JachNS1GheVk2GqomyXrDNHS5oWtWU2tolmzoAK7LQF6BbqpSQwVXrgkfDPyqSFZDt6ALiqbwnjV1bBC7o-iGbDU0VYLBaKqsNmTVbMJfRVJVaEmFbpumATiyZBkAoRsKDk9v6OAmWg0MWHTAbkJf"
+
+print("Testing manual decode...")
+print(f"Base64 string length: {len(test_base64)}")
+
+try:
+    # Try decode
+    decoded = base64.b64decode(test_base64)
+    print(f"Decoded bytes length: {len(decoded)}")
+
+    # Try decompress
+    decompressed = zlib.decompress(decoded)
+    xml = decompressed.decode('utf-8')
+    print(f"Decompressed XML length: {len(xml)}")
+    print("\nFirst 500 chars of XML:")
+    print(xml[:500])
+    print("\n[SUCCESS] Decoding worked!")
+
+except Exception as e:
+    print(f"\n[FAIL] Error: {e}")

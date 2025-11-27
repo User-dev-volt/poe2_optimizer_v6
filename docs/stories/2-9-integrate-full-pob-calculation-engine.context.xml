@@ -1,0 +1,265 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>9</storyId>
+    <title>Integrate Full PoB Calculation Engine</title>
+    <status>Approved</status>
+    <generatedAt>2025-11-22</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-9-integrate-full-pob-calculation-engine.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>the calculator to return accurate DPS/Life/EHP values that reflect passive tree allocations</iWant>
+    <soThat>the optimizer can measure actual improvements and validate Epic 2 success criteria</soThat>
+    <tasks>
+      <phase name="Phase 1: Extend MinimalCalc.lua" estimate="8-12 hours">
+        <task>Load passive tree node data from Data/3_0.lua</task>
+        <task>Implement passive node stat aggregation</task>
+        <task>Pass aggregated stats to calcs.perform()</task>
+        <task>Extract DPS/Life/EHP from calculation results</task>
+        <task>Validate against known builds</task>
+      </phase>
+      <phase name="Phase 2: External PoB Validation" estimate="4-8 hours">
+        <task>Implement ExternalPoBValidator class</task>
+        <task>Save build to temp XML file</task>
+        <task>Call PoB CLI/GUI subprocess</task>
+        <task>Parse output stats</task>
+        <task>Compare with MinimalCalc results</task>
+      </phase>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-2.9.1" status="BLOCKED">
+      <title>Extended MinimalCalc.lua Integration</title>
+      <items>
+        <item>Calculator extends MinimalCalc.lua with passive tree stat aggregation</item>
+        <item>Passive tree node bonuses reflected in calculations</item>
+        <item>No HeadlessWrapper.lua dependencies (per Epic 1 ADR)</item>
+        <item>No Lua errors during initialization or calculation</item>
+      </items>
+    </criterion>
+    <criterion id="AC-2.9.2" status="BLOCKED">
+      <title>Passive Tree Stats Reflected in Calculations</title>
+      <items>
+        <item>Adding a +10% increased damage node increases reported DPS</item>
+        <item>Adding a +20 maximum life node increases reported Life</item>
+        <item>Removing nodes decreases corresponding stats</item>
+        <item>Stats change proportionally to node bonuses</item>
+      </items>
+    </criterion>
+    <criterion id="AC-2.9.3" status="BLOCKED">
+      <title>Items and Skills Loaded from Build</title>
+      <items>
+        <item>Calculator loads equipped items from PoB XML</item>
+        <item>Calculator loads active skills and support gems</item>
+        <item>DPS reflects actual skill damage (not "Default Attack")</item>
+        <item>Builds with different gear show different stats</item>
+      </items>
+    </criterion>
+    <criterion id="AC-2.9.4" status="BLOCKED">
+      <title>Performance Requirements</title>
+      <items>
+        <item>Single calculation completes in &lt;500ms (relaxed from 100ms due to full calculation)</item>
+        <item>Batch 100 calculations complete in &lt;60 seconds</item>
+        <item>Memory usage &lt;200MB during calculation</item>
+      </items>
+    </criterion>
+    <criterion id="AC-2.9.5" status="PARTIAL">
+      <title>Backward Compatibility</title>
+      <items>
+        <item>All existing parity tests continue to pass</item>
+        <item>BuildStats dataclass unchanged (same fields)</item>
+        <item>calculate_build_stats() API signature unchanged</item>
+      </items>
+    </criterion>
+    <criterion id="AC-2.9.6" status="BLOCKED">
+      <title>Validation Enablement</title>
+      <items>
+        <item>Re-run Epic 2 validation with realistic test builds</item>
+        <item>Success rate >=70% (optimizer finds improvements)</item>
+        <item>Median improvement >=5% on degraded builds</item>
+        <item>Zero budget violations</item>
+      </items>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/PRD.md" title="Product Requirements Document" section="FR-3.x: PoB Calculation Engine Integration">
+        Specifies Lupa + HeadlessWrapper.lua integration with Python stub functions for PoB calculations. Target: 1000 calculations in &lt;1s.
+      </doc>
+      <doc path="docs/solution-architecture.md" title="Solution Architecture" section="Calculator Component (7.2)">
+        Defines PoBCalculationEngine class with thread-local pattern, Lupa integration, and calculate_build_stats() API.
+      </doc>
+      <doc path="docs/tech-spec-epic-1.md" title="Epic 1 Tech Spec" section="Calculator Module">
+        Details MinimalCalc.lua bootstrap approach, stub functions, passive tree loading, and performance targets.
+      </doc>
+      <doc path="docs/tech-spec-epic-2.md" title="Epic 2 Tech Spec" section="Dependencies">
+        Documents Epic 1 APIs consumed: calculate_build_stats(), PassiveTreeGraph, BuildData, BuildStats.
+      </doc>
+      <doc path="docs/Corrected Course Docs/sprint-change-proposal-epic-1-minimalcalc.md" title="Epic 1 ADR">
+        CRITICAL: Documents HeadlessWrapper.lua as architecturally impossible - causes Windows Fatal Exception 0xe24c4a02.
+      </doc>
+      <doc path="docs/sprint-change-proposal-2025-11-22.md" title="Story 2.9 Sprint Change Proposal">
+        Proposed HeadlessWrapper.lua approach - conflicts with Epic 1 ADR findings.
+      </doc>
+      <doc path="docs/validation/epic-2-validation-report-2025-11-16.md" title="Epic 2 Validation Report">
+        Identified gap: MinimalCalc.lua doesn't calculate passive bonuses (all builds return ~1.2 DPS).
+      </doc>
+    </docs>
+    <code>
+      <artifact path="src/calculator/pob_engine.py" kind="engine" symbol="PoBCalculationEngine" lines="47-528">
+        Current MinimalCalc.lua integration. Uses thread-local Lupa runtime with stub functions. Story 1.8 optimized with pre-compiled Calculate() and cached passive tree.
+      </artifact>
+      <artifact path="src/calculator/full_pob_engine.py" kind="engine" symbol="FullPoBEngine" lines="52-528">
+        Story 2.9 implementation using HeadlessWrapper.lua. Provides loadBuildFromXML(), allocate_node(), deallocate_node(). CRASHES with Windows Fatal Exception.
+      </artifact>
+      <artifact path="src/calculator/build_calculator.py" kind="api" symbol="calculate_build_stats" lines="74-155">
+        High-level calculation API consumed by optimizer. Thread-local engine pattern, 5-second timeout.
+      </artifact>
+      <artifact path="src/calculator/stub_functions.py" kind="stubs" symbol="Deflate, Inflate, ConPrintf">
+        Python implementations for PoB Lua dependencies. No-ops for GUI functions.
+      </artifact>
+      <artifact path="src/optimizer/hill_climbing.py" kind="algorithm" symbol="optimize_build" lines="46-333">
+        Main optimization loop that calls calculate_build_stats() for each neighbor evaluation.
+      </artifact>
+      <artifact path="src/models/build_stats.py" kind="model" symbol="BuildStats">
+        Dataclass for calculation results: total_dps, effective_hp, life, resistances, etc.
+      </artifact>
+      <artifact path="src/models/build_data.py" kind="model" symbol="BuildData">
+        Dataclass for build configuration: character_class, level, passive_nodes, config.
+      </artifact>
+      <artifact path="external/pob-engine/src/HeadlessWrapper.lua" kind="external" symbol="loadBuildFromXML, newBuild">
+        PoB's headless wrapper - requires full GUI runtime, CANNOT be used in headless Python environment.
+      </artifact>
+      <artifact path="src/calculator/MinimalCalc.lua" kind="bootstrap" symbol="Calculate">
+        Custom bootstrap that loads only calculation modules. Currently doesn't aggregate passive node bonuses.
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="lupa" version=">=2.0">Python-LuaJIT bindings for PoB calculation engine integration</package>
+        <package name="xmltodict" version="0.13.0">XML parsing for PoB codes</package>
+        <package name="pytest" version=">=7.4.0">Testing framework</package>
+        <package name="pytest-cov" version=">=4.1.0">Coverage reporting</package>
+        <package name="pytest-benchmark" version=">=4.0.0">Performance benchmarking</package>
+        <package name="pytest-xdist" version=">=3.5.0">Process isolation for LuaJIT Windows exceptions</package>
+        <package name="psutil" version=">=5.9.0">Memory usage monitoring</package>
+      </python>
+      <external>
+        <dependency name="Path of Building" path="external/pob-engine/">Git submodule containing PoB Lua calculation engine</dependency>
+      </external>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint id="epic-1-adr" severity="CRITICAL">
+      HeadlessWrapper.lua approach is ARCHITECTURALLY IMPOSSIBLE in headless Python environment.
+      Windows Fatal Exception 0xe24c4a02 in native code - cannot be caught or worked around.
+      This was documented in Epic 1 ADR (2025-10-17) and reproduced in Story 2.9 testing.
+    </constraint>
+    <constraint id="thread-safety">
+      Lua state is NOT thread-safe. Must use thread-local storage pattern (one LuaRuntime per thread).
+    </constraint>
+    <constraint id="performance">
+      Single calculation must complete in &lt;500ms. Batch 100 in &lt;60s. Memory &lt;200MB.
+    </constraint>
+    <constraint id="backward-compat">
+      BuildStats dataclass and calculate_build_stats() API must remain unchanged.
+      All existing parity tests must continue to pass.
+    </constraint>
+    <constraint id="no-gui-deps">
+      Solution must work without PoB GUI, Windows windowing system, or native graphics libraries.
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="calculate_build_stats" kind="function" path="src/calculator/build_calculator.py">
+      <signature>calculate_build_stats(build: BuildData) -> BuildStats</signature>
+      <description>Primary API for optimizer. Must return accurate stats reflecting passive tree allocations.</description>
+    </interface>
+    <interface name="PoBCalculationEngine.calculate" kind="method" path="src/calculator/pob_engine.py">
+      <signature>calculate(self, build: BuildData) -> BuildStats</signature>
+      <description>Low-level calculation via MinimalCalc.lua. Currently doesn't aggregate passive bonuses.</description>
+    </interface>
+    <interface name="FullPoBEngine.calculate_from_xml" kind="method" path="src/calculator/full_pob_engine.py">
+      <signature>calculate_from_xml(self, xml_string: str, build_name: str) -> BuildStats</signature>
+      <description>Full PoB calculation via HeadlessWrapper.lua. CRASHES - not usable.</description>
+    </interface>
+    <interface name="BuildStats" kind="dataclass" path="src/models/build_stats.py">
+      <signature>total_dps, effective_hp, life, energy_shield, mana, resistances, armour, evasion, etc.</signature>
+      <description>Calculation results consumed by optimizer metrics and UI.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing follows pytest framework with fixtures in tests/fixtures/. Unit tests use mocks for Lua engine.
+      Integration tests require external/pob-engine/ initialized. Performance tests use pytest-benchmark.
+      Process isolation via pytest-xdist for LuaJIT Windows exception handling.
+      Coverage target: &gt;80% for calculator module, &gt;90% for critical paths.
+    </standards>
+    <locations>
+      <location>tests/unit/</location>
+      <location>tests/integration/</location>
+      <location>tests/performance/</location>
+      <location>tests/integration/test_full_pob_engine.py</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-2.9.1">Test MinimalCalc.lua extension loads passive tree node data without errors</idea>
+      <idea ac="AC-2.9.1">Verify no HeadlessWrapper.lua dependencies in final implementation</idea>
+      <idea ac="AC-2.9.2">Test adding damage node increases DPS proportionally</idea>
+      <idea ac="AC-2.9.2">Test adding life node increases Life proportionally</idea>
+      <idea ac="AC-2.9.2">Test removing nodes decreases stats</idea>
+      <idea ac="AC-2.9.3">Test build with equipped items shows correct resistances</idea>
+      <idea ac="AC-2.9.3">Test build with skills shows actual DPS (not Default Attack ~1.2 DPS)</idea>
+      <idea ac="AC-2.9.4">Benchmark single calculation &lt;500ms</idea>
+      <idea ac="AC-2.9.4">Benchmark batch 100 calculations &lt;60s</idea>
+      <idea ac="AC-2.9.4">Monitor memory usage stays &lt;200MB</idea>
+      <idea ac="AC-2.9.5">Run existing parity tests after implementation</idea>
+      <idea ac="AC-2.9.5">Verify BuildStats fields unchanged</idea>
+      <idea ac="AC-2.9.6">Run Epic 2 validation with degraded builds corpus</idea>
+      <idea ac="AC-2.9.6">Verify &gt;=70% success rate, &gt;=5% median improvement</idea>
+    </ideas>
+  </tests>
+
+  <blockerAnalysis>
+    <summary>
+      Story 2.9 is ARCHITECTURALLY BLOCKED. The HeadlessWrapper.lua approach conflicts with
+      Epic 1 ADR documenting this as impossible in headless Python environment.
+    </summary>
+    <rootCause>
+      HeadlessWrapper.lua is NOT a true headless calculation engine - it's a GUI application wrapper requiring
+      full PoB GUI runtime with C++ native bindings, Windows windowing system, and native graphics libraries.
+      The Windows Fatal Exception 0xe24c4a02 occurs in native code and cannot be caught.
+    </rootCause>
+    <evidence>
+      - pytest tests/integration/test_full_pob_engine.py crashes with Windows Fatal Exception 0xe24c4a02
+      - Same error documented in Epic 1 ADR (2025-10-17)
+      - Error occurs at full_pob_engine.py:171 during HeadlessWrapper.lua loading
+    </evidence>
+    <recommendedOptions>
+      <option name="C-Revised" effort="8-16 hrs">
+        Extend MinimalCalc.lua to calculate passive tree bonuses. Was rejected as "incomplete" but may be viable with focused scope.
+      </option>
+      <option name="Subprocess" effort="8-12 hrs">
+        Run FullPoBEngine in isolated Python subprocess. May avoid LuaJIT state corruption; adds IPC overhead.
+      </option>
+      <option name="Hybrid" effort="12-20 hrs">
+        Use MinimalCalc for fast calcs, subprocess for full validation. Best of both worlds but complex.
+      </option>
+      <option name="External" effort="4-8 hrs">
+        Call PoB CLI/GUI externally via subprocess. Slow but guaranteed to work.
+      </option>
+    </recommendedOptions>
+    <nextActions>
+      <action owner="PM/SM">Review Epic 1 ADR and reconcile with Story 2.9 assumptions</action>
+      <action owner="Team">Evaluate alternative approaches (see options above)</action>
+      <action owner="Architect">Determine if subprocess isolation is viable for production use</action>
+      <action owner="PO">Re-approve sprint change with corrected risk assessment</action>
+    </nextActions>
+  </blockerAnalysis>
+</story-context>

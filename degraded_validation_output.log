@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "D:\poe2_optimizer_v6\scripts\validate_degraded_corpus.py", line 28, in <module>
+    from src.parsers.pob_xml_parser import parse_pob_xml
+ModuleNotFoundError: No module named 'src.parsers.pob_xml_parser'

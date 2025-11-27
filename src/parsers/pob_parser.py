@@ -298,18 +298,25 @@ def _extract_passive_nodes(pob_root: dict) -> Set[int]:
 def _extract_items(pob_root: dict) -> List[Item]:
     """Extract equipment items from PoB data.
 
+    Story 2.9 Milestone 1: Enhanced to parse weapon stats for DPS calculations.
+    Parses physical damage, attack speed, crit chance, and added damage from item text.
+
     Args:
         pob_root: PathOfBuilding root dictionary
 
     Returns:
-        List of Item objects
+        List of Item objects with weapon stats populated
     """
+    import re
+
     items = []
+
+    # Items section is directly under pob_root (which is already PathOfBuilding2)
     items_section = pob_root.get("Items", {})
     if not isinstance(items_section, dict):
         return items
 
-    # Items may be a dict of Item elements or a single Item
+    # Get Item elements from Items section
     item_elements = items_section.get("Item", [])
     if not item_elements:
         return items
@@ -323,14 +330,83 @@ def _extract_items(pob_root: dict) -> List[Item]:
             continue
 
         try:
+            # Get item text content
+            item_text = item_data.get("#text", "")
+            item_id = item_data.get("@id", "Unknown")
+
+            if not item_text:
+                continue
+
+            lines = item_text.strip().split('\n')
+            if len(lines) < 2:
+                continue
+
+            # Parse rarity (first line: "Rarity: RARE")
+            rarity = "Normal"
+            if lines[0].startswith("Rarity:"):
+                rarity = lines[0].split(":", 1)[1].strip()
+
+            # Parse item name (second line after "Rarity:")
+            name = lines[1].strip() if len(lines) > 1 else "Unknown Item"
+
+            # Parse base type (third line, usually the base item type)
+            base_type = lines[2].strip() if len(lines) > 2 else ""
+
+            # Parse weapon stats from mod lines
+            stats = {
+                "slot": item_id,
+                "name": name,
+                "base_type": base_type,
+                "rarity": rarity
+            }
+
+            # Extract weapon stats (for DPS calculation)
+            for line in lines:
+                line = line.strip()
+
+                # Physical damage: "Adds X to Y Physical Damage"
+                match = re.search(r'Adds (\d+) to (\d+) Physical Damage', line, re.IGNORECASE)
+                if match:
+                    stats["phys_min"] = stats.get("phys_min", 0) + int(match.group(1))
+                    stats["phys_max"] = stats.get("phys_max", 0) + int(match.group(2))
+
+                # Lightning damage
+                match = re.search(r'Adds (\d+) to (\d+) Lightning [Dd]amage', line)
+                if match:
+                    stats["lightning_min"] = stats.get("lightning_min", 0) + int(match.group(1))
+                    stats["lightning_max"] = stats.get("lightning_max", 0) + int(match.group(2))
+
+                # Cold damage
+                match = re.search(r'Adds (\d+) to (\d+) Cold [Dd]amage', line)
+                if match:
+                    stats["cold_min"] = stats.get("cold_min", 0) + int(match.group(1))
+                    stats["cold_max"] = stats.get("cold_max", 0) + int(match.group(2))
+
+                # Fire damage
+                match = re.search(r'Adds (\d+) to (\d+) Fire [Dd]amage', line)
+                if match:
+                    stats["fire_min"] = stats.get("fire_min", 0) + int(match.group(1))
+                    stats["fire_max"] = stats.get("fire_max", 0) + int(match.group(2))
+
+                # Attack Speed: "X% increased Attack Speed"
+                match = re.search(r'(\d+)% increased Attack Speed', line, re.IGNORECASE)
+                if match:
+                    stats["attack_speed_inc"] = stats.get("attack_speed_inc", 0) + int(match.group(1))
+
+                # Critical Strike Chance
+                match = re.search(r'\+(\d+)% to Critical Hit Chance', line, re.IGNORECASE)
+                if match:
+                    stats["crit_chance_add"] = stats.get("crit_chance_add", 0) + int(match.group(1))
+
             item = Item(
-                slot=item_data.get("@id", "Unknown"),
-                name=item_data.get("#text", "Unknown Item"),
-                rarity=item_data.get("@rarity", "Normal"),
-                item_level=int(item_data.get("@itemLevel", 1)),
-                stats={}  # Detailed stat parsing can be added later
+                slot=f"Weapon{item_id}" if _is_weapon_base(base_type) else f"Slot{item_id}",
+                name=name,
+                rarity=rarity,
+                item_level=1,  # Not critical for calculations
+                stats=stats
             )
             items.append(item)
+
         except (ValueError, KeyError) as e:
             # Skip malformed items (log for debugging)
             logger.debug(
@@ -342,22 +418,54 @@ def _extract_items(pob_root: dict) -> List[Item]:
     return items
 
 
+def _is_weapon_base(base_type: str) -> bool:
+    """Check if base type is a weapon.
+
+    Story 2.9: Simple heuristic for weapon detection.
+    """
+    weapon_keywords = [
+        "Bow", "Staff", "Wand", "Sword", "Axe", "Mace", "Claw",
+        "Dagger", "Sceptre", "Crossbow", "Quarterstaff", "Flail"
+    ]
+    return any(kw in base_type for kw in weapon_keywords)
+
+
+def _is_minion_skill(skill_id: str) -> bool:
+    """Check if skill is a minion/summon skill.
+
+    Story 2.9: Temporary filter - minion skills cause calcs.initEnv() crash.
+    TODO: Implement proper minion support in MinimalCalc.lua
+    """
+    minion_keywords = ["Summon", "Raise", "Animate", "Companion"]
+    return any(kw in skill_id for kw in minion_keywords)
+
+
 def _extract_skills(pob_root: dict) -> List[Skill]:
     """Extract active skills from PoB data.
+
+    Story 2.9 Phase 2: Enhanced to capture skillId, supports, and all gem data
+    needed for MinimalCalc.lua skill processing.
 
     Args:
         pob_root: PathOfBuilding root dictionary
 
     Returns:
-        List of Skill objects
+        List of Skill objects with full gem data
     """
     skills = []
     skills_section = pob_root.get("Skills", {})
     if not isinstance(skills_section, dict):
         return skills
 
-    # Skills may be a dict of Skill elements or a single Skill
-    skill_elements = skills_section.get("Skill", [])
+    # Handle SkillSet wrapper (PoE 2 format)
+    skill_set = skills_section.get("SkillSet", {})
+    if isinstance(skill_set, list):
+        skill_set = skill_set[0] if skill_set else {}
+    elif not isinstance(skill_set, dict):
+        skill_set = {}
+
+    # Skills may be in SkillSet or directly in Skills section
+    skill_elements = skill_set.get("Skill", []) if skill_set else skills_section.get("Skill", [])
     if not skill_elements:
         return skills
 
@@ -369,18 +477,55 @@ def _extract_skills(pob_root: dict) -> List[Skill]:
         if not isinstance(skill_data, dict):
             continue
 
+        # Skip disabled skills
+        if skill_data.get("@enabled", "true").lower() != "true":
+            continue
+
         try:
-            # Get primary gem
-            gem = skill_data.get("Gem", {})
-            if isinstance(gem, list) and gem:
-                gem = gem[0]  # Use first gem as primary
+            # Get all gems in this skill group
+            gems = skill_data.get("Gem", [])
+            if isinstance(gems, dict):
+                gems = [gems]
+            elif not isinstance(gems, list):
+                gems = []
+
+            if not gems:
+                continue
+
+            # First gem is the active skill, rest are supports
+            active_gem = gems[0]
+            support_gems = []
+
+            # Parse active gem
+            skill_id = active_gem.get("@skillId", "")
+            if not skill_id:
+                # Fallback to variantId or nameSpec
+                skill_id = active_gem.get("@variantId", active_gem.get("@nameSpec", "Unknown"))
+
+            # Parse support gems (all gems after the first)
+            for support in gems[1:]:
+                if isinstance(support, dict) and support.get("@enabled", "true").lower() == "true":
+                    support_id = support.get("@skillId", support.get("@variantId", ""))
+                    if support_id:
+                        support_gems.append({
+                            "skillId": support_id,
+                            "level": int(support.get("@level", 1)),
+                            "quality": int(support.get("@quality", 0)),
+                            "nameSpec": support.get("@nameSpec", "")
+                        })
+
+            # Story 2.9: Skip minion skills (temporary workaround)
+            if _is_minion_skill(skill_id):
+                logger.debug(f"Skipping minion skill: {skill_id} (not yet supported)")
+                continue
 
             skill = Skill(
-                name=gem.get("@nameSpec", "Unknown Skill") if isinstance(gem, dict) else "Unknown Skill",
-                level=int(gem.get("@level", 1)) if isinstance(gem, dict) else 1,
-                quality=int(gem.get("@quality", 0)) if isinstance(gem, dict) else 0,
-                enabled=skill_data.get("@enabled", "true").lower() == "true",
-                support_gems=[]  # Support gem parsing can be added later
+                name=active_gem.get("@nameSpec", "Unknown Skill"),
+                level=int(active_gem.get("@level", 1)),
+                quality=int(active_gem.get("@quality", 0)),
+                enabled=True,
+                support_gems=support_gems,
+                skill_id=skill_id  # Added for MinimalCalc.lua integration
             )
             skills.append(skill)
         except (ValueError, KeyError) as e:

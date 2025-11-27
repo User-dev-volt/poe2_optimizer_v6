@@ -1,0 +1,98 @@
+INFO: ================================================================================
+INFO: Epic 2 Baseline Stats Generator - Task 5
+INFO: ================================================================================
+INFO: 
+Loading corpus manifest from: D:\poe2_optimizer_v6\tests\fixtures\optimization_corpus\corpus_manifest.json
+INFO: Found 36 builds in corpus
+INFO: 
+Calculating baseline stats for all 36 builds...
+INFO: --------------------------------------------------------------------------------
+INFO: [1/36] Processing: amazon_80_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [2/36] Processing: amazonhuntress_80_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [3/36] Processing: bloodmage_100_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [4/36] Processing: build_01_witch_90
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [5/36] Processing: build_02_warrior_75
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [6/36] Processing: build_03_ranger_60
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [7/36] Processing: build_04_monk_30
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [8/36] Processing: build_05_mercenary_100
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [9/36] Processing: build_06_sorceress_90
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [10/36] Processing: build_07_witch_01
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [11/36] Processing: build_08_warrior_30
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [12/36] Processing: build_09_ranger_90
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [13/36] Processing: build_10_monk_60
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [14/36] Processing: build_11_mercenary_75
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [15/36] Processing: build_12_sorceress_30
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [16/36] Processing: build_13_huntress_01
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [17/36] Processing: build_14_huntress_90
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [18/36] Processing: deadeye_100_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [19/36] Processing: gemlinglegionnaire_81_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [20/36] Processing: huntress_100_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [21/36] Processing: huntress_68_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [22/36] Processing: huntress_71_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [23/36] Processing: invoker_100_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [24/36] Processing: litch_100_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [25/36] Processing: monk_72_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [26/36] Processing: pathfinder_100_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [27/36] Processing: ranger_68_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [28/36] Processing: ritualist_68_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [29/36] Processing: smithofkitava_80_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [30/36] Processing: sorceress_69_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [31/36] Processing: titan_100_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [32/36] Processing: warbringer_100_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [33/36] Processing: warrior_79_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [34/36] Processing: witch_67_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [35/36] Processing: witch_76_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: [36/36] Processing: witchhunter_100_poeninja
+ERROR:   \u2717 Failed: 'BuildStats' object has no attribute 'fire_res'
+INFO: --------------------------------------------------------------------------------
+INFO: Completed: 0 successful, 36 failed
+WARNING: \u26a0 36 builds failed to calculate
+INFO: 
+Calculating corpus-level statistics...
+Traceback (most recent call last):
+  File "D:\poe2_optimizer_v6\scripts\generate_baseline_stats.py", line 316, in <module>
+    main()
+  File "D:\poe2_optimizer_v6\scripts\generate_baseline_stats.py", line 265, in main
+    corpus_stats = calculate_corpus_statistics(build_stats)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\poe2_optimizer_v6\scripts\generate_baseline_stats.py", line 154, in calculate_corpus_statistics
+    'mean': mean(allocated_values),
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "G:\miniconda3\Lib\statistics.py", line 486, in mean
+    raise StatisticsError('mean requires at least one data point')
+statistics.StatisticsError: mean requires at least one data point

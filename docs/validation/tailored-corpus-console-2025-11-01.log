@@ -1,0 +1,1935 @@
+2025-11-01 20:37:36,581 - INFO - Found 21 tailored builds
+2025-11-01 20:37:36,581 - INFO - 
+============================================================
+2025-11-01 20:37:36,581 - INFO - VALIDATING WITH METRIC: DPS
+2025-11-01 20:37:36,581 - INFO - ============================================================
+
+2025-11-01 20:37:36,582 - INFO - Validating huntress_hip_70_15points (category=HIP, metric=dps)...
+2025-11-01 20:37:36,624 - INFO - MinimalCalc.lua loaded - PoB calculation modules initialized
+2025-11-01 20:37:36,624 - INFO - MinimalCalc.lua loaded successfully
+2025-11-01 20:37:36,624 - INFO - Loading passive tree data (first call)
+2025-11-01 20:37:36,624 - INFO - Loading passive tree data from: D:\poe2_optimizer_v6\external\pob-engine\src\TreeData\0_3\tree.json
+2025-11-01 20:37:36,656 - INFO - Found 4118 nodes in tree data
+2025-11-01 20:37:36,685 - INFO - Loaded 4118 passive tree nodes, 4950 connections
+2025-11-01 20:37:36,685 - INFO - Class starting nodes: {'Warrior': 33812, 'Huntress': 41736, 'Witch': 59822, 'Ranger': 46990, 'Sorceress': 9994, 'Monk': 74, 'Mercenary': 55536}
+2025-11-01 20:37:36,685 - INFO - Passive tree cache size: 0.14 MB (estimated)
+2025-11-01 20:37:36,699 - INFO - Passive tree converted to dict and cached (one-time cost)
+2025-11-01 20:37:36,699 - INFO - PoB calculation engine initialized
+2025-11-01 20:37:36,780 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+[MinimalCalc] PoB src directory: D:/poe2_optimizer_v6/external/pob-engine/src
+[MinimalCalc] Creating stubs for external libraries and GUI functions...
+[MinimalCalc] ===== STEP 1: Loading GameVersions.lua (pure data, no GUI) =====
+[MinimalCalc] SUCCESS: latestTreeVersion = 0_3
+[MinimalCalc] ===== STEP 2: Loading Common.lua (utility functions) =====
+[MinimalCalc] SUCCESS: Common.lua loaded, common.classes available
+[MinimalCalc] ===== STEP 3: Loading Data/Global.lua (ModFlag, KeywordFlag, SkillType) =====
+[MinimalCalc] SUCCESS: Global.lua loaded, ModFlag/KeywordFlag/SkillType available
+[MinimalCalc] ===== STEP 4: Loading Data/Misc.lua (game constants) =====
+[MinimalCalc] SUCCESS: Misc.lua loaded, data.characterConstants/gameConstants/monsterConstants available
+[MinimalCalc] Overrode unarmedWeaponData with PoE 2 class data
+[MinimalCalc] ===== STEP 4b: Adding data stubs for PoB calculation dependencies =====
+[MinimalCalc] SUCCESS: Data stubs created (including monster stat tables)
+[MinimalCalc] ===== STEP 4c: Stubbing data.gems and data.skills (not needed for Story 1.5 - no skills) =====
+[MinimalCalc] SUCCESS: data.gems and data.skills initialized with minimal stubs
+[MinimalCalc] ===== STEP 5a: Creating ModParser stub =====
+[MinimalCalc] SUCCESS: ModParser stub created
+[MinimalCalc] ===== STEP 5b: Loading Modules/ModTools.lua (modLib) =====
+[MinimalCalc] Intercepting ModParser load - returning stub
+[MinimalCalc] SUCCESS: ModTools.lua loaded, modLib available
+[MinimalCalc] ===== STEP 5c: Loading Modules/CalcTools.lua (calcLib) =====
+[MinimalCalc] SUCCESS: CalcTools.lua loaded, calcLib available
+[MinimalCalc] ===== STEP 6: Pre-loading required Classes =====
+[MinimalCalc] Loading Classes/ModStore.lua...
+[MinimalCalc] Loading Classes/ModList.lua...
+[MinimalCalc] Loading Classes/ModDB.lua...
+[MinimalCalc] SUCCESS: Core classes loaded
+[MinimalCalc] ===== STEP 7: Loading Modules/Calcs.lua (calculation engine) =====
+[MinimalCalc] SUCCESS: Calcs.lua loaded
+[MinimalCalc] SUCCESS: calcs.initEnv and calcs.perform verified
+[MinimalCalc] ===== Bootstrap complete - minimal PoB environment ready =====
+[MinimalCalc] Bootstrap complete - Calculate() function exposed - TIMESTAMP: 1760762916.3465545
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Huntress
+[MinimalCalc]   level: 70
+[MinimalCalc]   classId: 1
+[MinimalCalc]   allocated nodes: 71 of 71
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 1
+[MinimalCalc] Class name: Huntress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2f35a368
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.134588
+[MinimalCalc]   Life: 893
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 335
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.81042
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 78
+[MinimalCalc]   AccuracyHitChance: 78
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Huntress
+[MinimalCalc]   level: 70
+[MinimalCalc]   classId: 1
+[MinimalCalc]   allocated nodes: 72025-11-01 20:37:36,866 - INFO - Baseline calculated: DPS=1.1, Life=893, EHP=893.0
+2025-11-01 20:37:36,866 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:36,866 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:36,866 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:36,866 - INFO -   [HIP] huntress_hip_70_15points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:36,867 - INFO - Validating huntress_lip_97_5points (category=LIP, metric=dps)...
+2025-11-01 20:37:36,968 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+1 of 71
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 1
+[MinimalCalc] Class name: Huntress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2f9e6dd8
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.134588
+[MinimalCalc]   Life: 893
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 335
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.81042
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 78
+[MinimalCalc]   AccuracyHitChance: 78
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Huntress
+[MinimalCalc]   level: 97
+[MinimalCalc]   classId: 1
+[MinimalCalc]   allocated nodes: 116 of 116
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 1
+[MinimalCalc] Class name: Huntress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2eed40b0
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.255772
+[MinimalCalc]   Life: 1217
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 443
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.89698
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 86
+[MinimalCalc]   AccuracyHitChance: 86
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Huntress
+[MinimalCalc]   level: 97
+[MinimalCalc]   classId: 1
+[MinimalCalc]   allocated nodes: 116 of 116
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 1
+[MinimalCalc] Class name: Huntress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = 2025-11-01 20:37:37,061 - INFO - Baseline calculated: DPS=1.3, Life=1217, EHP=1217.0
+2025-11-01 20:37:37,061 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:37,061 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:37,061 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:37,061 - INFO -   [LIP] huntress_lip_97_5points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:37,061 - INFO - Validating huntress_mip_90_12points (category=MIP, metric=dps)...
+2025-11-01 20:37:37,132 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e304fee20
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.255772
+[MinimalCalc]   Life: 1217
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 443
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.89698
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 86
+[MinimalCalc]   AccuracyHitChance: 86
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Huntress
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 1
+[MinimalCalc]   allocated nodes: 102 of 102
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 1
+[MinimalCalc] Class name: Huntress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30baf890
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1133
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 415
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[MinimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Huntress
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 1
+[MinimalCalc]   allocated nodes: 102 of 102
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 1
+[MinimalCalc] Class name: Huntress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2fc629d8
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1133
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 415
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[Mi2025-11-01 20:37:37,234 - INFO - Baseline calculated: DPS=1.2, Life=1133, EHP=1133.0
+2025-11-01 20:37:37,234 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:37,234 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:37,234 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:37,234 - INFO -   [MIP] huntress_mip_90_12points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:37,234 - INFO - Validating mercenary_hip_88_10points (category=HIP, metric=dps)...
+2025-11-01 20:37:37,345 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+2025-11-01 20:37:37,420 - INFO - Baseline calculated: DPS=1.2, Life=1117, EHP=1117.0
+2025-11-01 20:37:37,421 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:37,421 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:37,421 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:37,421 - INFO -   [HIP] mercenary_hip_88_10points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:37,421 - INFO - Validating mercenary_lip_90_7points (category=LIP, metric=dps)...
+nimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Mercenary
+[MinimalCalc]   level: 88
+[MinimalCalc]   classId: 3
+[MinimalCalc]   allocated nodes: 102 of 102
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 3
+[MinimalCalc] Class name: Mercenary
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e3036e958
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1117
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 399
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[MinimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Mercenary
+[MinimalCalc]   level: 88
+[MinimalCalc]   classId: 3
+[MinimalCalc]   allocated nodes: 102 of 102
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 3
+[MinimalCalc] Class name: Mercenary
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e3034b988
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1117
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 399
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[MinimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Mercenary
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 3
+[MinimalCalc]   allocated nodes: 107 of 107
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 3
+[MinimalCalc] Class name: Mercenary
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mai2025-11-01 20:37:37,491 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+2025-11-01 20:37:37,599 - INFO - Baseline calculated: DPS=1.2, Life=1141, EHP=1141.0
+2025-11-01 20:37:37,599 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:37,599 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:37,599 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:37,599 - INFO -   [LIP] mercenary_lip_90_7points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:37,599 - INFO - Validating mercenary_mip_86_15points (category=MIP, metric=dps)...
+nSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2f146f40
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1141
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 407
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[MinimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Mercenary
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 3
+[MinimalCalc]   allocated nodes: 107 of 107
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 3
+[MinimalCalc] Class name: Mercenary
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2fa17bd0
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1141
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 407
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[MinimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Mercenary
+[MinimalCalc]   level: 86
+[MinimalCalc]   classId: 3
+[MinimalCalc]   allocated nodes: 95 of 95
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 3
+[MinimalCalc] Class name: Mercenary
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2f9288c8
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc2025-11-01 20:37:37,681 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+2025-11-01 20:37:37,753 - INFO - Baseline calculated: DPS=1.2, Life=1093, EHP=1093.0
+2025-11-01 20:37:37,754 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:37,754 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:37,754 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:37,754 - INFO -   [MIP] mercenary_mip_86_15points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:37,754 - INFO - Validating monk_hip_65_10points (category=HIP, metric=dps)...
+2025-11-01 20:37:37,857 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.210223
+[MinimalCalc]   Life: 1093
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 391
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.864445
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 83
+[MinimalCalc]   AccuracyHitChance: 83
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Mercenary
+[MinimalCalc]   level: 86
+[MinimalCalc]   classId: 3
+[MinimalCalc]   allocated nodes: 95 of 95
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 3
+[MinimalCalc] Class name: Mercenary
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30e50db8
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.210223
+[MinimalCalc]   Life: 1093
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 391
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.864445
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 83
+[MinimalCalc]   AccuracyHitChance: 83
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 11
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Monk
+[MinimalCalc]   level: 65
+[MinimalCalc]   classId: 6
+[MinimalCalc]   allocated nodes: 71 of 71
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 6
+[MinimalCalc] Class name: Monk
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30363c10
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.089375
+[MinimalCalc]   Life: 841
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 315
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.778125
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 75
+[MinimalCalc]   AccuracyHitChance: 75
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Monk
+[MinimalCalc]   level: 65
+[MinimalCalc]   classId: 6
+[MinimalCalc]   allocated nodes: 71 o2025-11-01 20:37:37,945 - INFO - Baseline calculated: DPS=1.1, Life=841, EHP=841.0
+2025-11-01 20:37:37,946 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:37,946 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:37,946 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:37,947 - INFO -   [HIP] monk_hip_65_10points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:37,947 - INFO - Validating monk_lip_100_5points (category=LIP, metric=dps)...
+2025-11-01 20:37:38,039 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+f 71
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 6
+[MinimalCalc] Class name: Monk
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e3146ecc0
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.089375
+[MinimalCalc]   Life: 841
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 315
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.778125
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 75
+[MinimalCalc]   AccuracyHitChance: 75
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Monk
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 6
+[MinimalCalc]   allocated nodes: 119 of 119
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 6
+[MinimalCalc] Class name: Monk
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e3071b358
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.270983
+[MinimalCalc]   Life: 1261
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 455
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.907845
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Monk
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 6
+[MinimalCalc]   allocated nodes: 119 of 119
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 6
+[MinimalCalc] Class name: Monk
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] 2025-11-01 20:37:38,101 - INFO - Baseline calculated: DPS=1.3, Life=1261, EHP=1261.0
+2025-11-01 20:37:38,101 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:38,101 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:38,101 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:38,101 - INFO -   [LIP] monk_lip_100_5points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:38,101 - INFO - Validating monk_mip_80_10points (category=MIP, metric=dps)...
+2025-11-01 20:37:38,201 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+DEBUG: weaponData1 = table: 0x020e2f47b618
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.270983
+[MinimalCalc]   Life: 1261
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 455
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.907845
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Monk
+[MinimalCalc]   level: 80
+[MinimalCalc]   classId: 6
+[MinimalCalc]   allocated nodes: 94 of 94
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 6
+[MinimalCalc] Class name: Monk
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e3144d2e0
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.179927
+[MinimalCalc]   Life: 1021
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 375
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.842805
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 81
+[MinimalCalc]   AccuracyHitChance: 81
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Monk
+[MinimalCalc]   level: 80
+[MinimalCalc]   classId: 6
+[MinimalCalc]   allocated nodes: 94 of 94
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 6
+[MinimalCalc] Class name: Monk
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2f7e1430
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.179927
+[MinimalCalc]   Life: 1021
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 375
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.842805
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 81
+[MinimalCalc]   AccuracyHitChance: 81
+[2025-11-01 20:37:38,308 - INFO - Baseline calculated: DPS=1.2, Life=1021, EHP=1021.0
+2025-11-01 20:37:38,308 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:38,308 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:38,308 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:38,308 - INFO -   [MIP] monk_mip_80_10points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:38,308 - INFO - Validating ranger_hip_74_10points (category=HIP, metric=dps)...
+2025-11-01 20:37:38,398 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+2025-11-01 20:37:38,494 - INFO - Baseline calculated: DPS=1.2, Life=941, EHP=941.0
+2025-11-01 20:37:38,494 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:38,494 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:38,494 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:38,494 - INFO -   [HIP] ranger_hip_74_10points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:38,495 - INFO - Validating ranger_lip_100_4points (category=LIP, metric=dps)...
+MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 11
+[MinimalCalc]   Int: 11
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Ranger
+[MinimalCalc]   level: 74
+[MinimalCalc]   classId: 0
+[MinimalCalc]   allocated nodes: 88 of 88
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 0
+[MinimalCalc] Class name: Ranger
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2e79e720
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.1648
+[MinimalCalc]   Life: 941
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 343
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.832
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 80
+[MinimalCalc]   AccuracyHitChance: 80
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 15
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Ranger
+[MinimalCalc]   level: 74
+[MinimalCalc]   classId: 0
+[MinimalCalc]   allocated nodes: 88 of 88
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 0
+[MinimalCalc] Class name: Ranger
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2ee8cca8
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.1648
+[MinimalCalc]   Life: 941
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 343
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.832
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 80
+[MinimalCalc]   AccuracyHitChance: 80
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 15
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Ranger
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 0
+[MinimalCalc]   allocated nodes: 120 of 120
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 0
+[MinimalCalc] Class name: Ranger
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] 2025-11-01 20:37:38,565 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+2025-11-01 20:37:38,645 - INFO - Baseline calculated: DPS=1.3, Life=1253, EHP=1253.0
+2025-11-01 20:37:38,645 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:38,645 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:38,645 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:38,645 - INFO -   [LIP] ranger_lip_100_4points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:38,645 - INFO - Validating ranger_mip_90_6points (category=MIP, metric=dps)...
+DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2f710a18
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.270983
+[MinimalCalc]   Life: 1253
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 447
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.907845
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 15
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Ranger
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 0
+[MinimalCalc]   allocated nodes: 120 of 120
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 0
+[MinimalCalc] Class name: Ranger
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2f57f2c0
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.270983
+[MinimalCalc]   Life: 1253
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 447
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.907845
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 15
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Ranger
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 0
+[MinimalCalc]   allocated nodes: 108 of 108
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 0
+[MinimalCalc] Class name: Ranger
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2eeac668
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Ca2025-11-01 20:37:38,753 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+2025-11-01 20:37:38,816 - INFO - Baseline calculated: DPS=1.2, Life=1133, EHP=1133.0
+2025-11-01 20:37:38,817 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:38,817 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:38,817 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:38,817 - INFO -   [MIP] ranger_mip_90_6points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:38,817 - INFO - Validating sorceress_hip_66_11points (category=HIP, metric=dps)...
+2025-11-01 20:37:38,922 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+lculation complete!
+[MinimalCalc]   TotalDPS: 1.240575
+[MinimalCalc]   Life: 1133
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 407
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.886125
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 85
+[MinimalCalc]   AccuracyHitChance: 85
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 15
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Ranger
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 0
+[MinimalCalc]   allocated nodes: 108 of 108
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 0
+[MinimalCalc] Class name: Ranger
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e304e8688
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.240575
+[MinimalCalc]   Life: 1133
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 407
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.886125
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 85
+[MinimalCalc]   AccuracyHitChance: 85
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 15
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Sorceress
+[MinimalCalc]   level: 66
+[MinimalCalc]   classId: 5
+[MinimalCalc]   allocated nodes: 71 of 71
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 5
+[MinimalCalc] Class name: Sorceress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2ef75f80
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.104432
+[MinimalCalc]   Life: 845
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 327
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.78888
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 76
+[MinimalCalc]   AccuracyHitChance: 76
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Sorceress
+[MinimalCalc]   level: 66
+[MinimalCalc]   classId: 5
+[MinimalCalc]   allocated nodes: 71 of 71
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...2025-11-01 20:37:39,014 - INFO - Baseline calculated: DPS=1.1, Life=845, EHP=845.0
+2025-11-01 20:37:39,015 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:39,015 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:39,015 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:39,015 - INFO -   [HIP] sorceress_hip_66_11points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:39,015 - INFO - Validating sorceress_lip_100_4points (category=LIP, metric=dps)...
+2025-11-01 20:37:39,120 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 5
+[MinimalCalc] Class name: Sorceress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2fc806e8
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.104432
+[MinimalCalc]   Life: 845
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 327
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.78888
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 76
+[MinimalCalc]   AccuracyHitChance: 76
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Sorceress
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 5
+[MinimalCalc]   allocated nodes: 120 of 120
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 5
+[MinimalCalc] Class name: Sorceress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30ae7a80
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.270983
+[MinimalCalc]   Life: 1253
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 463
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.907845
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Sorceress
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 5
+[MinimalCalc]   allocated nodes: 120 of 120
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 5
+[MinimalCalc] Class name: Sorceress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e304d4418
+[Minim2025-11-01 20:37:39,184 - INFO - Baseline calculated: DPS=1.3, Life=1253, EHP=1253.0
+2025-11-01 20:37:39,184 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:39,184 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:39,184 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:39,184 - INFO -   [LIP] sorceress_lip_100_4points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:39,184 - INFO - Validating sorceress_mip_90_9points (category=MIP, metric=dps)...
+2025-11-01 20:37:39,303 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+alCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.270983
+[MinimalCalc]   Life: 1253
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 463
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.907845
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Sorceress
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 5
+[MinimalCalc]   allocated nodes: 105 of 105
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 5
+[MinimalCalc] Class name: Sorceress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2fc60dc0
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1133
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 423
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[MinimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Sorceress
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 5
+[MinimalCalc]   allocated nodes: 105 of 105
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 5
+[MinimalCalc] Class name: Sorceress
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2f7a6da0
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1133
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 423
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[MinimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[Mi2025-11-01 20:37:39,370 - INFO - Baseline calculated: DPS=1.2, Life=1133, EHP=1133.0
+2025-11-01 20:37:39,370 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:39,370 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:39,370 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:39,370 - INFO -   [MIP] sorceress_mip_90_9points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:39,371 - INFO - Validating warrior_hip_73_13points (category=HIP, metric=dps)...
+2025-11-01 20:37:39,444 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+2025-11-01 20:37:39,574 - INFO - Baseline calculated: DPS=1.7, Life=945, EHP=945.0
+2025-11-01 20:37:39,574 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:39,574 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:39,574 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:39,575 - INFO -   [HIP] warrior_hip_73_13points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:39,575 - INFO - Validating warrior_lip_100_3points (category=LIP, metric=dps)...
+nimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Warrior
+[MinimalCalc]   level: 73
+[MinimalCalc]   classId: 2
+[MinimalCalc]   allocated nodes: 76 of 76
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 2
+[MinimalCalc] Class name: Warrior
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e3050e1c0
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.701882
+[MinimalCalc]   Life: 945
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 339
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 1.21563
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 78
+[MinimalCalc]   AccuracyHitChance: 78
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 15
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Warrior
+[MinimalCalc]   level: 73
+[MinimalCalc]   classId: 2
+[MinimalCalc]   allocated nodes: 76 of 76
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 2
+[MinimalCalc] Class name: Warrior
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e303899b0
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.701882
+[MinimalCalc]   Life: 945
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 339
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 1.21563
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 78
+[MinimalCalc]   AccuracyHitChance: 78
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 15
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Warrior
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 2
+[MinimalCalc]   allocated nodes: 121 of 121
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 2
+[MinimalCalc] Class name: Warrior
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEf2025-11-01 20:37:39,649 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+2025-11-01 20:37:39,735 - INFO - Baseline calculated: DPS=1.9, Life=1269, EHP=1269.0
+2025-11-01 20:37:39,735 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:39,735 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:39,735 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:39,735 - INFO -   [LIP] warrior_lip_100_3points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:39,735 - INFO - Validating warrior_mip_87_8points (category=MIP, metric=dps)...
+fect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30741dd8
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.9064745
+[MinimalCalc]   Life: 1269
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 447
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 1.3617675
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 15
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Warrior
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 2
+[MinimalCalc]   allocated nodes: 121 of 121
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 2
+[MinimalCalc] Class name: Warrior
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e3044da28
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.9064745
+[MinimalCalc]   Life: 1269
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 447
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 1.3617675
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 15
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Warrior
+[MinimalCalc]   level: 87
+[MinimalCalc]   classId: 2
+[MinimalCalc]   allocated nodes: 103 of 103
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 2
+[MinimalCalc] Class name: Warrior
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30c8a418
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculatio2025-11-01 20:37:39,844 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+2025-11-01 20:37:39,909 - INFO - Baseline calculated: DPS=1.8, Life=1113, EHP=1113.0
+2025-11-01 20:37:39,909 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:39,909 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:39,909 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:39,909 - INFO -   [MIP] warrior_mip_87_8points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:39,909 - INFO - Validating witch_hip_70_7points (category=HIP, metric=dps)...
+2025-11-01 20:37:40,017 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+n complete!
+[MinimalCalc]   TotalDPS: 1.8153345
+[MinimalCalc]   Life: 1113
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 395
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 1.2966675
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 83
+[MinimalCalc]   AccuracyHitChance: 83
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 15
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Warrior
+[MinimalCalc]   level: 87
+[MinimalCalc]   classId: 2
+[MinimalCalc]   allocated nodes: 103 of 103
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 2
+[MinimalCalc] Class name: Warrior
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30bf2890
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.8153345
+[MinimalCalc]   Life: 1113
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 395
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 1.2966675
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 83
+[MinimalCalc]   AccuracyHitChance: 83
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 15
+[MinimalCalc]   Int: 7
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Witch
+[MinimalCalc]   level: 70
+[MinimalCalc]   classId: 4
+[MinimalCalc]   allocated nodes: 79 of 79
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 4
+[MinimalCalc] Class name: Witch
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2e7b6e78
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.119503
+[MinimalCalc]   Life: 893
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 343
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.799645
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 77
+[MinimalCalc]   AccuracyHitChance: 77
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Witch
+[MinimalCalc]   level: 70
+[MinimalCalc]   classId: 4
+[MinimalCalc]   allocated nodes: 79 of 79
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc2025-11-01 20:37:40,102 - INFO - Baseline calculated: DPS=1.1, Life=893, EHP=893.0
+2025-11-01 20:37:40,102 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:40,102 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:40,102 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:40,102 - INFO -   [HIP] witch_hip_70_7points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:40,102 - INFO - Validating witch_lip_100_3points (category=LIP, metric=dps)...
+2025-11-01 20:37:40,179 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 4
+[MinimalCalc] Class name: Witch
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30427408
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.119503
+[MinimalCalc]   Life: 893
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 343
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.799645
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 77
+[MinimalCalc]   AccuracyHitChance: 77
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Witch
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 4
+[MinimalCalc]   allocated nodes: 121 of 121
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 4
+[MinimalCalc] Class name: Witch
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30f77580
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.270983
+[MinimalCalc]   Life: 1253
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 463
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.907845
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Witch
+[MinimalCalc]   level: 100
+[MinimalCalc]   classId: 4
+[MinimalCalc]   allocated nodes: 121 of 121
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 4
+[MinimalCalc] Class name: Witch
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e2f3ffd60
+[MinimalCalc] DEBUG: weaponData1.type 2025-11-01 20:37:40,277 - INFO - Baseline calculated: DPS=1.3, Life=1253, EHP=1253.0
+2025-11-01 20:37:40,277 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:40,277 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:40,277 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:40,277 - INFO -   [LIP] witch_lip_100_3points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:40,277 - INFO - Validating witch_mip_90_6points (category=MIP, metric=dps)...
+2025-11-01 20:37:40,370 - INFO - Starting optimization: metric=dps, unallocated=0, respec=None, max_iter=600
+= None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.270983
+[MinimalCalc]   Life: 1253
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 463
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.907845
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 87
+[MinimalCalc]   AccuracyHitChance: 87
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Witch
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 4
+[MinimalCalc]   allocated nodes: 108 of 108
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 4
+[MinimalCalc] Class name: Witch
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30fc6800
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1133
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 423
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[MinimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Witch
+[MinimalCalc]   level: 90
+[MinimalCalc]   classId: 4
+[MinimalCalc]   allocated nodes: 108 of 108
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 4
+[MinimalCalc] Class name: Witch
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Default Attack
+[MinimalCalc] DEBUG: skillFlags.attack = true
+[MinimalCalc] DEBUG: skillFlags.melee = true
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = true
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = nil
+[MinimalCalc] DEBUG: skillFlags.unarmed = true
+[MinimalCalc] DEBUG: weaponData1 = table: 0x020e30ec8dc8
+[MinimalCalc] DEBUG: weaponData1.type = None
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 1.225392
+[MinimalCalc]   Life: 1133
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 423
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0.87528
+[MinimalCalc]   AverageHit: N/A
+[MinimalCalc]   HitChance: 84
+[MinimalCalc]   AccuracyHitChance: 84
+[MinimalCalc]   Speed: 1.4
+[MinimalCalc]   Accuracy: N/A
+[MinimalCalc]   Dex: 2025-11-01 20:37:40,448 - INFO - Baseline calculated: DPS=1.2, Life=1133, EHP=1133.0
+2025-11-01 20:37:40,448 - INFO - No valid neighbors found - converged
+2025-11-01 20:37:40,448 - INFO - Iteration 0: +0.0% improvement, Budget: 0/0 U, 0/\u221e R, Elapsed: 0s
+2025-11-01 20:37:40,448 - INFO - Optimization complete: improvement=0.00%, iterations=0, time=0.1s, reason=no_valid_neighbors
+2025-11-01 20:37:40,448 - INFO -   [MIP] witch_mip_90_6points: No improvement (0.1s, 0 iter)
+2025-11-01 20:37:40,448 - INFO - 
+------------------------------------------------------------
+2025-11-01 20:37:40,448 - INFO - AGGREGATE RESULTS (DPS)
+2025-11-01 20:37:40,448 - INFO - ------------------------------------------------------------
+2025-11-01 20:37:40,448 - INFO - Success rate: 0.0% (target: 70%)
+2025-11-01 20:37:40,448 - INFO - Median improvement: 0.0% (target: 5%)
+2025-11-01 20:37:40,448 - INFO - Max time: 0.1s (target: <300s)
+2025-11-01 20:37:40,448 - INFO - Overall PASS: False
+2025-11-01 20:37:40,448 - INFO - 
+By Category:
+2025-11-01 20:37:40,448 - INFO -   HIP: 0.0% success, 0.0% median
+2025-11-01 20:37:40,448 - INFO -   MIP: 0.0% success, 0.0% median
+2025-11-01 20:37:40,448 - INFO -   LIP: 0.0% success, 0.0% median
+2025-11-01 20:37:40,453 - INFO - 
+============================================================
+2025-11-01 20:37:40,453 - INFO - Validation results saved to: D:\poe2_optimizer_v6\docs\validation\tailored-corpus-validation-2025-11-01.json
+2025-11-01 20:37:40,453 - INFO - ============================================================
+
+7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15

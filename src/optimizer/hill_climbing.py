@@ -34,9 +34,11 @@ from src.models.optimization_config import (
     OptimizationResult
 )
 from src.calculator.build_calculator import calculate_build_stats
+from src.calculator.passive_tree import get_passive_tree
 from src.optimizer.convergence import ConvergenceDetector
 from src.optimizer.progress import ProgressTracker
 from src.optimizer.budget_tracker import BudgetState
+from src.optimizer.neighbor_generator import generate_neighbors, BudgetState as NeighborBudgetState
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +111,12 @@ def optimize_build(config: OptimizationConfiguration) -> OptimizationResult:
     )
 
     # ========================================
+    # Initialize passive tree for neighbor generation
+    # ========================================
+    tree = get_passive_tree()
+    logger.debug("Passive tree loaded for neighbor generation")
+
+    # ========================================
     # Task 2.1: Initialize optimization state
     # ========================================
     current_build = config.build
@@ -154,15 +162,29 @@ def optimize_build(config: OptimizationConfiguration) -> OptimizationResult:
             break
 
         # ========================================
-        # Task 2.2: Generate neighbors (PLACEHOLDER for Story 2.2)
+        # Task 2.2: Generate neighbors
         # ========================================
-        # TODO: Story 2.2 will implement full neighbor generation
-        # For now, return empty list to trigger immediate convergence
-        neighbors = _generate_neighbors_placeholder(
-            current_build,
-            unallocated_remaining,
-            respec_remaining
+        # Create budget state for neighbor generator
+        neighbor_budget = NeighborBudgetState(
+            unallocated_available=config.unallocated_points,
+            unallocated_used=config.unallocated_points - int(unallocated_remaining),
+            respec_available=config.respec_points,
+            respec_used=0 if config.respec_points is None else (config.respec_points - int(respec_remaining))
         )
+
+        # Generate mutations (returns List[TreeMutation])
+        mutations = generate_neighbors(
+            current_build,
+            tree,
+            neighbor_budget,
+            prioritize_adds=True
+        )
+
+        # Convert mutations to BuildData neighbors
+        neighbors = [mutation.apply(current_build) for mutation in mutations]
+
+        # Track mutations for later use (needed for node change tracking)
+        neighbor_mutations = mutations
 
         # Check if no valid neighbors (convergence condition)
         if not neighbors:
@@ -184,6 +206,7 @@ def optimize_build(config: OptimizationConfiguration) -> OptimizationResult:
         # ========================================
         best_neighbor = _select_best_neighbor(
             neighbor_evaluations,
+            neighbor_mutations,
             config.metric
         )
 
@@ -384,6 +407,7 @@ def _evaluate_neighbors(
 
 def _select_best_neighbor(
     evaluations: List[Tuple[BuildData, BuildStats]],
+    mutations: List,
     metric: str
 ) -> Optional[Tuple[BuildData, BuildStats, set, set]]:
     """
@@ -394,6 +418,7 @@ def _select_best_neighbor(
 
     Args:
         evaluations: List of (build, stats) tuples from _evaluate_neighbors
+        mutations: List of TreeMutation objects corresponding to neighbors
         metric: Optimization metric ("dps", "ehp", "balanced")
 
     Returns:
@@ -407,14 +432,14 @@ def _select_best_neighbor(
     if not evaluations:
         return None
 
-    # For Story 2.1, this is a simplified implementation
-    # Story 2.6 will implement full metric calculation with weighted objectives
-    best = max(evaluations, key=lambda e: _get_metric_value(e[1], metric))
-    best_build, best_stats = best
+    # Find best neighbor by metric value
+    best_idx = max(range(len(evaluations)), key=lambda i: _get_metric_value(evaluations[i][1], metric))
+    best_build, best_stats = evaluations[best_idx]
 
-    # Calculate node changes (placeholder - Story 2.2 will track this properly)
-    nodes_added = set()
-    nodes_removed = set()
+    # Extract node changes from corresponding mutation
+    best_mutation = mutations[best_idx]
+    nodes_added = best_mutation.nodes_added
+    nodes_removed = best_mutation.nodes_removed
 
     return (best_build, best_stats, nodes_added, nodes_removed)
 

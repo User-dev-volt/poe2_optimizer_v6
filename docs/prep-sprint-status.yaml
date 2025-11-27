@@ -1,0 +1,394 @@
+prep_sprint_status:
+  sprint_goal: Validate Epic 2 value, enable Alec testing, de-risk Epic 3 complexity
+  duration_estimate: 3-4 days
+  started: null
+  completed: null
+  blocking_tasks:
+    task-6-epic-2-validation:
+      status: in_progress
+      note: |
+        DECISION MADE 2025-11-22: Option D (Full PoB Integration) selected.
+        Story 2.9 added to Epic 2 to implement full HeadlessWrapper.lua integration.
+        Task 6 unblocked - depends on Story 2.9 completion.
+        See: docs/sprint-change-proposal-2025-11-22.md
+tasks:
+  task-1-demo-script:
+    title: Create Epic 2 Demo Script
+    owner: Amelia (Developer)
+    agent_command: /bmad:bmm:agents:dev
+    priority: HIGH
+    estimate: 2 hours
+    status: completed
+    deliverable: scripts/demo_optimization.py
+    acceptance: Alec can run 'python scripts/demo_optimization.py' and see optimizer
+      work
+    reference: epic-002-retro-2025-10-31.md lines 422-428
+    dependencies: []
+    notes: Completed 2025-11-01. Script loads builds from fixtures, runs optimize_build(),
+      displays detailed before/after stats. Tested with multiple builds and metrics.
+  task-2-flask-architecture:
+    title: Design Flask Application Architecture
+    owner: Winston (Architect)
+    agent_command: /bmad:bmm:agents:architect
+    priority: HIGH
+    estimate: 2-3 hours
+    status: completed
+    deliverable: docs/architecture/epic-3-web-architecture.md
+    acceptance: Architecture document addresses thread safety, SSE design, session
+      state
+    reference: epic-002-retro-2025-10-31.md lines 430-434
+    dependencies: []
+    notes: 'Completed 2025-11-01. Comprehensive architecture document created addressing
+      all three critical challenges: (1) Thread safety via request-level mutex for
+      LuaRuntime, (2) SSE architecture for real-time progress streaming, (3) Session
+      state management with in-memory storage. Document includes detailed module structure,
+      API design, error handling, resource cleanup strategy, and complete code examples.
+      Ready for implementation.'
+  task-3-flask-sse-prototype:
+    title: Build Flask + SSE Prototype
+    owner: Amelia (Developer)
+    agent_command: /bmad:bmm:agents:dev
+    priority: HIGH
+    estimate: 3-4 hours
+    status: completed
+    deliverable: prototypes/flask_sse_demo/ working code
+    acceptance: SSE endpoint streams progress updates to browser without refresh
+    reference: epic-002-retro-2025-10-31.md lines 436-441
+    dependencies: []
+    notes: 'Completed 2025-11-01. Full-featured Flask + SSE prototype created with:
+      (1) Flask app with SSE endpoint streaming progress updates, (2) HTML/JS frontend
+      using EventSource API, (3) Simulated optimization with real-time progress, metrics,
+      and completion events, (4) Connection status indicator and event log, (5) Cancel
+      functionality. Successfully tested - server starts on localhost:5000, SSE streams
+      work without page refresh. Architecture validates SSE approach for Story 3.5.
+      Files: app.py, templates/index.html, README.md with full documentation.'
+  task-4-corpus-inventory:
+    title: Inventory and Organize Existing Test Corpus
+    owner: Amelia (Developer)
+    agent_command: /bmad:bmm:agents:dev
+    priority: HIGH
+    estimate: 2-3 hours
+    status: completed
+    deliverable: tests/fixtures/optimization_corpus/corpus_manifest.json
+    acceptance: Manifest documents all parity builds with metadata
+    reference: epic-002-retro-2025-10-31.md lines 444-451
+    dependencies: []
+    notes: 'Completed 2025-11-01. Generated comprehensive manifest for all 36 parity
+      builds with metadata: class, level, ascendancy, allocated_points, unallocated_points.
+      Corpus includes diverse class distribution (8 Huntress, 6 Witch, 6 Warrior,
+      5 Ranger, 4 Monk, 4 Mercenary, 3 Sorceress) and level range (5 low-level, 2
+      mid, 19 high, 10 max). 12 builds have unallocated points for optimization testing.
+      Script created: scripts/generate_corpus_manifest.py for reproducibility.'
+  task-5-baseline-stats:
+    title: Establish Epic 2 Baseline Stats
+    owner: Murat (TEA) + Amelia (Developer)
+    agent_command: /bmad:bmm:agents:tea or /bmad:bmm:agents:dev
+    priority: HIGH
+    estimate: 2-3 hours
+    status: completed
+    deliverable: tests/fixtures/optimization_corpus/baseline_stats.json
+    acceptance: All parity builds have baseline DPS, Life, EHP, points recorded
+    reference: epic-002-retro-2025-10-31.md lines 453-457
+    dependencies:
+    - task-4-corpus-inventory
+    notes: 'Completed 2025-11-01. Generated baseline stats for all 36 corpus builds
+      using Epic 1 calculator. Corpus statistics: 36 builds total, mean DPS=1.2, median
+      Life=1013, median EHP=1013, 16 builds with unallocated points (mean 31.7 unallocated).
+      All builds successfully calculated with DPS, Life, EHP, resistances, armour,
+      evasion recorded. Ready for Task 6 validation. Script: scripts/generate_baseline_stats.py'
+      
+  task-6-epic-2-validation:
+    title: Validate Epic 2 Success Criteria [UNBLOCKED - READY]
+    owner: Amelia (Developer) + Murat (TEA)
+    agent_command: /bmad:bmm:agents:dev or /bmad:bmm:agents:tea
+    priority: '**HIGH**'
+    estimate: 3-4 hours
+    status: ready
+    deliverable: 'docs/validation/realistic-validation-results.json, scripts/validate_realistic_builds.py'
+    acceptance: '- Success rate >= 70%
+      - Median improvement >= 5%
+      - ALL completions < 5 minutes
+      - Budget constraints never violated
+      - Alec reviews and approves results
+      - Use pytest-xdist pattern for batch calculations (ADR-003)
+      '
+    reference: epic-002-retro-2025-10-31.md lines 459-482
+    dependencies:
+    - task-5-baseline-stats (COMPLETE)
+    - story-2.9-full-pob-integration (COMPLETE - 2025-11-26)
+    decision_made:
+      date: 2025-11-22
+      selected_option: D
+      option_name: "Full PoB Integration"
+      rationale: |
+        Option D selected because:
+        1. Epic 3 requires full PoB integration anyway
+        2. Avoids throwaway work from Options B/C
+        3. Validates everything properly (DPS, Life, EHP)
+        4. Solves the problem permanently
+      implementation: "Story 2.9 added to Epic 2 - COMPLETED 2025-11-26"
+      effort: "16-24 hours (ACTUAL: ~20 hours)"
+    completion_notes: |
+      2025-11-26: Story 2.9 COMPLETE
+      - DPS calculation verified: 311.7 (vs ~1.2 Default Attack)
+      - Items/skills loading working correctly
+      - Passive tree stats integrated and tested
+      - Windows Fatal Exception 0xe24c4a02 is KNOWN platform limitation (ADR-003)
+      - Workaround: pytest-xdist with `-n auto --dist=loadfile` (process isolation)
+      - Task 6 UNBLOCKED and ready to proceed
+    validation_report:
+      date: 2025-11-21
+      summary: |
+        CRITICAL FINDING: Optimizer is STRUCTURALLY complete but FUNCTIONALLY unvalidated.
+        We cannot prove the optimizer makes builds better - only that it allocates nodes.
+
+      what_works:
+        - Hill climbing algorithm converges properly
+        - Neighbor generation finds valid connected nodes
+        - Budget constraints enforced (zero violations)
+        - Performance excellent (76s max vs 300s target)
+        - Node count increases (56 -> 58 nodes allocated)
+
+      what_we_cannot_validate:
+        - DPS improvement (calculator returns ~1 DPS for all builds - uses Default Attack)
+        - Life/Mana improvement (calculator ignores passive tree stat bonuses)
+        - Whether allocated nodes are GOOD vs RANDOM choices
+        - The core value proposition ("optimizer makes builds better")
+
+      root_cause: |
+        MinimalCalc.lua (Epic 1 scope) calculates stats from base character level only.
+        It does NOT parse passive tree node bonuses into Life/Mana/DPS calculations.
+        It does NOT load items or skills from builds (uses "Default Attack" for all).
+        Result: All node allocations produce identical stats, so optimizer has no signal.
+
+      risk_assessment:
+        ship_as_is: |
+          HIGH RISK - Optimizer may be doing random walks through tree.
+          Users will see "0% improvement" and lose trust immediately.
+          Hidden bugs could be masked by broken metric.
+
+        add_heuristics: |
+          MEDIUM RISK - Can verify nodes have relevant stats (damage%, life%).
+          Partial confidence only. Still doesn't prove actual improvement.
+          Estimate: 4-6 hours to implement.
+
+        fix_calculator: |
+          LOW RISK but HIGH EFFORT - Proper solution.
+          Requires implementing full mod parsing from PoB.
+          Estimate: 16-24 hours (significant scope).
+
+        defer_to_epic_3: |
+          MEDIUM RISK - Epic 3 web UI will use actual PoB for calculations.
+          Calculator limitation becomes moot once PoB integration complete.
+          Risk: Building on unvalidated foundation.
+
+      options:
+        option_a:
+          name: "Accept and Proceed"
+          description: Accept structural completion, defer validation to Epic 3
+          pros:
+            - No additional work
+            - Epic 3 will fix this anyway (full PoB integration)
+          cons:
+            - Building on unvalidated foundation
+            - May discover fundamental bugs later
+            - Cannot demonstrate MVP value to stakeholders
+          recommendation: Only if timeline is critical
+
+        option_b:
+          name: "Add Node Quality Heuristics"
+          description: Verify allocated nodes have relevant stats for build type
+          pros:
+            - Partial validation (4-6 hours)
+            - Proves optimizer makes intelligent choices
+            - Low risk, moderate effort
+          cons:
+            - Still not full proof of improvement
+            - Heuristics may miss edge cases
+          recommendation: Reasonable middle ground
+
+        option_c:
+          name: "Fix Calculator (Partial)"
+          description: Implement Life/Mana calculation from passive tree
+          pros:
+            - Quantifiable proof optimizer works
+            - Validates core algorithm
+            - Reusable for future testing
+          cons:
+            - 8-12 hours work
+            - Still won't validate DPS (needs skills/items)
+          recommendation: Best validation short of full PoB
+
+        option_d:
+          name: "Full PoB Integration Sprint"
+          description: Integrate actual PoB calculation engine
+          pros:
+            - Complete validation
+            - Solves problem permanently
+            - Required for Epic 3 anyway
+          cons:
+            - 16-24+ hours
+            - Significant scope creep
+            - Delays Epic 3 start
+          recommendation: Only if MVP validation is mandatory
+
+      recommendation: |
+        RECOMMENDED: Option C - Fix Calculator (Partial)
+
+        Rationale:
+        1. Validates the core algorithm with quantifiable proof (Life/Mana changes)
+        2. Moderate effort (8-12 hours) with high confidence outcome
+        3. DPS validation can wait for Epic 3 (skills/items integration)
+        4. Provides foundation for future testing
+
+        Alternative: Option B if time is constrained (4-6 hours)
+
+        NOT RECOMMENDED: Option A (shipping unvalidated code) or Option D (scope creep)
+
+    notes: |
+      2025-11-21: VALIDATION BLOCKED - Cannot prove optimizer effectiveness.
+      2025-11-22: DECISION MADE - Option D (Full PoB Integration) selected.
+      Story 2.9 created to implement full HeadlessWrapper.lua integration.
+      Test corpus to be created collaboratively with Alec using realistic builds.
+      2025-11-26: Story 2.9 COMPLETE - Task 6 UNBLOCKED.
+      ⚠️ IMPORTANT: Windows Fatal Exception 0xe24c4a02 is EXPECTED (ADR-003).
+      Use: pytest -n auto --dist=loadfile for batch calculations.
+      See: docs/decisions/ADR-003-windows-luajit-cleanup-mitigation.md
+      See: docs/sprint-change-proposal-2025-11-22.md
+
+  task-7-requirements-clarification:
+    title: Epic 3 Requirements Clarification
+    owner: Mary (Analyst) + Sarah (PO) + Winston (Architect)
+    agent_command: /bmad:bmm:agents:analyst
+    priority: MEDIUM
+    estimate: 1-2 hours
+    status: pending
+    deliverable: Updated story files with clarified acceptance criteria
+    acceptance: Open questions Q1-Q5 resolved and documented
+    reference: epic-002-retro-2025-10-31.md lines 486-489
+    dependencies: []
+    notes: Resolves questions about auto-detection accuracy, cancel behavior, etc.
+  task-8-risk-mitigation:
+    title: Epic 3 Risk Mitigation Planning
+    owner: John (PM) + Winston (Architect)
+    agent_command: /bmad:bmm:agents:pm
+    priority: MEDIUM
+    estimate: 2 hours
+    status: pending
+    deliverable: docs/prep-sprint/epic-3-risk-mitigation.md
+    acceptance: Mitigation strategies for high-risk stories (3.5, 3.7, 3.10)
+    reference: epic-002-retro-2025-10-31.md lines 491-495
+    dependencies: []
+    notes: Define 'good enough for local MVP' quality bar
+  task-9-test-strategy:
+    title: Epic 3 Test Strategy
+    owner: Murat (TEA)
+    agent_command: /bmad:bmm:agents:tea
+    priority: MEDIUM
+    estimate: 2 hours
+    status: pending
+    deliverable: docs/prep-sprint/epic-3-test-strategy.md
+    acceptance: Testing approach defined for UI stories, round-trip validation, memory
+      leak testing
+    reference: epic-002-retro-2025-10-31.md lines 497-501
+    dependencies: []
+    notes: Plan manual vs automated testing approach
+  task-10-update-docs:
+    title: Update Project Documentation
+    owner: Amelia (Developer)
+    agent_command: /bmad:bmm:agents:dev
+    priority: LOW
+    estimate: 1 hour
+    status: pending
+    deliverable: Updated README.md
+    acceptance: README shows Epic 2 complete, testing section added, roadmap updated
+    reference: epic-002-retro-2025-10-31.md lines 505-509
+    dependencies:
+    - task-6-epic-2-validation
+    notes: Can happen after Epic 3 starts - low priority
+progress:
+  total_tasks: 10
+  completed: 5
+  in_progress: 1
+  pending: 4
+  blocked: 0
+  estimated_hours: 40-56 hours (includes Story 2.9)
+  estimated_days: 5-7 days
+  epic_3_ready: false
+  epic_3_blocker: |
+    Sequence before Epic 3:
+    1. Story 2.9 (Full PoB Integration) - 16-24 hrs
+    2. Task 6 validation must pass (≥70% success, ≥5% improvement)
+    3. Epic 2 Retrospective - capture course correction lessons
+    4. Tasks 7-10 (Epic 3 prep) - informed by retro insights
+
+epic_3_launch_readiness:
+  required:
+    task-6-epic-2-validation: false  # BLOCKED - needs decision
+  recommended:
+    task-1-demo-script: true
+    task-2-flask-architecture: true
+    task-3-flask-sse-prototype: true
+    task-4-corpus-inventory: true
+    task-5-baseline-stats: true
+  optional:
+    task-7-requirements-clarification: false
+    task-8-risk-mitigation: false
+    task-9-test-strategy: false
+    task-10-update-docs: false
+
+decision_resolved:
+  question: "How should we proceed with Epic 2 validation?"
+  answer: "Option D - Full PoB Integration"
+  resolved_date: 2025-11-22
+  resolved_by: Alec
+  implementation: |
+    - Story 2.9 added to Epic 2: Integrate Full PoB Calculation Engine
+    - Test corpus created collaboratively (Alec retrieves builds, AI specifies degradation)
+    - Validation re-runs after Story 2.9 complete
+  next_steps:
+    - Complete Story 2.9 (16-24 hours)
+    - Create realistic test corpus with Alec
+    - Re-run Epic 2 validation
+    - Epic 2 Retrospective
+    - Unblock Epic 3 upon successful validation
+
+workflow_sequence:
+  description: "Recommended execution order after course correction"
+  steps:
+    step_1:
+      name: "Story 2.9 - Full PoB Integration"
+      owner: Amelia (Developer)
+      estimate: 16-24 hours
+      blocker_for: task-6
+    step_2:
+      name: "Task 6 - Epic 2 Validation"
+      owner: Amelia + Murat
+      estimate: 2-3 hours
+      depends_on: step_1
+    step_3:
+      name: "Epic 2 Retrospective"
+      owner: All agents
+      estimate: 1-2 hours
+      depends_on: step_2
+      purpose: |
+        Capture lessons learned from course correction:
+        - Why did the calculator gap occur?
+        - How can we prevent similar gaps in future epics?
+        - What worked well in the correction process?
+    step_4:
+      name: "Tasks 7-10 - Epic 3 Prep"
+      owner: Various
+      estimate: 6-8 hours
+      depends_on: step_3 (retrospective insights inform prep)
+    step_5:
+      name: "Epic 3 Starts"
+      depends_on: step_4
+
+notes:
+- 'Reference retrospective: docs/retrospectives/epic-002-retro-2025-10-31.md'
+- 'Reference sprint change proposal: docs/sprint-change-proposal-2025-11-22.md'
+- '2025-11-22: DECISION MADE - Option D (Full PoB Integration) selected'
+- 'Story 2.9 added to Epic 2 to implement full HeadlessWrapper.lua integration'
+- Tasks 1-5 complete, Task 6 in_progress (depends on Story 2.9), Tasks 7-10 pending
+- 'Workflow: Story 2.9 → Task 6 → Retro → Tasks 7-10 → Epic 3'

@@ -28,12 +28,17 @@ class Item:
 
 @dataclass
 class Skill:
-    """Active skill gem"""
+    """Active skill gem.
+
+    Story 2.9 Phase 2: Enhanced with skill_id and support gem details
+    for MinimalCalc.lua skill processing and DPS calculation.
+    """
     name: str
     level: int
     quality: int
     enabled: bool
-    support_gems: List[str] = field(default_factory=list)
+    support_gems: List[dict] = field(default_factory=list)  # List of {skillId, level, quality, nameSpec}
+    skill_id: str = ""  # PoB skill ID (e.g., "FallingThunderPlayer")
 
 
 @dataclass

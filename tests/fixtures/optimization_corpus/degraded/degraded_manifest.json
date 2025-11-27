@@ -1,0 +1,98 @@
+{
+  "version": "1.0",
+  "created": "2025-11-01",
+  "description": "Degraded builds for Epic 2 validation - BFS truncation approach",
+  "strategy": "BFS from class start, keep first N nodes (HIP: 50-60%, MIP: 70-80%, LIP: 85-95%)",
+  "total_builds": 7,
+  "difficulty_distribution": {
+    "HIP": 2,
+    "MIP": 2,
+    "LIP": 3
+  },
+  "builds": [
+    {
+      "filename": "amazon_80_poeninja_degraded_hip.xml",
+      "source": "amazon_80_poeninja.xml",
+      "difficulty": "HIP",
+      "original_nodes": 109,
+      "nodes_removed": 48,
+      "degraded_nodes": 61,
+      "removal_pct": 44.0,
+      "unallocated_points": 18,
+      "level": 80,
+      "class": "Huntress"
+    },
+    {
+      "filename": "amazonhuntress_80_poeninja_degraded_mip.xml",
+      "source": "amazonhuntress_80_poeninja.xml",
+      "difficulty": "MIP",
+      "original_nodes": 127,
+      "nodes_removed": 36,
+      "degraded_nodes": 91,
+      "removal_pct": 28.3,
+      "unallocated_points": 0,
+      "level": 80,
+      "class": "Huntress"
+    },
+    {
+      "filename": "bloodmage_100_poeninja_degraded_lip.xml",
+      "source": "bloodmage_100_poeninja.xml",
+      "difficulty": "LIP",
+      "original_nodes": 134,
+      "nodes_removed": 13,
+      "degraded_nodes": 121,
+      "removal_pct": 9.7,
+      "unallocated_points": 0,
+      "level": 100,
+      "class": "Witch"
+    },
+    {
+      "filename": "deadeye_100_poeninja_degraded_hip.xml",
+      "source": "deadeye_100_poeninja.xml",
+      "difficulty": "HIP",
+      "original_nodes": 134,
+      "nodes_removed": 65,
+      "degraded_nodes": 69,
+      "removal_pct": 48.5,
+      "unallocated_points": 30,
+      "level": 100,
+      "class": "Ranger"
+    },
+    {
+      "filename": "gemlinglegionnaire_81_poeninja_degraded_mip.xml",
+      "source": "gemlinglegionnaire_81_poeninja.xml",
+      "difficulty": "MIP",
+      "original_nodes": 135,
+      "nodes_removed": 38,
+      "degraded_nodes": 97,
+      "removal_pct": 28.1,
+      "unallocated_points": 0,
+      "level": 81,
+      "class": "Mercenary"
+    },
+    {
+      "filename": "huntress_100_poeninja_degraded_lip.xml",
+      "source": "huntress_100_poeninja.xml",
+      "difficulty": "LIP",
+      "original_nodes": 149,
+      "nodes_removed": 11,
+      "degraded_nodes": 138,
+      "removal_pct": 7.4,
+      "unallocated_points": 0,
+      "level": 100,
+      "class": "Huntress"
+    },
+    {
+      "filename": "warbringer_100_poeninja_degraded_lip.xml",
+      "source": "warbringer_100_poeninja.xml",
+      "difficulty": "LIP",
+      "original_nodes": 157,
+      "nodes_removed": 9,
+      "degraded_nodes": 148,
+      "removal_pct": 5.7,
+      "unallocated_points": 0,
+      "level": 100,
+      "class": "Warrior"
+    }
+  ]
+}

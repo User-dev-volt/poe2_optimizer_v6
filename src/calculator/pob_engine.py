@@ -239,6 +239,7 @@ class PoBCalculationEngine:
             #   - passiveNodes: table/array of node IDs
             #   - treeData: PassiveTree structure from Story 1.7 (REQUIRED for calcs.initEnv)
             # Recursively convert nested config dict to Lua tables
+            # Story 2.9 Fix: Also convert Python lists to Lua tables for proper iteration
             def dict_to_lua_table(d):
                 if not isinstance(d, dict):
                     return d
@@ -247,7 +248,10 @@ class PoBCalculationEngine:
                     if isinstance(v, dict):
                         lua_tbl[k] = dict_to_lua_table(v)
                     elif isinstance(v, list):
-                        lua_tbl[k] = [dict_to_lua_table(item) if isinstance(item, dict) else item for item in v]
+                        # Convert Python list to Lua table (1-indexed array)
+                        # This is critical for stats parsing in MinimalCalc.lua
+                        converted_list = [dict_to_lua_table(item) if isinstance(item, dict) else item for item in v]
+                        lua_tbl[k] = self._lua.table_from(converted_list)
                     else:
                         lua_tbl[k] = v
                 return lua_tbl
@@ -256,12 +260,70 @@ class PoBCalculationEngine:
             # Use dict_to_lua_table() for recursive conversion (handles nested node dicts)
             tree_data_lua_table = dict_to_lua_table(self._tree_data_lua)
 
+            # Story 2.9 Phase 2: Convert skills to Lua table format
+            # Each skill becomes a socket group with active skill and supports
+            skills_lua = self._lua.table()
+            for i, skill in enumerate(build.skills):
+                if skill.enabled and skill.skill_id:
+                    skill_group = self._lua.table(
+                        skillId=skill.skill_id,
+                        level=skill.level,
+                        quality=skill.quality,
+                        name=skill.name,
+                        enabled=True,
+                        supports=self._lua.table_from([
+                            {
+                                "skillId": s.get("skillId", ""),
+                                "level": s.get("level", 1),
+                                "quality": s.get("quality", 0)
+                            }
+                            for s in skill.support_gems
+                        ]) if skill.support_gems else self._lua.table()
+                    )
+                    skills_lua[i + 1] = skill_group  # Lua is 1-indexed
+
+            logger.debug(
+                "Passing %d skills to Lua",
+                len(build.skills)
+            )
+
+            # Story 2.9 Milestone 2: Convert items to Lua table format
+            items_lua = self._lua.table()
+            for i, item in enumerate(build.items):
+                if item.stats:  # Only pass items with parsed stats
+                    item_table = self._lua.table(
+                        slot=item.slot,
+                        name=item.name,
+                        rarity=item.rarity,
+                        base_type=item.stats.get("base_type", ""),
+                        # Weapon damage stats
+                        phys_min=item.stats.get("phys_min", 0),
+                        phys_max=item.stats.get("phys_max", 0),
+                        lightning_min=item.stats.get("lightning_min", 0),
+                        lightning_max=item.stats.get("lightning_max", 0),
+                        cold_min=item.stats.get("cold_min", 0),
+                        cold_max=item.stats.get("cold_max", 0),
+                        fire_min=item.stats.get("fire_min", 0),
+                        fire_max=item.stats.get("fire_max", 0),
+                        # Attack modifiers
+                        attack_speed_inc=item.stats.get("attack_speed_inc", 0),
+                        crit_chance_add=item.stats.get("crit_chance_add", 0)
+                    )
+                    items_lua[i + 1] = item_table  # Lua is 1-indexed
+
+            logger.debug(
+                "Passing %d items to Lua",
+                len(build.items)
+            )
+
             lua_build_data = self._lua.table(
                 characterClass=character_class_str,
                 level=build.level,
                 passiveNodes=passive_nodes_list,
                 treeData=tree_data_lua_table,  # Story 1.8 Task 3: Fresh Lua table from cached dict
-                config=dict_to_lua_table(build.config)  # Enemy/calculation configuration from PoB
+                config=dict_to_lua_table(build.config),  # Enemy/calculation configuration from PoB
+                skills=skills_lua,  # Story 2.9 Phase 2: Active skills and supports
+                items=items_lua  # Story 2.9 Milestone 2: Equipment items with weapon stats
             )
 
             # Task 6: Implement 5-second timeout

@@ -32,6 +32,27 @@ This local MVP consists of **3 major epics** delivering a complete, polished pas
 
 ---
 
+## ⚠️ CRITICAL: Windows LuaJIT Fatal Exception (Known Limitation)
+
+**DO NOT create stories/tasks claiming Windows Fatal Exception 0xe24c4a02 needs to be "fixed"!**
+
+- **Status:** KNOWN and ACCEPTED platform limitation (ADR-003)
+- **Date Accepted:** Epic 1, Story 2.7 (October 2025)
+- **When it occurs:** During cleanup AFTER tests pass successfully
+- **Impact:** None - tests pass correctly before crash
+- **Workaround:** `pytest -n auto --dist=loadfile` (process isolation via pytest-xdist)
+- **Reference:** `docs/decisions/ADR-003-windows-luajit-cleanup-mitigation.md`
+
+This exception is a LuaJIT Windows cleanup issue, not a code bug. All integration tests pass successfully before the crash occurs during Python garbage collection teardown. Epic 1 and Epic 2 already use pytest-xdist for process isolation to mitigate this.
+
+**If you see this exception during testing:**
+1. Check that tests PASSED before the crash (look for "X passed" line)
+2. Use `pytest -n auto --dist=loadfile` to avoid crashes
+3. Read ADR-003 for complete context
+4. DO NOT treat this as a new bug or blocker
+
+---
+
 ## Epic 1: Foundation - PoB Calculation Engine Integration
 
 **Goal:** Enable accurate Path of Building calculations in headless Python environment.
@@ -439,7 +460,32 @@ This local MVP consists of **3 major epics** delivering a complete, polished pas
 
 ---
 
-**Epic 2 Total:** 8 stories (24 story points estimated)
+#### Story 2.9: Integrate Full PoB Calculation Engine
+**As a** developer
+**I want** the calculator to return accurate DPS/Life/EHP values that reflect passive tree allocations
+**So that** the optimizer can measure actual improvements and validate Epic 2 success criteria
+
+**Acceptance Criteria:**
+- Extended MinimalCalc.lua with passive tree stat aggregation
+- Passive tree stats reflected in calculations (adding nodes changes DPS/Life)
+- External PoB validation for final results (accuracy check)
+- Performance: <500ms single calculation, <60s for 100 batch
+- Backward compatibility with existing parity tests
+- Epic 2 validation passes (≥70% success rate, ≥5% median improvement)
+
+**Technical Notes:**
+- Hybrid approach: MinimalCalc.lua (fast) + External PoB (accurate validation)
+- HeadlessWrapper.lua abandoned per Epic 1 ADR (architecturally impossible)
+- Test corpus created collaboratively with Alec (realistic builds with items/skills)
+- Required to validate Epic 2 success criteria
+- See: `docs/stories/2-9-integrate-full-pob-calculation-engine.md`
+
+**Priority:** BLOCKING (Must complete before Epic 2 can be validated)
+**Size:** Large (16-24 hours)
+
+---
+
+**Epic 2 Total:** 9 stories (40-48 story points estimated)
 
 ---
 

@@ -32,9 +32,19 @@
 <status>[ ] Done / [ ] N/A / [ ] Action-needed</status>
 </check-item>
 
+<check-item id="1.4">
+<prompt>Review existing ADRs for related decisions</prompt>
+<action>Search for prior Architecture Decision Records related to the proposed approach</action>
+<action>Check: docs/Corrected Course Docs/, docs/decisions/, docs/ADRs/</action>
+<action>Verify proposed solution does not contradict documented architectural constraints</action>
+<action>If ADR conflict found, document it and factor into path forward evaluation</action>
+<status>[ ] Done / [ ] N/A / [ ] Action-needed</status>
+</check-item>
+
 <halt-condition>
 <action if="trigger is unclear">HALT: "Cannot proceed without understanding what caused the need for change"</action>
 <action if="no evidence provided">HALT: "Need concrete evidence or examples of the issue before analyzing impact"</action>
+<action if="ADR conflict not reviewed">HALT: "Must review existing ADRs before proposing technical approaches to avoid repeating documented failures"</action>
 </halt-condition>
 
 </section>
