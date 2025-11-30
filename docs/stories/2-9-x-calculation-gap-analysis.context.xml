@@ -1,0 +1,273 @@
+<story-context id="2-9-x-calculation-gap-analysis" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>9.x</storyId>
+    <title>Comprehensive Calculation Gap Analysis and Decision</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-9-x-calculation-gap-analysis.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>systematically analyze all calculation failures across the test corpus</iWant>
+    <soThat>we can make an informed decision about the best implementation approach (incremental, hybrid, or subprocess) based on total effort required</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <description>Test all 15 builds with detailed logging</description>
+        <subtasks>
+          <subtask>1.1: Run validation script with verbose MinimalCalc.lua logging</subtask>
+          <subtask>1.2: Capture build name, skill type, DPS output for each build</subtask>
+          <subtask>1.3: Identify which builds succeed (DPS &gt; 0) and which fail (DPS = 0)</subtask>
+          <subtask>1.4: Extract skill flags and calculation path for each build</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2">
+        <description>Categorize failures by skill type and root cause</description>
+        <subtasks>
+          <subtask>2.1: Group failures into categories: spell, DOT, minion, totem/trap, other</subtask>
+          <subtask>2.2: For each category, analyze MinimalCalc.lua to identify missing components</subtask>
+          <subtask>2.3: Check for missing data files (spell gems, base damage tables)</subtask>
+          <subtask>2.4: Check for missing calculation functions (spell DPS formulas, DOT tick engine)</subtask>
+          <subtask>2.5: Check for architectural limitations (complex interactions, conversions)</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="3">
+        <description>Estimate effort required to fix each category</description>
+        <subtasks>
+          <subtask>3.1: For each category, determine complexity: data-only, logic, engine, architecture</subtask>
+          <subtask>3.2: Estimate hours: Low (&lt;4), Medium (4-8), High (8-16), Very High (16+)</subtask>
+          <subtask>3.3: Calculate total effort for each implementation scenario</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="4">
+        <description>Create decision matrix and recommend approach</description>
+        <subtasks>
+          <subtask>4.1: Compare approaches across dimensions: effort, risk, performance, completeness</subtask>
+          <subtask>4.2: Apply decision framework: ≤16 hrs → Incremental, 16-40 hrs → Hybrid, &gt;40 hrs → Subprocess</subtask>
+          <subtask>4.3: Recommend approach with justification</subtask>
+          <subtask>4.4: Identify any unknown gaps or risks</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="5">
+        <description>Create gap analysis report and review with Alec</description>
+        <subtasks>
+          <subtask>5.1: Write docs/validation/calculation-gap-analysis-2025-11-29.md</subtask>
+          <subtask>5.2: Include executive summary, categorization, root causes, estimates</subtask>
+          <subtask>5.3: Include decision matrix with recommendation</subtask>
+          <subtask>5.4: Include test corpus results table (build, skill type, success, root cause)</subtask>
+          <subtask>5.5: Review report with Alec, obtain approval for recommended approach</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-2.9.x.1">
+      <description>All 15 realistic builds tested with MinimalCalc.lua with detailed logging enabled</description>
+      <details>
+        - Each build calculation logged with skill type, flags, and output values
+        - Failures categorized by root cause (spell, DOT, minion, etc.)
+      </details>
+    </criterion>
+    <criterion id="AC-2.9.x.2">
+      <description>Root causes identified for each failure category</description>
+      <details>
+        - Spell skills: Missing data files, missing calculation formulas
+        - DOT skills: Missing DOT engine, tick rate calculations
+        - Other categories: Minion, totem, trap, complex interactions
+      </details>
+    </criterion>
+    <criterion id="AC-2.9.x.3">
+      <description>Effort estimates documented for each fix category</description>
+      <details>
+        - Low (&lt;4 hrs): Simple data loading
+        - Medium (4-8 hrs): Calculation logic implementation
+        - High (8-16 hrs): Complex engine integration
+        - Very High (16+ hrs): Architectural overhaul
+      </details>
+    </criterion>
+    <criterion id="AC-2.9.x.4">
+      <description>Decision matrix created comparing implementation approaches</description>
+      <details>
+        - Incremental (Stories 2.9.1, 2.9.2+): Extend MinimalCalc.lua
+        - Hybrid (Story 2.9.1): MinimalCalc for attacks, subprocess for spells
+        - Subprocess (Story 2.9.1): Full external PoB for all calculations
+      </details>
+    </criterion>
+    <criterion id="AC-2.9.x.5">
+      <description>Gap analysis report created and reviewed by Alec</description>
+      <details>
+        - Deliverable: docs/validation/calculation-gap-analysis-2025-11-29.md
+        - Contains: failure categorization, root causes, effort estimates, decision matrix
+        - Includes: recommended approach with justification
+      </details>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-change-proposal-2025-11-29.md</path>
+        <title>Sprint Change Proposal - Epic 2 Calculation Gap Analysis</title>
+        <section>Section 6: Implementation Plan</section>
+        <snippet>Defines Story 2.9.x requirements: test 15 builds, categorize failures, estimate effort, create decision matrix. Deliverable is gap analysis report with recommended implementation approach.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-change-proposal-2025-11-29.md</path>
+        <title>Sprint Change Proposal - Epic 2 Calculation Gap Analysis</title>
+        <section>Section 4: Path Forward Evaluation</section>
+        <snippet>Decision framework: ≤16 hours → incremental Stories 2.9.1/2.9.2, 16-40 hours → hybrid approach (MinimalCalc + subprocess), &gt;40 hours → full subprocess. Prevents 20-80+ hours of incremental validation thrashing.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-change-proposal-2025-11-29.md</path>
+        <title>Sprint Change Proposal - Epic 2 Calculation Gap Analysis</title>
+        <section>Section 1: Issue Summary</section>
+        <snippet>Root cause: MinimalCalc.lua returns 0 DPS for spell/DOT skills. Missing spell base damage data, spell calculation logic, and DOT engine. Current 20% success rate (3 of 15 builds), need ≥70%.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Optimization Engine</title>
+        <section>Epic-Level Success Criteria</section>
+        <snippet>Epic-AC-1: Find improvements for 80%+ of non-optimal builds. Epic-AC-2: Median improvement 8%+ for builds with budget headroom. Requires calculator supporting diverse skill types (attacks, spells, DOT).</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-9-integrate-full-pob-calculation-engine.md</path>
+        <title>Story 2.9: Integrate Full PoB Calculation Engine</title>
+        <section>Dev Agent Record - Completion Notes</section>
+        <snippet>Completed 2025-11-26. Attack skill DPS calculation working (311.7 DPS verified). Items and skills loading correctly. Passive tree stat aggregation integrated. Windows Fatal Exception 0xe24c4a02 is EXPECTED (ADR-003), use pytest-xdist.</snippet>
+      </doc>
+      <doc>
+        <path>docs/HANDOFF-2025-11-27-TASK-6-BUGS-FIXED.md</path>
+        <title>Task 6 Bug Fix Handoff</title>
+        <section>Discovery and Results</section>
+        <snippet>Background on calculation gap discovery during Task 6 validation. Explains the 20% success rate issue and three critical bugs that were fixed before discovering the spell/DOT gap.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prep-sprint-status.yaml</path>
+        <title>Prep Sprint Status</title>
+        <section>task-6-epic-2-validation</section>
+        <snippet>Task 6 blocked by calculation gap. Completion notes document timeline: 2025-11-26 Story 2.9 complete (attack skills), 2025-11-27 gap discovered (20% success), 2025-11-29 Sprint Change Proposal approved.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/calculator/MinimalCalc.lua</path>
+        <kind>lua-module</kind>
+        <symbol>MinimalCalc</symbol>
+        <lines>entire-file</lines>
+        <reason>Current calculator implementation. Supports attack skills but returns 0 DPS for spell/DOT. Gap analysis must examine this file to identify missing components (spell base damage, spell formulas, DOT engine).</reason>
+      </artifact>
+      <artifact>
+        <path>scripts/validate_realistic_builds.py</path>
+        <kind>validation-script</kind>
+        <symbol>validate_realistic_builds</symbol>
+        <lines>entire-file</lines>
+        <reason>Validation script to run gap analysis. Modify to enable verbose MinimalCalc.lua logging for detailed failure categorization.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/fixtures/optimization_builds/corpus.json</path>
+        <kind>test-data</kind>
+        <symbol>N/A</symbol>
+        <lines>N/A</lines>
+        <reason>Test corpus containing the 15 realistic builds to analyze. Build data includes skill types, items, passive trees. Gap analysis will test each build and categorize failures.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/fixtures/optimization_corpus/baseline_stats.json</path>
+        <kind>test-data</kind>
+        <symbol>N/A</symbol>
+        <lines>N/A</lines>
+        <reason>Baseline statistics for test corpus. Reference for comparing gap analysis results against known baseline values.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="xmltodict" version="0.13.0" />
+        <package name="lupa" version=">=2.0" />
+        <package name="pytest" version=">=7.4.0" />
+        <package name="pytest-cov" version=">=4.1.0" />
+        <package name="pytest-benchmark" version=">=4.0.0" />
+        <package name="pytest-xdist" version=">=3.5.0" />
+        <package name="psutil" version=">=5.9.0" />
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>
+      <category>Scope</category>
+      <description>Story 2.9.x is ANALYSIS ONLY - no implementation. Deliverable is gap analysis report, not code fixes. Implementation will be in subsequent stories (2.9.1, 2.9.2+) based on gap analysis decision.</description>
+    </constraint>
+    <constraint>
+      <category>Timeline</category>
+      <description>Estimate: 4-8 hours. Priority: CRITICAL (blocks Epic 2 validation). Must complete before implementation stories can be created.</description>
+    </constraint>
+    <constraint>
+      <category>Decision Framework</category>
+      <description>Apply effort-based decision thresholds: Total effort ≤16 hrs → incremental extension, 16-40 hrs → hybrid approach, &gt;40 hrs → full subprocess. Decision must be approved by Alec.</description>
+    </constraint>
+    <constraint>
+      <category>Analysis Coverage</category>
+      <description>Must test ALL 15 builds in realistic corpus. Categorize failures systematically (spell, DOT, minion, totem/trap, complex). Identify root causes for each category.</description>
+    </constraint>
+    <constraint>
+      <category>Success Metric</category>
+      <description>Gap analysis reveals TRUE scope and enables ONE informed decision, preventing 20-80+ hours of incremental validation thrashing. Must prevent pattern: implement → validate → discover new gap → repeat.</description>
+    </constraint>
+    <constraint>
+      <category>Validation Target</category>
+      <description>Epic 2 requires ≥70% success rate and ≥5% median improvement. Current 20% success rate (3 of 15 builds) is BLOCKING. Gap analysis must identify ALL barriers to reaching 70%+ target.</description>
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>MinimalCalc.lua logging API</name>
+      <kind>lua-function</kind>
+      <signature>print("[MinimalCalc] " .. message)</signature>
+      <path>src/calculator/MinimalCalc.lua</path>
+      <description>Enable verbose logging in MinimalCalc.lua to capture skill type, flags, calculation path, and output values for gap analysis categorization.</description>
+    </interface>
+    <interface>
+      <name>Validation script output</name>
+      <kind>json-output</kind>
+      <signature>{"build_name": str, "skill_type": str, "dps": float, "success": bool, "root_cause": str}</signature>
+      <path>scripts/validate_realistic_builds.py</path>
+      <description>Validation script should output structured results for each build including success/failure and categorized root cause for gap analysis report.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing for gap analysis is validation-based rather than unit testing. Run validation script on all 15 builds with verbose logging. Capture detailed output for failure categorization. Document results in structured format (build, skill type, success, root cause). Use pytest framework for reproducibility.
+    </standards>
+    <locations>
+      <location>scripts/validate_realistic_builds.py - Main validation script</location>
+      <location>tests/fixtures/optimization_builds/corpus.json - Test corpus (15 builds)</location>
+      <location>docs/validation/ - Gap analysis report output location</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-2.9.x.1">
+        <description>Run validation script with verbose MinimalCalc.lua logging enabled</description>
+        <approach>Modify validate_realistic_builds.py to enable detailed logging. Capture skill flags (attack/spell), calculation path, and output values for each build.</approach>
+      </idea>
+      <idea ac="AC-2.9.x.2">
+        <description>Categorize failures using pattern matching on logged output</description>
+        <approach>Parse MinimalCalc.lua logs for patterns: "skillFlags.attack = false" (spell), "mainSkill.output is NIL" (calculation failure). Group builds by failure pattern.</approach>
+      </idea>
+      <idea ac="AC-2.9.x.3">
+        <description>Effort estimation validation through code inspection</description>
+        <approach>For each failure category, examine MinimalCalc.lua source to identify missing components. Estimate effort based on complexity: data loading (Low), calculation logic (Medium), engine integration (High).</approach>
+      </idea>
+      <idea ac="AC-2.9.x.4">
+        <description>Decision matrix validation against Sprint Change Proposal framework</description>
+        <approach>Verify decision matrix includes all three approaches (incremental, hybrid, subprocess) with effort, risk, performance, completeness dimensions. Apply threshold rules correctly.</approach>
+      </idea>
+      <idea ac="AC-2.9.x.5">
+        <description>Gap analysis report structure validation</description>
+        <approach>Verify report includes: executive summary, failure categorization table, root cause analysis for each category, effort estimates, decision matrix, recommended approach with justification.</approach>
+      </idea>
+    </ideas>
+  </tests>
+</story-context>

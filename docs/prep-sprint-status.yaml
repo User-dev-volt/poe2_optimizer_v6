@@ -98,12 +98,12 @@ tasks:
       evasion recorded. Ready for Task 6 validation. Script: scripts/generate_baseline_stats.py'
       
   task-6-epic-2-validation:
-    title: Validate Epic 2 Success Criteria [UNBLOCKED - READY]
+    title: Validate Epic 2 Success Criteria [BLOCKED - Calculator Gap]
     owner: Amelia (Developer) + Murat (TEA)
     agent_command: /bmad:bmm:agents:dev or /bmad:bmm:agents:tea
     priority: '**HIGH**'
     estimate: 3-4 hours
-    status: ready
+    status: blocked
     deliverable: 'docs/validation/realistic-validation-results.json, scripts/validate_realistic_builds.py'
     acceptance: '- Success rate >= 70%
       - Median improvement >= 5%
@@ -129,13 +129,23 @@ tasks:
       implementation: "Story 2.9 added to Epic 2 - COMPLETED 2025-11-26"
       effort: "16-24 hours (ACTUAL: ~20 hours)"
     completion_notes: |
-      2025-11-26: Story 2.9 COMPLETE
+      2025-11-26: Story 2.9 COMPLETE (Attack Skills Only)
       - DPS calculation verified: 311.7 (vs ~1.2 Default Attack)
       - Items/skills loading working correctly
       - Passive tree stats integrated and tested
       - Windows Fatal Exception 0xe24c4a02 is KNOWN platform limitation (ADR-003)
       - Workaround: pytest-xdist with `-n auto --dist=loadfile` (process isolation)
-      - Task 6 UNBLOCKED and ready to proceed
+
+      2025-11-27: CALCULATION GAP DISCOVERED
+      - Task 6 validation revealed 20% success rate (3 of 15 builds)
+      - Root cause: MinimalCalc.lua only supports attack skills
+      - Missing: Spell base damage, DOT calculation engine, spell-specific logic
+      - Impact: Cannot validate Epic 2 success criteria (need ≥70% success rate)
+
+      2025-11-29: SPRINT CHANGE PROPOSAL APPROVED
+      - Story 2.9.x created: Comprehensive Calculation Gap Analysis (4-8 hrs)
+      - Task 6 RE-BLOCKED until gap analysis and implementation complete
+      - See: docs/sprint-change-proposal-2025-11-29.md
     validation_report:
       date: 2025-11-21
       summary: |
@@ -309,18 +319,21 @@ tasks:
 progress:
   total_tasks: 10
   completed: 5
-  in_progress: 1
+  in_progress: 0
   pending: 4
-  blocked: 0
+  blocked: 1
   estimated_hours: 40-56 hours (includes Story 2.9)
   estimated_days: 5-7 days
   epic_3_ready: false
   epic_3_blocker: |
-    Sequence before Epic 3:
-    1. Story 2.9 (Full PoB Integration) - 16-24 hrs
-    2. Task 6 validation must pass (≥70% success, ≥5% improvement)
-    3. Epic 2 Retrospective - capture course correction lessons
-    4. Tasks 7-10 (Epic 3 prep) - informed by retro insights
+    Sequence before Epic 3 (UPDATED 2025-11-29):
+    1. Story 2.9.x (Calculation Gap Analysis) - 4-8 hrs [NEW]
+    2. Stories 2.9.1+ (Implementation based on gap analysis) - 12-40 hrs [NEW]
+    3. Task 6 validation must pass (≥70% success, ≥5% improvement)
+    4. Epic 2 Retrospective - capture course correction lessons
+    5. Tasks 7-10 (Epic 3 prep) - informed by retro insights
+
+    See: docs/sprint-change-proposal-2025-11-29.md for complete plan
 
 epic_3_launch_readiness:
   required:
@@ -387,8 +400,10 @@ workflow_sequence:
 
 notes:
 - 'Reference retrospective: docs/retrospectives/epic-002-retro-2025-10-31.md'
-- 'Reference sprint change proposal: docs/sprint-change-proposal-2025-11-22.md'
+- 'Reference sprint change proposal (original): docs/sprint-change-proposal-2025-11-22.md'
+- 'Reference sprint change proposal (gap analysis): docs/sprint-change-proposal-2025-11-29.md'
 - '2025-11-22: DECISION MADE - Option D (Full PoB Integration) selected'
 - 'Story 2.9 added to Epic 2 to implement full HeadlessWrapper.lua integration'
-- Tasks 1-5 complete, Task 6 in_progress (depends on Story 2.9), Tasks 7-10 pending
-- 'Workflow: Story 2.9 → Task 6 → Retro → Tasks 7-10 → Epic 3'
+- '2025-11-29: CALCULATION GAP DISCOVERED - Story 2.9.x created for gap analysis'
+- Tasks 1-5 complete, Task 6 blocked (needs Story 2.9.x completion), Tasks 7-10 pending
+- 'Workflow: Story 2.9.x → Stories 2.9.1+ → Task 6 → Retro → Tasks 7-10 → Epic 3'

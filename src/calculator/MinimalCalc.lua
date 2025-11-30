@@ -248,8 +248,28 @@ data.weaponTypeInfo = {
     Dagger = { name = "Dagger", oneHand = true, melee = true, flag = "Dagger" },
     -- Caster weapons
     Wand = { name = "Wand", oneHand = true, melee = false, flag = "Wand" },
-    Sceptre = { name = "Sceptre", oneHand = true, melee = true, flag = "Sceptre" }
+    Sceptre = { name = "Sceptre", oneHand = true, melee = true, flag = "Sceptre" },
+    -- Story 2.9.1: Added Spear support (AC-2.9.1.2)
+    Spear = { name = "Spear", oneHand = true, melee = true, flag = "Spear" }
 }
+
+-- Story 2.9.1 Phase 1: Load PoB weapon base data files (AC-2.9.1.1)
+-- Initialize itemBases table to hold weapon base data from Data/Bases/*.lua
+data.itemBases = {}
+print("[MinimalCalc] Loading PoB weapon base data from Data/Bases/*.lua...")
+local weaponBaseTypes = {"mace", "spear", "sword", "axe", "bow", "staff", "wand", "sceptre", "dagger", "claw", "crossbow"}
+for _, baseType in ipairs(weaponBaseTypes) do
+    local filePath = "Data/Bases/"..baseType
+    local success, err = pcall(function()
+        LoadModule(filePath, data.itemBases)
+        print("[MinimalCalc]   Loaded: " .. filePath .. ".lua")
+    end)
+    if not success then
+        print("[MinimalCalc]   WARNING: Failed to load " .. filePath .. ".lua: " .. tostring(err))
+    end
+end
+print("[MinimalCalc] Weapon base data loading complete")
+
 -- Resource cost divisors (required by CalcOffence.lua:1885)
 -- Story 2.9: Added to fix "attempt to index nil value (field 'costs')" error
 data.costs = {
@@ -1017,6 +1037,9 @@ function Calculate(buildData)
                         weaponType = "Sceptre"
                     elseif rawType:match("Crossbow") then
                         weaponType = "Crossbow"
+                    elseif rawType:match("Spear") then
+                        -- Story 2.9.1: Added Spear pattern matching (AC-2.9.1.2)
+                        weaponType = "Spear"
                     end
 
                     -- Get weapon type info from data.weaponTypeInfo
@@ -1028,20 +1051,58 @@ function Calculate(buildData)
                         print("[MinimalCalc]   Found weaponTypeInfo for: " .. weaponType)
                     end
 
-                    -- Base weapon stats (from weapon stub approach)
+                    -- Story 2.9.1 Phase 1: Use real PoB weapon data instead of hard-coded stubs (AC-2.9.1.3)
                     local basePhysMin, basePhysMax = 50, 100
                     local baseCritChance = 5
                     local baseAttackRate = 1.2
+                    local baseRange = 11
 
-                    -- Adjust base stats by weapon type
-                    if weaponType:match("Bow") or weaponType:match("Crossbow") then
-                        basePhysMin, basePhysMax = 40, 80
-                        baseAttackRate = 1.5
-                        baseCritChance = 5
-                    elseif weaponType:match("Staff") or weaponType:match("Quarterstaff") then
-                        basePhysMin, basePhysMax = 70, 140
-                        baseAttackRate = 1.0
-                        baseCritChance = 7
+                    -- Try to find exact base match first (e.g., "Gemini Bow"), then fall back to weapon type
+                    local foundBase = false
+
+                    -- First attempt: Exact base name match
+                    if rawType and data.itemBases[rawType] then
+                        local baseData = data.itemBases[rawType]
+                        if baseData.weapon then
+                            basePhysMin = baseData.weapon.PhysicalMin or 50
+                            basePhysMax = baseData.weapon.PhysicalMax or 100
+                            baseCritChance = baseData.weapon.CritChanceBase or 5
+                            baseAttackRate = baseData.weapon.AttackRateBase or 1.2
+                            baseRange = baseData.weapon.Range or 11
+                            foundBase = true
+                            print("[MinimalCalc]   Using PoB data for exact base: " .. rawType)
+                        end
+                    end
+
+                    -- Second attempt: Find any base matching weaponType category
+                    if not foundBase then
+                        for baseName, baseData in pairs(data.itemBases) do
+                            if baseData.type == weaponType and baseData.weapon then
+                                basePhysMin = baseData.weapon.PhysicalMin or 50
+                                basePhysMax = baseData.weapon.PhysicalMax or 100
+                                baseCritChance = baseData.weapon.CritChanceBase or 5
+                                baseAttackRate = baseData.weapon.AttackRateBase or 1.2
+                                baseRange = baseData.weapon.Range or 11
+                                foundBase = true
+                                print("[MinimalCalc]   Using PoB data for " .. weaponType .. " from base: " .. baseName)
+                                break  -- Use first matching base
+                            end
+                        end
+                    end
+
+                    -- Graceful fallback if weapon type not found in PoB data
+                    if not foundBase then
+                        print("[MinimalCalc]   WARNING: No PoB base found for weaponType '" .. weaponType .. "', using generic defaults")
+                        -- Keep default values set above
+                        if weaponType:match("Bow") or weaponType:match("Crossbow") then
+                            basePhysMin, basePhysMax = 40, 80
+                            baseAttackRate = 1.5
+                            baseCritChance = 5
+                        elseif weaponType:match("Staff") or weaponType:match("Quarterstaff") then
+                            basePhysMin, basePhysMax = 70, 140
+                            baseAttackRate = 1.0
+                            baseCritChance = 7
+                        end
                     end
 
                     -- Apply item's physical damage (adds to base)
@@ -1074,7 +1135,7 @@ function Calculate(buildData)
                                 CritChance = totalCritChance,
                                 PhysicalMin = totalPhysMin,
                                 PhysicalMax = totalPhysMax,
-                                range = 11  -- Default melee range
+                                range = baseRange  -- Story 2.9.1: Use real PoB range data
                             }
                         },
                         -- Story 2.9: CalcSetup.lua:1035 requires itemSocketCount to be a number

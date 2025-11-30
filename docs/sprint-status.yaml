@@ -1,4 +1,4 @@
-# generated: 2025-10-27
+# generated: 2025-11-29
 # project: poe2_optimizer_v6
 # project_key: poe2_optimizer_v6
 # tracking_system: file-system
@@ -29,7 +29,7 @@
 # - SM typically drafts next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
 
-generated: 2025-10-27
+generated: 2025-11-29
 project: poe2_optimizer_v6
 project_key: poe2_optimizer_v6
 tracking_system: file-system
@@ -58,7 +58,9 @@ development_status:
   2-6-metric-selection-and-evaluation: done
   2-7-convergence-detection: done
   2-8-optimization-progress-tracking: done
-  2-9-integrate-full-pob-calculation-engine: done  # COMPLETE 2025-11-26: DPS=311.7 verified, items/skills working. Fatal Exception 0xe24c4a02 is EXPECTED (ADR-003) - use pytest-xdist for batch calculations
+  2-9-integrate-full-pob-calculation-engine: done  # COMPLETE 2025-11-26: Attack skills working (DPS=311.7 verified). Spell/DOT gap discovered 2025-11-27 → Story 2.9.x created
+  2-9-x-calculation-gap-analysis: done  # COMPLETE 2025-11-29: Gap analysis finished, Alec approved Hybrid approach (10-16h). Story 2.9.1 to implement.
+  2-9-1-hybrid-calculation-approach: in-progress  # Context generated 2025-11-29. Phase 1: Load PoB data & fix weapons (2-4h), Phase 2: Subprocess fallback (8-12h). Total: 10-16 hours.
   epic-2-retrospective: completed
 
   # Epic 3: User Experience & Local Reliability

@@ -1,0 +1,349 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>9.1</storyId>
+    <title>Hybrid Calculation Approach</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-9-1-hybrid-calculation-approach.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>the calculator to support all skill types (attacks, spells, DOT, totems) using a hybrid approach</iWant>
+    <soThat>Epic 2 validation achieves 100% success rate (15/15 builds) and the optimizer can find meaningful improvements across all build archetypes</soThat>
+    <tasks>
+### Phase 1: Load PoB Data & Fix Weapons (2-4 hours)
+
+- [ ] **Task 1:** Load PoB weapon base data (AC: #1, #2)
+  - [ ] 1.1: Add `Data/Bases/*.lua` loading to MinimalCalc.lua (after line 252)
+  - [ ] 1.2: Create `data.itemBases` table and populate with all weapon types
+  - [ ] 1.3: Add "Spear" to `weaponTypeInfo` table with correct flags
+  - [ ] 1.4: Add Spear pattern matching to weapon type detection (after line 1019)
+  - [ ] 1.5: Test data loading with debug logging
+
+- [ ] **Task 2:** Use real weapon data (AC: #3)
+  - [ ] 2.1: Modify weapon stub creation to use `data.itemBases` lookup
+  - [ ] 2.2: Implement fallback for missing weapon types (use generic defaults)
+  - [ ] 2.3: Preserve existing weapon stub structure for backward compatibility
+  - [ ] 2.4: Verify weapon stats correctly populated (PhysMin/Max, APS, Crit)
+
+- [ ] **Task 3:** Validate weapon fixes (AC: #4)
+  - [ ] 3.1: Test `warrior_earthquake_89` (Mace Strike) → Verify DPS > 0
+  - [ ] 3.2: Test `warrior_spear_45` (Explosive Spear L45) → Verify DPS > 0
+  - [ ] 3.3: Test `warrior_spear_71` (Explosive Spear L71) → Verify DPS > 0
+  - [ ] 3.4: Regression test: Ensure `deadeye_lightning_arrow_76` still works (~311 DPS)
+  - [ ] 3.5: Update validation results JSON
+
+### Phase 2: Subprocess Fallback (8-12 hours)
+
+- [ ] **Task 4:** Implement skill type detection (AC: #5)
+  - [ ] 4.1: Create `is_attack_skill()` helper in `pob_engine.py`
+  - [ ] 4.2: Detect attack skills using `skillFlags.attack` from gem data
+  - [ ] 4.3: Handle edge cases: warcries with weapon scaling, minion skills
+  - [ ] 4.4: Add unit tests for skill classification
+
+- [ ] **Task 5:** Implement external PoB subprocess (AC: #6)
+  - [ ] 5.1: Create `SubprocessCalculator` class in `src/calculator/subprocess_calculator.py`
+  - [ ] 5.2: Write build XML to temp file (use `tempfile` module)
+  - [ ] 5.3: Platform detection: Windows (PoB GUI) vs Linux (PoB CLI if available)
+  - [ ] 5.4: Execute subprocess with timeout (30s max per calculation)
+  - [ ] 5.5: Parse PoB output (JSON format if available, else text scraping)
+  - [ ] 5.6: Extract stats: TotalDPS, Life, EnergyShield, Evasion, Armour
+  - [ ] 5.7: Error handling: graceful degradation for subprocess failures
+
+- [ ] **Task 6:** Integrate hybrid routing (AC: #7)
+  - [ ] 6.1: Modify `calculate_build_stats()` in `build_calculator.py`
+  - [ ] 6.2: Add routing logic: if attack → MinimalCalc, else → Subprocess
+  - [ ] 6.3: Implement fallback: MinimalCalc error → retry with subprocess
+  - [ ] 6.4: Preserve BuildStats dataclass structure (no API changes)
+  - [ ] 6.5: Add logging: track which calculation path used per build
+
+- [ ] **Task 7:** Comprehensive validation (AC: #8, #9, #10)
+  - [ ] 7.1: Run validation script on all 15 realistic builds
+  - [ ] 7.2: Verify 100% success rate (15/15 builds produce DPS > 0)
+  - [ ] 7.3: Log calculation path: MinimalCalc (3 builds) vs Subprocess (12 builds)
+  - [ ] 7.4: Epic 2 criteria check: ≥70% success, ≥5% median improvement
+  - [ ] 7.5: Performance test: All optimizations complete <300s
+  - [ ] 7.6: Update `docs/validation/realistic-validation-results.json`
+  - [ ] 7.7: Document results in validation report
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+### Phase 1: Load PoB Data & Fix Weapons (2-4 hours)
+
+**AC-2.9.1.1:** Load PoB weapon base data files
+- MinimalCalc.lua loads all weapon types from `Data/Bases/*.lua` (mace, spear, sword, axe, bow, staff, wand, sceptre, dagger, claw, crossbow)
+- `data.itemBases` table populated with weapon definitions
+- Weapon stats available: PhysicalMin/Max, AttackRate, CritChance, Range
+
+**AC-2.9.1.2:** Add missing weapon type support
+- "Spear" added to `weaponTypeInfo` table
+- Spear pattern matching implemented in weapon type detection
+- One-Handed Mace properly distinguished from Two-Handed Mace
+
+**AC-2.9.1.3:** Use real weapon data instead of hard-coded stubs
+- Weapon creation uses `data.itemBases` lookup instead of manual stubs
+- Graceful fallback for unrecognized weapon types
+- Existing weapon stub format maintained for compatibility
+
+**AC-2.9.1.4:** Weapon build validation
+- `warrior_earthquake_89` (Mace Strike) produces DPS > 0
+- `warrior_spear_45` (Explosive Spear L45) produces DPS > 0
+- `warrior_spear_71` (Explosive Spear L71) produces DPS > 0
+- No regressions: `deadeye_lightning_arrow_76` still produces ~311 DPS
+
+### Phase 2: Subprocess Fallback (8-12 hours)
+
+**AC-2.9.1.5:** Skill type detection implemented
+- Skill classification function detects: attack, spell, DOT, totem, warcry, minion
+- Detection uses `skillFlags.attack` and skill metadata
+- Edge cases handled: warcries with weapon scaling, minion skills
+
+**AC-2.9.1.6:** External PoB subprocess integration
+- SubprocessCalculator class implemented in `src/calculator/subprocess_calculator.py`
+- Writes build XML to temp file
+- Executes external PoB process (platform-specific: Windows GUI, Linux CLI if available)
+- Parses PoB output (JSON or text format)
+- Extracts DPS, Life, EHP, defenses
+
+**AC-2.9.1.7:** Hybrid routing logic
+- `calculate_build_stats()` routes based on skill type:
+  - Attack skills → MinimalCalc.lua (fast path, ~10ms)
+  - Spell/DOT/totem skills → SubprocessCalculator (~50-100ms)
+- Fallback: If MinimalCalc errors → retry with subprocess
+- Graceful error handling for subprocess failures
+
+**AC-2.9.1.8:** Spell/DOT/totem build validation
+- All 9 non-attack builds produce DPS > 0:
+  - `bloodmage_remnants_95` (Life Remnants - DOT)
+  - `gemling_frost_mage_100` (Frost spell)
+  - `witch_frost_mage_91` (Frost spell)
+  - `titan_totem_90` (Totem)
+  - `warrior_ballista_93` (Siege Ballista)
+  - `lich_frost_mage_90` (Frost spell)
+  - `lich_storm_mage_90` (Storm spell)
+  - `ritualist_lightning_spear_96` (Spell)
+  - `titan_infernal_cry_72` (Warcry)
+
+**AC-2.9.1.9:** Epic 2 validation criteria achieved
+- **Success rate:** 100% (15/15 builds produce DPS > 0)
+- **Median improvement:** ≥5% when optimizer runs with unallocated points
+- **Budget constraints:** Zero violations across all optimizations
+- **Performance:** All build optimizations complete within 300 seconds
+
+**AC-2.9.1.10:** Performance validation
+- Attack build optimization time remains fast (<60s for simple builds)
+- Spell/DOT build optimization time acceptable (<300s per build)
+- Batch validation (15 builds) completes in reasonable time (<90 minutes)
+- Process isolation via pytest-xdist prevents Fatal Exception 0xe24c4a02 (per ADR-003)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/validation/calculation-gap-REVISED-ANALYSIS-2025-11-29.md</path>
+        <title>REVISED Gap Analysis - Data Files Discovery</title>
+        <section>Root Cause Re-Analysis</section>
+        <snippet>Critical discovery: PoB 2 already has complete curated data files (Data/Bases/*.lua, Data/Gems.lua). MinimalCalc doesn't load weapon base data - creates hard-coded stubs instead. Spear is entirely missing from manual stub logic.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Core Optimization Engine</title>
+        <section>Windows LuaJIT Fatal Exception</section>
+        <snippet>Windows Fatal Exception 0xe24c4a02 is KNOWN platform limitation, NOT a bug. Documented in ADR-003. Use pytest -n auto --dist=loadfile for batch calculations. All tests pass correctly before cleanup crash occurs.</snippet>
+      </doc>
+      <doc>
+        <path>docs/decisions/ADR-003-windows-luajit-cleanup-mitigation.md</path>
+        <title>ADR-003: Windows LuaJIT Cleanup Crash Mitigation</title>
+        <section>Primary Mitigations</section>
+        <snippet>Use pytest-xdist for process isolation: pytest -n auto --dist=loadfile. Crash occurs during cleanup AFTER tests pass. All tests still pass correctly. No code bug - LuaJIT Windows limitation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/solution-architecture.md</path>
+        <title>Solution Architecture: PoE 2 Passive Tree Optimizer</title>
+        <section>System Architecture</section>
+        <snippet>Layered architecture: Application Logic Layer (optimizer) consumes Calculation Layer (calculator). Epic 2 introduces src/optimizer/ module. Zero modifications to Epic 1 code (calculator is stable API).</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-change-proposal-2025-11-29.md</path>
+        <title>Sprint Change Proposal - Story 2.9.1 Implementation Plan</title>
+        <section>Approved Hybrid Approach</section>
+        <snippet>10-16 hour hybrid implementation approved by Alec. Phase 1: Load PoB weapon data (2-4 hrs). Phase 2: Subprocess fallback for spells/DOT/totem (8-12 hrs). Achieves 100% success rate while preserving MinimalCalc performance.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-9-integrate-full-pob-calculation-engine.md</path>
+        <title>Story 2.9: Integrate Full PoB Calculation Engine</title>
+        <section>Story 2.9 Achievement</section>
+        <snippet>Attack skill DPS calculation working (311.7 DPS verified). Items and skills loading infrastructure complete. Passive tree stat parsing integrated. Baseline for Story 2.9.1.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/calculator/MinimalCalc.lua</path>
+        <kind>calculation engine</kind>
+        <symbol>Calculate</symbol>
+        <lines>1-300</lines>
+        <reason>Core Lua calculation engine. Lines 234-252 contain weaponTypeInfo table where Spear needs to be added. Line 252 is insertion point for Data/Bases/*.lua loading.</reason>
+      </artifact>
+      <artifact>
+        <path>src/calculator/build_calculator.py</path>
+        <kind>service</kind>
+        <symbol>calculate_build_stats</symbol>
+        <lines>74-100</lines>
+        <reason>High-level API for build calculation. This is where hybrid routing logic (attack vs spell/DOT detection) will be added to route to MinimalCalc or subprocess.</reason>
+      </artifact>
+      <artifact>
+        <path>src/calculator/pob_engine.py</path>
+        <kind>service</kind>
+        <symbol>PoBCalculationEngine</symbol>
+        <lines>1-282</lines>
+        <reason>Python wrapper around Lua engine using lupa. Contains calculate() method that will be used for attack skill fast path. Threading and session isolation already implemented.</reason>
+      </artifact>
+      <artifact>
+        <path>src/models/build_data.py</path>
+        <kind>model</kind>
+        <symbol>BuildData</symbol>
+        <lines>45-80</lines>
+        <reason>Immutable build representation dataclass. Contains character, passive_nodes, items, skills. No API changes needed - hybrid approach preserves interface.</reason>
+      </artifact>
+      <artifact>
+        <path>src/models/build_data.py</path>
+        <kind>model</kind>
+        <symbol>Skill</symbol>
+        <lines>30-42</lines>
+        <reason>Skill gem dataclass. Contains skill_id field that can be used for skill type detection (attack vs spell). Support gems list for damage calculation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/models/build_stats.py</path>
+        <kind>model</kind>
+        <symbol>BuildStats</symbol>
+        <lines>1-50</lines>
+        <reason>Calculation result dataclass. Contains TotalDPS, Life, EHP, defenses. Subprocess calculator must return this same structure for API compatibility.</reason>
+      </artifact>
+      <artifact>
+        <path>external/pob-engine/src/Data/Bases/mace.lua</path>
+        <kind>data file</kind>
+        <symbol>itemBases</symbol>
+        <lines>N/A</lines>
+        <reason>PoB weapon base data for maces. Template for how weapon data is structured. MinimalCalc needs to load all Data/Bases/*.lua files (mace, spear, sword, axe, bow, staff, wand, sceptre, dagger, claw, crossbow).</reason>
+      </artifact>
+      <artifact>
+        <path>external/pob-engine/src/Data/Bases/spear.lua</path>
+        <kind>data file</kind>
+        <symbol>itemBases</symbol>
+        <lines>N/A</lines>
+        <reason>PoB weapon base data for spears. Currently NOT loaded by MinimalCalc - Phase 1 will add loading and pattern matching for this weapon type.</reason>
+      </artifact>
+      <artifact>
+        <path>scripts/validate_realistic_builds.py</path>
+        <kind>test script</kind>
+        <symbol>validate_realistic_builds</symbol>
+        <lines>N/A</lines>
+        <reason>Validation script for Epic 2 15-build test corpus. Used to verify 100% success rate (15/15 builds produce DPS > 0) after hybrid implementation.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/integration/test_epic2_validation.py</path>
+        <kind>integration test</kind>
+        <symbol>test_epic2_validation</symbol>
+        <lines>N/A</lines>
+        <reason>Epic 2 validation integration tests. Will test hybrid routing, subprocess fallback, and Epic 2 success criteria (≥70% success, ≥5% median improvement).</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="lupa" version="~=2.2">LuaJIT binding for MinimalCalc fast path</package>
+        <package name="pytest" version="^8.0">Testing framework</package>
+        <package name="pytest-xdist" version="^3.6">Process isolation for Windows LuaJIT cleanup (ADR-003)</package>
+      </python>
+      <external>
+        <dependency>PathOfBuilding-Lua (PoE 2 fork) at external/pob-engine/src</dependency>
+        <dependency>Data/Bases/*.lua files: mace, spear, sword, axe, bow, staff, wand, sceptre, dagger, claw, crossbow</dependency>
+        <dependency>Data/Gems.lua: Spell gem base damage by level (438KB, already loaded at MinimalCalc line 415)</dependency>
+      </external>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>ZERO modifications to Epic 1 code (calculator API is stable, no backward-compatibility breaks)</constraint>
+    <constraint>Preserve BuildData and BuildStats dataclass structure (no API changes for optimizer compatibility)</constraint>
+    <constraint>Use pytest-xdist process isolation for Windows LuaJIT cleanup (pytest -n auto --dist=loadfile per ADR-003)</constraint>
+    <constraint>MinimalCalc performance must remain fast for attack builds (~10ms per calculation, ~20s per optimization)</constraint>
+    <constraint>Subprocess calculation must complete within 30s timeout per build to avoid hanging</constraint>
+    <constraint>All 15 realistic builds must produce DPS > 0 (100% success rate required for Epic 2 validation)</constraint>
+    <constraint>Phase 1 must NOT break existing deadeye_lightning_arrow_76 build (~311 DPS regression test)</constraint>
+    <constraint>Process isolation via pytest-xdist prevents Fatal Exception 0xe24c4a02 during batch testing</constraint>
+    <constraint>Weapon base data loading must use PoB's existing Data/Bases/*.lua files (no reinventing wheel)</constraint>
+    <constraint>Skill type detection must handle edge cases: warcries with weapon scaling, minion skills</constraint>
+    <constraint>Fallback mechanism: if MinimalCalc errors, retry with subprocess (graceful degradation)</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>calculate_build_stats</name>
+      <kind>Function API</kind>
+      <signature>def calculate_build_stats(build: BuildData) -> BuildStats</signature>
+      <path>src/calculator/build_calculator.py:74</path>
+      <note>Primary API for optimizer. Hybrid routing will be added here: attack skills → MinimalCalc, spell/DOT/totem → subprocess. Must preserve return type BuildStats.</note>
+    </interface>
+    <interface>
+      <name>BuildData</name>
+      <kind>Python dataclass</kind>
+      <signature>@dataclass BuildData(character_class, level, passive_nodes, items, skills, ...)</signature>
+      <path>src/models/build_data.py:45</path>
+      <note>Immutable build representation. Contains Skill objects with skill_id field for type detection. No changes to structure.</note>
+    </interface>
+    <interface>
+      <name>BuildStats</name>
+      <kind>Python dataclass</kind>
+      <signature>@dataclass BuildStats(TotalDPS, Life, EnergyShield, Evasion, Armour, ...)</signature>
+      <path>src/models/build_stats.py</path>
+      <note>Calculation result. Subprocess calculator must return this exact structure for API compatibility with optimizer.</note>
+    </interface>
+    <interface>
+      <name>SubprocessCalculator.calculate</name>
+      <kind>Class method (NEW)</kind>
+      <signature>def calculate(self, build: BuildData, timeout: int = 30) -> BuildStats</signature>
+      <path>src/calculator/subprocess_calculator.py (NEW FILE)</path>
+      <note>New class for subprocess-based calculation. Must match PoBCalculationEngine.calculate() signature. Writes XML, executes PoB process, parses output, returns BuildStats.</note>
+    </interface>
+    <interface>
+      <name>MinimalCalc.lua weaponTypeInfo</name>
+      <kind>Lua table</kind>
+      <signature>data.weaponTypeInfo = { ["Weapon Type"] = { name, oneHand, melee, flag } }</signature>
+      <path>src/calculator/MinimalCalc.lua:234-252</path>
+      <note>Weapon type definitions. Needs "Spear" entry added with { name="Spear", oneHand=true, melee=true, flag="Spear" }.</note>
+    </interface>
+    <interface>
+      <name>MinimalCalc.lua itemBases</name>
+      <kind>Lua table (NEW)</kind>
+      <signature>data.itemBases = {} -- populated by LoadModule("Data/Bases/*.lua")</signature>
+      <path>src/calculator/MinimalCalc.lua (after line 252)</path>
+      <note>New table to hold PoB weapon base data. Loaded from Data/Bases/*.lua files. Used for weapon stat lookup instead of hard-coded stubs.</note>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      Use pytest with pytest-xdist for process isolation (ADR-003). Integration tests in tests/integration/ directory. Validation scripts in scripts/ directory. All tests must use pytest -n auto --dist=loadfile pattern for Windows LuaJIT cleanup. Unit tests for skill detection logic. Integration tests for subprocess calculator and hybrid routing. Full validation using scripts/validate_realistic_builds.py on 15-build corpus.
+    </standards>
+    <locations>
+      tests/integration/ - Integration tests for calculator
+      tests/integration/optimizer/ - Optimizer integration tests
+      scripts/validate_realistic_builds.py - Epic 2 validation script
+      tests/integration/test_epic2_validation.py - Epic 2 integration tests
+    </locations>
+    <ideas>
+      <test id="AC-2.9.1.1">Unit test: test_load_weapon_bases() - Verify Data/Bases/*.lua files load correctly into data.itemBases</test>
+      <test id="AC-2.9.1.2">Unit test: test_spear_pattern_matching() - Verify "Spear" pattern matching in weapon type detection</test>
+      <test id="AC-2.9.1.3">Unit test: test_weapon_data_lookup() - Verify weapon creation uses itemBases lookup with graceful fallback</test>
+      <test id="AC-2.9.1.4">Integration test: test_weapon_builds() - Run validation on 3 weapon builds (warrior_earthquake_89, warrior_spear_45, warrior_spear_71), verify DPS > 0 and no regression on deadeye_lightning_arrow_76</test>
+      <test id="AC-2.9.1.5">Unit test: test_skill_type_detection() - Test is_attack_skill() with various skill types (attacks, spells, warcries, minions)</test>
+      <test id="AC-2.9.1.6">Unit test: test_subprocess_calculator() - Test SubprocessCalculator.calculate() with mock XML/subprocess execution</test>
+      <test id="AC-2.9.1.7">Integration test: test_hybrid_routing() - Verify calculate_build_stats() routes attack → MinimalCalc, spell → subprocess</test>
+      <test id="AC-2.9.1.8">Integration test: test_spell_dot_totem_builds() - Run validation on 12 spell/DOT/totem builds, verify DPS > 0</test>
+      <test id="AC-2.9.1.9">Integration test: test_epic2_validation_criteria() - Run scripts/validate_realistic_builds.py, verify 100% success (15/15), ≥5% median improvement, <300s completion</test>
+      <test id="AC-2.9.1.10">Performance test: test_hybrid_performance() - Measure attack build optimization time (<60s) vs spell build time (<300s)</test>
+    </ideas>
+  </tests>
+</story-context>
