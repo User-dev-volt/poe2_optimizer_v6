@@ -61,6 +61,7 @@ development_status:
   2-9-integrate-full-pob-calculation-engine: done  # COMPLETE 2025-11-26: Attack skills working (DPS=311.7 verified). Spell/DOT gap discovered 2025-11-27 → Story 2.9.x created
   2-9-x-calculation-gap-analysis: done  # COMPLETE 2025-11-29: Gap analysis finished, Alec approved Hybrid approach (10-16h). Story 2.9.1 to implement.
   2-9-1-hybrid-calculation-approach: in-progress  # Context generated 2025-11-29. Phase 1: Load PoB data & fix weapons (2-4h), Phase 2: Subprocess fallback (8-12h). Total: 10-16 hours.
+  2-9-2-spell-dot-minimalcalc-enhancement: in-progress  # Context generated 2025-12-01: Phase 2 spell/DOT support for MinimalCalc.lua. Completes Epic 2 validation (100% build success). Est: 10-16 hours.
   epic-2-retrospective: completed
 
   # Epic 3: User Experience & Local Reliability

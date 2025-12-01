@@ -1021,8 +1021,9 @@ function Calculate(buildData)
                         else
                             weaponType = "One Handed Axe"
                         end
-                    elseif rawType:match("Mace") then
-                        if rawType:match("Two Hand") then
+                    elseif rawType:match("Mace") or rawType:match("Maul") then
+                        -- Mauls are Two Handed Maces in PoE 2
+                        if rawType:match("Two Hand") or rawType:match("Maul") then
                             weaponType = "Two Handed Mace"
                         else
                             weaponType = "One Handed Mace"
@@ -1106,8 +1107,13 @@ function Calculate(buildData)
                     end
 
                     -- Apply item's physical damage (adds to base)
-                    local totalPhysMin = basePhysMin + (itemData.phys_min or 0)
-                    local totalPhysMax = basePhysMax + (itemData.phys_max or 0)
+                    local flatPhysMin = basePhysMin + (itemData.phys_min or 0)
+                    local flatPhysMax = basePhysMax + (itemData.phys_max or 0)
+
+                    -- Story 2.9.1: Apply percentage increase (e.g., "76% increased Physical Damage")
+                    local physDamageInc = 1 + ((itemData.phys_damage_inc or 0) / 100)
+                    local totalPhysMin = flatPhysMin * physDamageInc
+                    local totalPhysMax = flatPhysMax * physDamageInc
 
                     -- Apply attack speed modifier
                     local attackSpeedMod = 1 + ((itemData.attack_speed_inc or 0) / 100)
@@ -1617,6 +1623,75 @@ function Calculate(buildData)
     -- Many stats default to 0 if not present - this ensures GetStat doesn't return nil
     if not env.player.output then
         env.player.output = {}
+    end
+
+    -- Story 2.9.2: Add spell base damage modifiers before calcs.perform()
+    -- This manually extracts spell base damage from statSets.levels and adds to skillModList
+    if env.player.mainSkill and env.player.mainSkill.activeEffect then
+        local activeEffect = env.player.mainSkill.activeEffect
+        local grantedEffect = activeEffect.grantedEffect
+        local gemLevel = activeEffect.level or 1
+
+        -- Check if this is a spell skill
+        local skillFlags = (env.mode == "CALCS" and activeEffect.statSetCalcs and activeEffect.statSetCalcs.skillFlags)
+                        or (activeEffect.statSet and activeEffect.statSet.skillFlags)
+
+        print("[MinimalCalc] Story 2.9.2: Checking spell detection...")
+        print("[MinimalCalc]   skillFlags exists: " .. tostring(skillFlags ~= nil))
+        if skillFlags then
+            print("[MinimalCalc]   skillFlags.spell: " .. tostring(skillFlags.spell))
+            print("[MinimalCalc]   skillFlags.attack: " .. tostring(skillFlags.attack))
+        end
+
+        if skillFlags and skillFlags.spell and not skillFlags.attack then
+            print("[MinimalCalc] Story 2.9.2: Detected spell skill, extracting base damage...")
+
+            -- Get the main statSet (usually index 1)
+            if grantedEffect.statSets and grantedEffect.statSets[1] then
+                local statSet = grantedEffect.statSets[1]
+
+                -- Get level data for this gem level
+                if statSet.levels and statSet.levels[gemLevel] then
+                    local levelData = statSet.levels[gemLevel]
+                    print("[MinimalCalc]   Gem level: " .. gemLevel)
+
+                    -- Map stat names to their positions in the stats array
+                    if statSet.stats then
+                        -- Damage type mappings
+                        local damageTypeMappings = {
+                            spell_minimum_base_physical_damage = "PhysicalMin",
+                            spell_maximum_base_physical_damage = "PhysicalMax",
+                            spell_minimum_base_lightning_damage = "LightningMin",
+                            spell_maximum_base_lightning_damage = "LightningMax",
+                            spell_minimum_base_cold_damage = "ColdMin",
+                            spell_maximum_base_cold_damage = "ColdMax",
+                            spell_minimum_base_fire_damage = "FireMin",
+                            spell_maximum_base_fire_damage = "FireMax",
+                            spell_minimum_base_chaos_damage = "ChaosMin",
+                            spell_maximum_base_chaos_damage = "ChaosMax",
+                        }
+
+                        -- Iterate through stats and extract base damage
+                        for idx, statName in ipairs(statSet.stats) do
+                            if damageTypeMappings[statName] and levelData[idx] then
+                                local modName = damageTypeMappings[statName]
+                                local value = levelData[idx]
+
+                                -- Add the base damage as a modifier to skillModList
+                                if env.player.mainSkill.skillModList then
+                                    env.player.mainSkill.skillModList:NewMod(modName, "BASE", value, grantedEffect.modSource or "Skill", ModFlag.Spell)
+                                    print("[MinimalCalc]   Added " .. modName .. " = " .. value .. " (from stat: " .. statName .. ")")
+                                end
+                            end
+                        end
+                    end
+                else
+                    print("[MinimalCalc]   WARNING: No level data found for gem level " .. gemLevel)
+                end
+            else
+                print("[MinimalCalc]   WARNING: No statSets found for spell skill")
+            end
+        end
     end
 
     -- Perform calculations (wrap in pcall for error handling)

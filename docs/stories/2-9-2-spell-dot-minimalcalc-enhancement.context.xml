@@ -1,0 +1,304 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2.9</epicId>
+    <storyId>2</storyId>
+    <title>Spell/DOT MinimalCalc Enhancement</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-9-2-spell-dot-minimalcalc-enhancement.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>MinimalCalc.lua to calculate spell/DOT/totem damage from gem level progression data</iWant>
+    <soThat>all 15 realistic builds produce DPS > 0 and Epic 2 validation achieves 100% success rate</soThat>
+    <tasks>
+      <task id="1" acs="AC-2.9.2.1">
+        <title>Research PoB Spell Damage Calculation</title>
+        <subtasks>
+          <subtask id="1.1">Study CalcOffence.lua spell damage formulas in external/pob-engine</subtask>
+          <subtask id="1.2">Understand grantedEffect.levels structure and data format</subtask>
+          <subtask id="1.3">Map gem stat IDs to base damage values (identify which stats = spell damage)</subtask>
+          <subtask id="1.4">Create debug script to inspect spell gem data structure</subtask>
+          <subtask id="1.5">Document findings: which Lua tables to access, data format, calculation order</subtask>
+        </subtasks>
+      </task>
+      <task id="2" acs="AC-2.9.2.1, AC-2.9.2.2">
+        <title>Enhance MinimalCalc.lua for Spell Base Damage</title>
+        <subtasks>
+          <subtask id="2.1">Add spell base damage extraction from grantedEffect.levels[level]</subtask>
+          <subtask id="2.2">Implement spell effectiveness calculation</subtask>
+          <subtask id="2.3">Add spell crit and cast speed modifiers</subtask>
+          <subtask id="2.4">Handle spell flags in CalcOffence pipeline</subtask>
+          <subtask id="2.5">Implement DOT base damage calculation</subtask>
+          <subtask id="2.6">Add DOT duration and ailment damage formulas</subtask>
+          <subtask id="2.7">Test with ONE spell build first (e.g., witch_frost_mage_91)</subtask>
+        </subtasks>
+      </task>
+      <task id="3" acs="AC-2.9.2.3">
+        <title>Add Totem/Minion Support</title>
+        <subtasks>
+          <subtask id="3.1">Implement totem damage multipliers</subtask>
+          <subtask id="3.2">Route totem skills through appropriate calculation path</subtask>
+          <subtask id="3.3">Handle minion skills (or implement graceful degradation)</subtask>
+          <subtask id="3.4">Test totem builds: titan_totem_90, warrior_ballista_93</subtask>
+          <subtask id="3.5">Document any unsupported skill types</subtask>
+        </subtasks>
+      </task>
+      <task id="4" acs="AC-2.9.2.4, AC-2.9.2.5, AC-2.9.2.6">
+        <title>Comprehensive Validation</title>
+        <subtasks>
+          <subtask id="4.1">Create test suite: test_story_2_9_2_spell_builds.py</subtask>
+          <subtask id="4.2">Test all 11 spell/DOT/totem builds individually</subtask>
+          <subtask id="4.3">Verify 100% success rate (15/15 builds DPS > 0)</subtask>
+          <subtask id="4.4">Run regression tests on weapon builds (no breakage)</subtask>
+          <subtask id="4.5">Run Epic 2 validation suite (≥70% success, ≥5% improvement)</subtask>
+          <subtask id="4.6">Measure performance: &lt;500ms per calculation target</subtask>
+          <subtask id="4.7">Document results in validation report</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-2.9.2.1">
+      <title>Spell base damage calculation implemented</title>
+      <requirements>
+        <requirement>MinimalCalc.lua accesses grantedEffect.levels[skillLevel] for spell gems</requirement>
+        <requirement>Extracts base damage values from gem stat progression</requirement>
+        <requirement>Applies spell damage effectiveness multipliers</requirement>
+        <requirement>Handles spell crit, cast speed, and mana cost calculations</requirement>
+      </requirements>
+    </criterion>
+    <criterion id="AC-2.9.2.2">
+      <title>DOT calculation support</title>
+      <requirements>
+        <requirement>DOT skills calculate base damage over time</requirement>
+        <requirement>Ailment damage formulas applied (ignite, poison, bleed if applicable to PoE 2)</requirement>
+        <requirement>DOT duration and damage multipliers handled correctly</requirement>
+        <requirement>DOT skills return non-zero DPS values</requirement>
+      </requirements>
+    </criterion>
+    <criterion id="AC-2.9.2.3">
+      <title>Totem/minion calculation support</title>
+      <requirements>
+        <requirement>Totem skills route through totem damage pipeline</requirement>
+        <requirement>Minion skills handled appropriately (or explicitly marked as unsupported with graceful degradation)</requirement>
+        <requirement>Totem/minion builds produce DPS &gt; 0 or graceful error message</requirement>
+      </requirements>
+    </criterion>
+    <criterion id="AC-2.9.2.4">
+      <title>Spell build validation</title>
+      <requirements>
+        <requirement>All 11 spell/DOT/totem builds produce DPS &gt; 0</requirement>
+        <requirement>Validation results documented in test results</requirement>
+        <requirement>Builds tested: bloodmage_remnants_95, gemling_frost_mage_100, witch_frost_mage_91, titan_totem_90, warrior_ballista_93, lich_frost_mage_90, lich_storm_mage_90, ritualist_lightning_spear_96, titan_infernal_cry_72, witch_essence_drain_86, titan_falling_thunder_99</requirement>
+      </requirements>
+    </criterion>
+    <criterion id="AC-2.9.2.5">
+      <title>Epic 2 validation criteria achieved</title>
+      <requirements>
+        <requirement>Success rate: 100% (15/15 builds produce DPS &gt; 0)</requirement>
+        <requirement>Median improvement: ≥5% when optimizer runs with unallocated points</requirement>
+        <requirement>Budget constraints: Zero violations across all optimizations</requirement>
+        <requirement>Performance: All build calculations complete &lt;500ms per calculation</requirement>
+      </requirements>
+    </criterion>
+    <criterion id="AC-2.9.2.6">
+      <title>No regressions in weapon builds</title>
+      <requirements>
+        <requirement>All 4 weapon builds from Story 2.9.1 Phase 1 continue to work correctly</requirement>
+        <requirement>DPS values remain stable (within 5% variance acceptable)</requirement>
+        <requirement>Test suite: test_story_2_9_1_phase1_weapons.py continues to pass</requirement>
+      </requirements>
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic 2 Technical Specification</title>
+        <section>Overview</section>
+        <snippet>Epic 2 implements the core optimization engine, building on Epic 1's proven 2ms-per-calculation performance. Target outcome is 5-15% median improvement in user metrics while completing within 5 minutes. Zero modifications to Epic 1 code expected.</snippet>
+      </doc>
+      <doc>
+        <path>docs/validation/calculation-gap-REVISED-ANALYSIS-2025-11-29.md</path>
+        <title>Calculation Gap Analysis (Revised)</title>
+        <section>Spell Base Damage - Data Exists</section>
+        <snippet>PoB 2 already has complete data files: Data/Gems.lua (438KB, spell base damage by level) already loaded by MinimalCalc. SkillStatMap.lua provides skill modifiers. Data files have minimal GUI dependencies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-9-1-hybrid-calculation-approach.md</path>
+        <title>Story 2.9.1: Hybrid Calculation Approach</title>
+        <section>Phase 1 Complete</section>
+        <snippet>Story 2.9.1 achieved partial completion with critical infrastructure: Hybrid routing operational, skill detection accurate (8/8 tests), 4/15 weapon builds working. Phase 2 (spell/DOT support) blocked on MinimalCalc enhancements.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-9-1-SM-HANDOFF.md</path>
+        <title>Story 2.9.1 SM Handoff</title>
+        <section>Phase 2 Scope</section>
+        <snippet>Handoff document proposing Story 2.9.2 to complete spell/DOT/totem support. Infrastructure ready, only spell calculation formulas missing in MinimalCalc.lua.</snippet>
+      </doc>
+      <doc>
+        <path>docs/solution-architecture.md</path>
+        <title>Solution Architecture</title>
+        <section>Epic 2 Module Isolation</section>
+        <snippet>Epic 2 optimizer module consumes Epic 1 calculator API. Zero modifications to Epic 1 code (calculator, parsers, models are stable APIs). No circular dependencies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/testing-coverage.md</path>
+        <title>Testing Coverage Standards</title>
+        <section>Testing Standards</section>
+        <snippet>Integration tests for Epic 2 validation. Realistic builds test coverage. Performance benchmarking standards.</snippet>
+      </doc>
+      <doc>
+        <path>external/pob-engine/src/Modules/CalcOffence.lua</path>
+        <title>PoB CalcOffence Module</title>
+        <section>Spell Damage Formulas</section>
+        <snippet>Reference implementation for spell damage calculation, spell effectiveness, crit, and DOT formulas. MinimalCalc must replicate subset of this logic.</snippet>
+      </doc>
+      <doc>
+        <path>external/pob-engine/src/Data/Gems.lua</path>
+        <title>PoB Gem Data</title>
+        <section>Gem Level Progression</section>
+        <snippet>438KB file containing all gem data including spell base damage by level. Already loaded by MinimalCalc (line 415). Contains grantedEffect.levels structure.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/calculator/MinimalCalc.lua</path>
+        <kind>lua-calculator</kind>
+        <symbol>ProcessSocketGroup</symbol>
+        <lines>1200-1250</lines>
+        <reason>Creates activeEffect for gems with skill flags. Critical for spell detection. Already sets up skillFlags structure needed for spell routing.</reason>
+      </artifact>
+      <artifact>
+        <path>src/calculator/MinimalCalc.lua</path>
+        <kind>lua-calculator</kind>
+        <symbol>Result extraction</symbol>
+        <lines>1654-1682</lines>
+        <reason>Extracts calculation results from env.player.output. Currently uses player.output, not mainSkill.output. Spell damage will need to populate mainSkill.output.TotalDPS.</reason>
+      </artifact>
+      <artifact>
+        <path>src/calculator/build_calculator.py</path>
+        <kind>python-service</kind>
+        <symbol>calculate_build_stats</symbol>
+        <lines>98-150</lines>
+        <reason>Hybrid routing entry point. Routes attack vs spell skills to appropriate calculator. Already operational from Story 2.9.1.</reason>
+      </artifact>
+      <artifact>
+        <path>src/calculator/subprocess_calculator.py</path>
+        <kind>python-service</kind>
+        <symbol>SubprocessCalculator</symbol>
+        <lines>41-100</lines>
+        <reason>Fallback calculator for complex skills. Provides process isolation for full PoB engine. Already implemented in Story 2.9.1.</reason>
+      </artifact>
+      <artifact>
+        <path>src/calculator/pob_engine.py</path>
+        <kind>python-service</kind>
+        <symbol>POBEngine</symbol>
+        <lines>1-200</lines>
+        <reason>Python interface to MinimalCalc.lua. May need additional methods to access gem level data or spell calculation results.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/integration/test_story_2_9_1_phase1_weapons.py</path>
+        <kind>test</kind>
+        <symbol>Weapon build regression tests</symbol>
+        <lines>all</lines>
+        <reason>Phase 1 validation tests for 4 weapon builds. Must continue to pass after spell enhancements (AC-2.9.2.6).</reason>
+      </artifact>
+      <artifact>
+        <path>scripts/debug_spell_data.py</path>
+        <kind>debug-script</kind>
+        <symbol>Spell data inspector</symbol>
+        <lines>all</lines>
+        <reason>Utility script for inspecting gem data structure and grantedEffect.levels. Useful for Task 1 research.</reason>
+      </artifact>
+      <artifact>
+        <path>external/pob-engine/src/Modules/CalcOffence.lua</path>
+        <kind>reference-lua</kind>
+        <symbol>PoB spell damage formulas</symbol>
+        <lines>all</lines>
+        <reason>Reference implementation for spell damage calculation. MinimalCalc needs to replicate subset of this logic for spell base damage, effectiveness, and DOT.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="lupa" version=">=2.0">Python-LuaJIT bindings for PoB calculation engine</package>
+        <package name="xmltodict" version="0.13.0">XML parsing for PoB codes</package>
+        <package name="pytest" version=">=7.4.0">Testing framework</package>
+        <package name="pytest-xdist" version=">=3.5.0">Process isolation for LuaJIT Windows exceptions</package>
+        <package name="pytest-benchmark" version=">=4.0.0">Performance benchmarking</package>
+        <package name="psutil" version=">=5.9.0">System utilities for process management</package>
+      </python>
+      <lua>
+        <module name="LuaJIT" version="2.1+">Embedded runtime for PoB calculation modules</module>
+        <datafile name="Data/Gems.lua">Gem progression data (438KB, already loaded at line 415)</datafile>
+        <datafile name="Data/SkillStatMap.lua">Skill stat mappings (98KB, already loaded)</datafile>
+        <module name="CalcOffence.lua">Reference spell damage formulas</module>
+      </lua>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Zero modifications to Epic 1 calculator API - maintain API stability</constraint>
+    <constraint>No changes to build_calculator.py routing logic (already operational from Story 2.9.1)</constraint>
+    <constraint>Preserve weapon build functionality - all Phase 1 tests must pass</constraint>
+    <constraint>Performance target: &lt;500ms per calculation for any build type</constraint>
+    <constraint>Use existing PoB data files (Data/Gems.lua already loaded at line 415)</constraint>
+    <constraint>Follow layered architecture: MinimalCalc.lua calculation layer, no business logic</constraint>
+    <constraint>Separate spell logic from attack logic in code to prevent regressions</constraint>
+    <constraint>Implement iteratively: Start with ONE spell build before expanding</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>grantedEffect.levels</name>
+      <kind>lua-data-structure</kind>
+      <signature>grantedEffect.levels[skillLevel] → { stats = {...}, ... }</signature>
+      <path>external/pob-engine/src/Data/Gems.lua</path>
+    </interface>
+    <interface>
+      <name>mainSkill.output.TotalDPS</name>
+      <kind>lua-output-field</kind>
+      <signature>mainSkill.output.TotalDPS → number</signature>
+      <path>src/calculator/MinimalCalc.lua:1654-1682</path>
+    </interface>
+    <interface>
+      <name>calculate_build_stats</name>
+      <kind>python-api</kind>
+      <signature>calculate_build_stats(build: BuildData) → BuildStats</signature>
+      <path>src/calculator/build_calculator.py:98</path>
+    </interface>
+    <interface>
+      <name>skillFlags</name>
+      <kind>lua-flags-structure</kind>
+      <signature>skillFlags = { attack: bool, spell: bool, projectile: bool, hit: bool }</signature>
+      <path>src/calculator/MinimalCalc.lua:1221-1240</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Integration tests for Epic 2 validation using pytest framework. Realistic build fixtures test coverage. Performance benchmarking with pytest-benchmark (&lt;500ms target). Process isolation with pytest-xdist for LuaJIT Windows exception handling. Regression tests must pass before marking story complete.</standards>
+    <locations>
+      <location>tests/integration/test_story_2_9_2_spell_builds.py</location>
+      <location>tests/integration/test_story_2_9_1_phase1_weapons.py</location>
+      <location>tests/fixtures/realistic_builds/</location>
+    </locations>
+    <ideas>
+      <test ac="AC-2.9.2.1">Test spell base damage extraction from grantedEffect.levels for witch_frost_mage_91</test>
+      <test ac="AC-2.9.2.1">Verify spell effectiveness multiplier applied correctly</test>
+      <test ac="AC-2.9.2.1">Test spell crit and cast speed modifiers</test>
+      <test ac="AC-2.9.2.2">Test DOT damage calculation for witch_essence_drain_86</test>
+      <test ac="AC-2.9.2.2">Verify ailment damage formulas (ignite/poison/bleed if applicable)</test>
+      <test ac="AC-2.9.2.3">Test totem damage calculation for titan_totem_90</test>
+      <test ac="AC-2.9.2.3">Test ballista calculation for warrior_ballista_93</test>
+      <test ac="AC-2.9.2.4">Integration test: All 11 spell/DOT/totem builds produce DPS &gt; 0</test>
+      <test ac="AC-2.9.2.5">Epic 2 validation: 15/15 builds success rate (100%)</test>
+      <test ac="AC-2.9.2.5">Median improvement ≥5% with unallocated points</test>
+      <test ac="AC-2.9.2.6">Regression test: 4 weapon builds from Phase 1 still working</test>
+      <test ac="AC-2.9.2.6">DPS stability check: Within 5% variance for weapon builds</test>
+      <test>Performance benchmark: Each build calculation &lt;500ms</test>
+    </ideas>
+  </tests>
+</story-context>
