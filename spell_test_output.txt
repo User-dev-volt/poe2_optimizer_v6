@@ -1,0 +1,226 @@
+[MinimalCalc] PoB src directory: D:/poe2_optimizer_v6/external/pob-engine/src
+[MinimalCalc] Creating stubs for external libraries and GUI functions...
+[MinimalCalc] ===== STEP 1: Loading GameVersions.lua (pure data, no GUI) =====
+[MinimalCalc] SUCCESS: latestTreeVersion = 0_3
+[MinimalCalc] ===== STEP 2: Loading Common.lua (utility functions) =====
+[MinimalCalc] SUCCESS: Common.lua loaded, common.classes available
+[MinimalCalc] ===== STEP 3: Loading Data/Global.lua (ModFlag, KeywordFlag, SkillType) =====
+[MinimalCalc] SUCCESS: Global.lua loaded, ModFlag/KeywordFlag/SkillType available
+[MinimalCalc] ===== STEP 4: Loading Data/Misc.lua (game constants) =====
+[MinimalCalc] SUCCESS: Misc.lua loaded, data.characterConstants/gameConstants/monsterConstants available
+[MinimalCalc] Overrode unarmedWeaponData with PoE 2 class data
+[MinimalCalc] ===== STEP 4b: Adding data stubs for PoB calculation dependencies =====
+[MinimalCalc] Loading PoB weapon base data from Data/Bases/*.lua...
+[MinimalCalc]   Loaded: Data/Bases/mace.lua
+[MinimalCalc]   Loaded: Data/Bases/spear.lua
+[MinimalCalc]   Loaded: Data/Bases/sword.lua
+[MinimalCalc]   Loaded: Data/Bases/axe.lua
+[MinimalCalc]   Loaded: Data/Bases/bow.lua
+[MinimalCalc]   Loaded: Data/Bases/staff.lua
+[MinimalCalc]   Loaded: Data/Bases/wand.lua
+[MinimalCalc]   Loaded: Data/Bases/sceptre.lua
+[MinimalCalc]   Loaded: Data/Bases/dagger.lua
+[MinimalCalc]   Loaded: Data/Bases/claw.lua
+[MinimalCalc]   Loaded: Data/Bases/crossbow.lua
+[MinimalCalc] Weapon base data loading complete
+[MinimalCalc] SUCCESS: Data stubs created (including monster stat tables)
+[MinimalCalc] ===== STEP 4c: Loading skill and gem data (Story 2.9 Phase 2) =====
+[MinimalCalc] Loading Data/SkillStatMap.lua...
+[MinimalCalc] Loading Data/Skills/act_str.lua...
+[MinimalCalc] Loading Data/Skills/act_int.lua...
+[MinimalCalc] Loading Data/Skills/act_dex.lua...
+[MinimalCalc] Loading Data/Skills/sup_str.lua...
+[MinimalCalc] Loading Data/Skills/sup_int.lua...
+[MinimalCalc] Loading Data/Skills/sup_dex.lua...
+[MinimalCalc] Loading Data/Skills/other.lua...
+[MinimalCalc] Loading Data/Skills/minion.lua...
+[MinimalCalc] Loaded 941 skills
+[MinimalCalc] Loading Data/Gems.lua...
+[MinimalCalc] Loaded 819 gems
+[MinimalCalc] SUCCESS: Skill and gem data loaded
+[MinimalCalc] ===== STEP 5a: Creating ModParser stub =====
+[MinimalCalc] SUCCESS: ModParser stub created
+[MinimalCalc] ===== STEP 5b: Loading Modules/ModTools.lua (modLib) =====
+[MinimalCalc] Intercepting ModParser load - returning stub
+[MinimalCalc] SUCCESS: ModTools.lua loaded, modLib available
+[MinimalCalc] ===== STEP 5c: Loading Modules/CalcTools.lua (calcLib) =====
+[MinimalCalc] SUCCESS: CalcTools.lua loaded, calcLib available
+[MinimalCalc] ===== STEP 6: Pre-loading required Classes =====
+[MinimalCalc] Loading Classes/ModStore.lua...
+[MinimalCalc] Loading Classes/ModList.lua...
+[MinimalCalc] Loading Classes/ModDB.lua...
+[MinimalCalc] SUCCESS: Core classes loaded
+[MinimalCalc] ===== STEP 7: Loading Modules/Calcs.lua (calculation engine) =====
+[MinimalCalc] SUCCESS: Calcs.lua loaded
+[MinimalCalc] SUCCESS: calcs.initEnv and calcs.perform verified
+[MinimalCalc] ===== Bootstrap complete - minimal PoB environment ready =====
+[MinimalCalc] ===== STEP 8: Creating passive node stat parser (Story 2.9) =====
+[MinimalCalc] SUCCESS: Passive node stat parser created
+[MinimalCalc] Bootstrap complete - Calculate() function exposed - TIMESTAMP: 1760762916.3465545
+[MinimalCalc] PoB src directory: D:/poe2_optimizer_v6/external/pob-engine/src
+[MinimalCalc] Creating stubs for external libraries and GUI functions...
+[MinimalCalc] ===== STEP 1: Loading GameVersions.lua (pure data, no GUI) =====
+[MinimalCalc] SUCCESS: latestTreeVersion = 0_3
+[MinimalCalc] ===== STEP 2: Loading Common.lua (utility functions) =====
+[MinimalCalc] SUCCESS: Common.lua loaded, common.classes available
+[MinimalCalc] ===== STEP 3: Loading Data/Global.lua (ModFlag, KeywordFlag, SkillType) =====
+[MinimalCalc] SUCCESS: Global.lua loaded, ModFlag/KeywordFlag/SkillType available
+[MinimalCalc] ===== STEP 4: Loading Data/Misc.lua (game constants) =====
+[MinimalCalc] SUCCESS: Misc.lua loaded, data.characterConstants/gameConstants/monsterConstants available
+[MinimalCalc] Overrode unarmedWeaponData with PoE 2 class data
+[MinimalCalc] ===== STEP 4b: Adding data stubs for PoB calculation dependencies =====
+[MinimalCalc] Loading PoB weapon base data from Data/Bases/*.lua...
+[MinimalCalc]   Loaded: Data/Bases/mace.lua
+[MinimalCalc]   Loaded: Data/Bases/spear.lua
+[MinimalCalc]   Loaded: Data/Bases/sword.lua
+[MinimalCalc]   Loaded: Data/Bases/axe.lua
+[MinimalCalc]   Loaded: Data/Bases/bow.lua
+[MinimalCalc]   Loaded: Data/Bases/staff.lua
+[MinimalCalc]   Loaded: Data/Bases/wand.lua
+[MinimalCalc]   Loaded: Data/Bases/sceptre.lua
+[MinimalCalc]   Loaded: Data/Bases/dagger.lua
+[MinimalCalc]   Loaded: Data/Bases/claw.lua
+[MinimalCalc]   Loaded: Data/Bases/crossbow.lua
+[MinimalCalc] Weapon base data loading complete
+[MinimalCalc] SUCCESS: Data stubs created (including monster stat tables)
+[MinimalCalc] ===== STEP 4c: Loading skill and gem data (Story 2.9 Phase 2) =====
+[MinimalCalc] Loading Data/SkillStatMap.lua...
+[MinimalCalc] Loading Data/Skills/act_str.lua...
+[MinimalCalc] Loading Data/Skills/act_int.lua...
+[MinimalCalc] Loading Data/Skills/act_dex.lua...
+[MinimalCalc] Loading Data/Skills/sup_str.lua...
+[MinimalCalc] Loading Data/Skills/sup_int.lua...
+[MinimalCalc] Loading Data/Skills/sup_dex.lua...
+[MinimalCalc] Loading Data/Skills/other.lua...
+[MinimalCalc] Loading Data/Skills/minion.lua...
+[MinimalCalc] Loaded 941 skills
+[MinimalCalc] Loading Data/Gems.lua...
+[MinimalCalc] Loaded 819 gems
+[MinimalCalc] SUCCESS: Skill and gem data loaded
+[MinimalCalc] ===== STEP 5a: Creating ModParser stub =====
+[MinimalCalc] SUCCESS: ModParser stub created
+[MinimalCalc] ===== STEP 5b: Loading Modules/ModTools.lua (modLib) =====
+[MinimalCalc] Intercepting ModParser load - returning stub
+[MinimalCalc] SUCCESS: ModTools.lua loaded, modLib available
+[MinimalCalc] ===== STEP 5c: Loading Modules/CalcTools.lua (calcLib) =====
+[MinimalCalc] SUCCESS: CalcTools.lua loaded, calcLib available
+[MinimalCalc] ===== STEP 6: Pre-loading required Classes =====
+[MinimalCalc] Loading Classes/ModStore.lua...
+[MinimalCalc] Loading Classes/ModList.lua...
+[MinimalCalc] Loading Classes/ModDB.lua...
+[MinimalCalc] SUCCESS: Core classes loaded
+[MinimalCalc] ===== STEP 7: Loading Modules/Calcs.lua (calculation engine) =====
+[MinimalCalc] SUCCESS: Calcs.lua loaded
+[MinimalCalc] SUCCESS: calcs.initEnv and calcs.perform verified
+[MinimalCalc] ===== Bootstrap complete - minimal PoB environment ready =====
+[MinimalCalc] ===== STEP 8: Creating passive node stat parser (Story 2.9) =====
+[MinimalCalc] SUCCESS: Passive node stat parser created
+[MinimalCalc] Bootstrap complete - Calculate() function exposed - TIMESTAMP: 1760762916.3465545
+[MinimalCalc] Calculate() called with buildData:
+[MinimalCalc]   characterClass: Witch
+[MinimalCalc]   level: 85
+[MinimalCalc]   classId: 4
+[MinimalCalc]   allocated nodes: 0 of 0
+[MinimalCalc]   Story 2.9: Parsed 0 mods from passive tree stats
+[MinimalCalc]   Found weaponTypeInfo for: Staff
+[MinimalCalc]   Using PoB data for Staff from base: Wrapped Quarterstaff
+[MinimalCalc]   Loaded weapon: Chiming Staff -> Staff (Phys: 7-12, APS: 1.40)
+[MinimalCalc]   Story 2.9 Milestone 3: Loaded 1 items from buildData
+[MinimalCalc]   Story 2.9 Phase 2: Created 8 socket groups from passed skills
+[MinimalCalc] Build object constructed, calling calcs.initEnv()...
+[MinimalCalc] DEBUG: Weapon before CalcSetup:
+[MinimalCalc]   weapon.type = Weapon
+[MinimalCalc]   weapon.base.type = Staff
+[MinimalCalc]   weapon.weaponData[1].type = Staff
+[MinimalCalc] Tree data exists, checking classes...
+[MinimalCalc] Tree has classes table
+[MinimalCalc] Tree has data for classId 4
+[MinimalCalc] Class name: Witch
+[MinimalCalc] calcs.initEnv() successful, calling calcs.perform()...
+[MinimalCalc] DEBUG: env.player.weaponData1 after CalcSetup:
+[MinimalCalc]   weaponData1.type = Staff
+[MinimalCalc]   weaponData1.AttackRate = 1.4
+[MinimalCalc]   weaponData1.PhysicalMin = 7
+[MinimalCalc]   weaponData1.PhysicalMax = 12
+[MinimalCalc======================================================================
+FINAL SPELL TEST - witch_frost_mage_91
+======================================================================
+
+Build Info:
+  Name: witch_frost_mage_91
+  Class: Witch, Level: 85
+  Skills: ['Pain Offering (ID: PainOfferingPlayer)', 'Hypothermia (ID: HypothermiaPlayer)', 'Flame Wall (ID: FlameWallPlayer)', 'Frost Bomb (ID: FrostBombPlayer)', 'Leap Slam (ID: LeapSlamPlayer)', 'Blink (ID: BlinkReservationPlayer)', 'Sigil of Power (ID: SigilOfPowerPlayer)', 'Discipline (ID: DisciplinePlayer)']
+  Allocated nodes: 0
+
+Calculating...
+
+Results:
+
+======================================================================
+ERROR: Calculation failed
+Exception: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+======================================================================
+] DEBUG: Weapon AFTER CalcSetup:
+[MinimalCalc]   weapon.base.type = Staff
+[MinimalCalc]   weapon.weaponData[1].type = Staff
+[MinimalCalc] Fixing skillFlags for mainSkill...
+[MinimalCalc] skillFlags set: attack=false, weapon1Attack=false, projectile=false
+[MinimalCalc] mainSkill.weapon1Flags = 0
+[MinimalCalc] DEBUG: mainSkill exists
+[MinimalCalc] DEBUG: activeEffect exists
+[MinimalCalc] DEBUG: grantedEffect name: Pain Offering
+[MinimalCalc] DEBUG: skillFlags.attack = false
+[MinimalCalc] DEBUG: skillFlags.melee = false
+[MinimalCalc] DEBUG: skillFlags.weapon1Attack = false
+[MinimalCalc] DEBUG: skillFlags.weapon2Attack = false
+[MinimalCalc] DEBUG: skillFlags.unarmed = false
+[MinimalCalc] DEBUG: weaponData1 = table: 0x010dc3c69070
+[MinimalCalc] DEBUG: weaponData1.type = Staff
+[MinimalCalc] DEBUG: weaponData1.AttackRate = 1.4
+[MinimalCalc] Story 2.9.2: Checking spell detection...
+[MinimalCalc]   skillFlags exists: true
+[MinimalCalc]   skillFlags.spell: false
+[MinimalCalc]   skillFlags.attack: false
+[MinimalCalc] calcs.perform() successful, extracting results...
+[MinimalCalc] DEBUG: mainSkill exists after perform
+[MinimalCalc] DEBUG: mainSkill.output is NIL!
+[MinimalCalc] DEBUG: mainSkill fields:
+[MinimalCalc]   skillData = <table>
+[MinimalCalc]   weapon1Flags = 0
+[MinimalCalc]   baseSkillModList = <table>
+[MinimalCalc]   skillTypes = <table>
+[MinimalCalc]   skillModList = <table>
+[MinimalCalc]   dotChaosCfg = <table>
+[MinimalCalc]   extraSkillModList = <table>
+[MinimalCalc]   buffList = <table>
+[MinimalCalc]   skillCfg = <table>
+[MinimalCalc]   dotFireCfg = <table>
+[MinimalCalc]   dotColdCfg = <table>
+[MinimalCalc]   conversionTable = <table>
+[MinimalCalc]   minionList = <table>
+[MinimalCalc]   dotLightningCfg = <table>
+[MinimalCalc]   socketGroup = <table>
+[MinimalCalc]   supportList = <table>
+[MinimalCalc]   gainTable = <table>
+[MinimalCalc]   dotPhysicalCfg = <table>
+[MinimalCalc]   dotCfg = <table>
+[MinimalCalc]   weapon2Flags = 0
+[MinimalCalc]   actor = <table>
+[MinimalCalc]   minionSkillTypes = <table>
+[MinimalCalc]   effectList = <table>
+[MinimalCalc] DEBUG: Extracting from player.output (not mainSkill.output)
+[MinimalCalc] Calculation complete!
+[MinimalCalc]   TotalDPS: 0
+[MinimalCalc]   Life: 1073
+[MinimalCalc]   EnergyShield: 0
+[MinimalCalc]   Mana: 403
+[MinimalCalc] DPS BREAKDOWN:
+[MinimalCalc]   AverageDamage: 0
+[MinimalCalc]   AverageHit: 0
+[MinimalCalc]   HitChance: 100
+[MinimalCalc]   AccuracyHitChance: 100
+[MinimalCalc]   Speed: 1.6666666666667
+[MinimalCalc]   Accuracy: 546
+[MinimalCalc]   Dex: 7
+[MinimalCalc]   Str: 7
+[MinimalCalc]   Int: 15

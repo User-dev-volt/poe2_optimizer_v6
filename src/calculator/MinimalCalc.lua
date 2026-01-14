@@ -226,7 +226,8 @@ data.ailmentData = {  -- Required by CalcPerform.lua:2904
 data.elementalAilmentTypeList = { "Ignite", "Chill", "Freeze", "Shock", "Scorch", "Brittle", "Sap" }
 data.nonElementalAilmentTypeList = { "Bleed", "Poison" }
 data.ailmentTypeList = { "Ignite", "Chill", "Freeze", "Shock", "Scorch", "Brittle", "Sap", "Bleed", "Poison" }
-data.monsterAllyLifeTable = {}
+-- Story 2.9.2: DO NOT override monsterAllyLifeTable - it's loaded from Data/Misc.lua with real values
+-- data.monsterAllyLifeTable = {}  -- REMOVED: Was overwriting totem life table from Misc.lua
 data.highPrecisionMods = {}  -- Required by ModDB.lua:137 (modifier precision tracking)
 -- Unarmed weapon data now defined above after loading Data/Misc.lua (lines 181-189)
 -- Weapon type info (required by CalcActiveSkill.lua:220)
@@ -901,6 +902,10 @@ function Calculate(buildData)
     build.characterLevel = buildData.level
     build.characterClass = buildData.characterClass
 
+    -- Story 2.9.2: Set main socket group for correct skill selection
+    build.mainSocketGroup = buildData.mainSocketGroup or 1
+    print("[MinimalCalc]   mainSocketGroup: " .. tostring(build.mainSocketGroup))
+
     -- 3. Configuration tab (parsed from PoB XML Config section)
     local pobConfig = buildData.config or {input = {}, placeholder = {}}
     local configInput = pobConfig.input or {}
@@ -1534,16 +1539,24 @@ function Calculate(buildData)
             print("[MinimalCalc] Fixing skillFlags for mainSkill...")
 
             local flags = {}
-            flags.attack = grantedEffect.skillTypes[1] == true  -- SkillType.Attack
+
+            -- Story 2.9.2: Detect totem attack skills (Siege Ballista, etc.)
+            -- SkillType.SummonsAttackTotem = 166 means totem performs attacks with player's weapon
+            local isSummonsAttackTotem = grantedEffect.skillTypes[166] == true
+
+            flags.attack = grantedEffect.skillTypes[1] == true or isSummonsAttackTotem  -- SkillType.Attack OR totem attacks
             flags.spell = grantedEffect.skillTypes[2] == true   -- SkillType.Spell
             flags.projectile = grantedEffect.skillTypes[3] == true  -- SkillType.Projectile
-            flags.hit = flags.attack or flags.spell
-            flags.melee = grantedEffect.skillTypes[11] == true
-            flags.ranged = not flags.melee and flags.attack
+            flags.totem = grantedEffect.skillTypes[25] == true or isSummonsAttackTotem  -- SkillType.SummonsTotem = 25
+
+            flags.hit = flags.attack or flags.spell or isSummonsAttackTotem
+            flags.melee = grantedEffect.skillTypes[20] == true  -- SkillType.Melee = 20
+            flags.ranged = not flags.melee and (flags.attack or isSummonsAttackTotem)
 
             -- Story 2.9 FIX: Set weapon-specific attack flags (critical for CalcOffence)
             -- CalcOffence.lua:1885 needs these to determine which weapon to use for damage
-            if flags.attack then
+            -- Story 2.9.2: Include SummonsAttackTotem skills (they use weapons even though not SkillType.Attack)
+            if flags.attack or isSummonsAttackTotem then
                 -- For attacks, determine if using weapon slot 1, 2, or unarmed
                 -- Check if player has weaponData1 (primary weapon)
                 if env.player.weaponData1 then
@@ -1582,8 +1595,20 @@ function Calculate(buildData)
                 env.player.mainSkill.weapon1Flags = 0
             end
 
-            print("[MinimalCalc] skillFlags set: attack=" .. tostring(flags.attack) .. ", weapon1Attack=" .. tostring(flags.weapon1Attack) .. ", projectile=" .. tostring(flags.projectile))
+            print("[MinimalCalc] skillFlags set: attack=" .. tostring(flags.attack) .. ", weapon1Attack=" .. tostring(flags.weapon1Attack) .. ", totem=" .. tostring(flags.totem) .. ", projectile=" .. tostring(flags.projectile))
             print("[MinimalCalc] mainSkill.weapon1Flags = " .. tostring(env.player.mainSkill.weapon1Flags))
+            if isSummonsAttackTotem then
+                print("[MinimalCalc] SummonsAttackTotem detected - totem performs weapon attacks")
+            end
+
+            -- Story 2.9.2: Initialize weapon1Cfg if weapon1Attack (CalcActiveSkill.lua:565-569)
+            -- This was skipped during initEnv because flags weren't set yet
+            if flags.weapon1Attack and not env.player.mainSkill.weapon1Cfg then
+                print("[MinimalCalc] Initializing weapon1Cfg for totem attack skill...")
+                env.player.mainSkill.weapon1Cfg = copyTable(env.player.mainSkill.skillCfg, true)
+                env.player.mainSkill.weapon1Cfg.skillCond = setmetatable({ ["MainHandAttack"] = true }, { __index = env.player.mainSkill.skillCfg.skillCond })
+                env.player.mainSkill.weapon1Cfg.flags = env.player.mainSkill.weapon1Flags
+            end
         end
     end
 
@@ -1632,19 +1657,11 @@ function Calculate(buildData)
         local grantedEffect = activeEffect.grantedEffect
         local gemLevel = activeEffect.level or 1
 
-        -- Check if this is a spell skill
-        local skillFlags = (env.mode == "CALCS" and activeEffect.statSetCalcs and activeEffect.statSetCalcs.skillFlags)
-                        or (activeEffect.statSet and activeEffect.statSet.skillFlags)
+        -- Check if this is a spell skill using skillTypes (same as PoB CalcActiveSkill.lua:522)
+        local skillTypes = env.player.mainSkill.skillTypes
+        local isSpell = skillTypes and skillTypes[SkillType.Spell]
 
-        print("[MinimalCalc] Story 2.9.2: Checking spell detection...")
-        print("[MinimalCalc]   skillFlags exists: " .. tostring(skillFlags ~= nil))
-        if skillFlags then
-            print("[MinimalCalc]   skillFlags.spell: " .. tostring(skillFlags.spell))
-            print("[MinimalCalc]   skillFlags.attack: " .. tostring(skillFlags.attack))
-        end
-
-        if skillFlags and skillFlags.spell and not skillFlags.attack then
-            print("[MinimalCalc] Story 2.9.2: Detected spell skill, extracting base damage...")
+        if isSpell then
 
             -- Get the main statSet (usually index 1)
             if grantedEffect.statSets and grantedEffect.statSets[1] then
@@ -1653,7 +1670,6 @@ function Calculate(buildData)
                 -- Get level data for this gem level
                 if statSet.levels and statSet.levels[gemLevel] then
                     local levelData = statSet.levels[gemLevel]
-                    print("[MinimalCalc]   Gem level: " .. gemLevel)
 
                     -- Map stat names to their positions in the stats array
                     if statSet.stats then
@@ -1680,16 +1696,11 @@ function Calculate(buildData)
                                 -- Add the base damage as a modifier to skillModList
                                 if env.player.mainSkill.skillModList then
                                     env.player.mainSkill.skillModList:NewMod(modName, "BASE", value, grantedEffect.modSource or "Skill", ModFlag.Spell)
-                                    print("[MinimalCalc]   Added " .. modName .. " = " .. value .. " (from stat: " .. statName .. ")")
                                 end
                             end
                         end
                     end
-                else
-                    print("[MinimalCalc]   WARNING: No level data found for gem level " .. gemLevel)
                 end
-            else
-                print("[MinimalCalc]   WARNING: No statSets found for spell skill")
             end
         end
     end
@@ -1743,6 +1754,17 @@ function Calculate(buildData)
                     print("[MinimalCalc]   " .. tostring(k) .. " = <table>")
                 end
             end
+        end
+    end
+
+    -- Story 2.9.2: Check for totem/minion actors (totem DPS might be here)
+    if env.minion and env.minion.output then
+        print("[MinimalCalc] DEBUG: Found minion actor with output!")
+        print("[MinimalCalc] DEBUG: minion.output.TotalDPS = " .. tostring(env.minion.output.TotalDPS))
+    elseif env.player.mainSkill and env.player.mainSkill.skillTotemId and env.player.mainSkill.minion then
+        print("[MinimalCalc] DEBUG: mainSkill has totem, checking minion data...")
+        if env.player.mainSkill.minion.output then
+            print("[MinimalCalc] DEBUG: mainSkill.minion.output.TotalDPS = " .. tostring(env.player.mainSkill.minion.output.TotalDPS))
         end
     end
 

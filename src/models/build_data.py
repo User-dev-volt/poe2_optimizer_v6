@@ -62,6 +62,9 @@ class BuildData:
     notes: Optional[str] = None
     config: dict = field(default_factory=dict)  # Enemy/calculation configuration from PoB Config tab
 
+    # Story 2.9.2: Main skill selection
+    main_socket_group: int = 1  # Which socket group to calculate DPS for (1-indexed)
+
     # Calculated properties
     @property
     def allocated_point_count(self) -> int:

@@ -112,6 +112,9 @@ def parse_pob_code(code: str) -> BuildData:
         level = _extract_level(build_section)
         ascendancy = build_section.get("@ascendClassName")
 
+        # Story 2.9.2: Extract main socket group for skill selection
+        main_socket_group = int(build_section.get("@mainSocketGroup") or build_section.get("@mainSkillIndex") or 1)
+
         # Extract passive tree
         passive_nodes = _extract_passive_nodes(pob_root)
 
@@ -139,7 +142,8 @@ def parse_pob_code(code: str) -> BuildData:
             tree_version=tree_version,
             build_name=build_name,
             notes=notes,
-            config=config
+            config=config,
+            main_socket_group=main_socket_group  # Story 2.9.2: Pass main skill selection
         )
 
     except (InvalidFormatError, UnsupportedVersionError):
@@ -388,6 +392,11 @@ def _extract_items(pob_root: dict) -> List[Item]:
                     stats["fire_min"] = stats.get("fire_min", 0) + int(match.group(1))
                     stats["fire_max"] = stats.get("fire_max", 0) + int(match.group(2))
 
+                # Physical Damage Increase: "X% increased Physical Damage"
+                match = re.search(r'(\d+)% increased Physical Damage', line, re.IGNORECASE)
+                if match:
+                    stats["phys_damage_inc"] = stats.get("phys_damage_inc", 0) + int(match.group(1))
+
                 # Attack Speed: "X% increased Attack Speed"
                 match = re.search(r'(\d+)% increased Attack Speed', line, re.IGNORECASE)
                 if match:
@@ -424,8 +433,8 @@ def _is_weapon_base(base_type: str) -> bool:
     Story 2.9: Simple heuristic for weapon detection.
     """
     weapon_keywords = [
-        "Bow", "Staff", "Wand", "Sword", "Axe", "Mace", "Claw",
-        "Dagger", "Sceptre", "Crossbow", "Quarterstaff", "Flail"
+        "Bow", "Staff", "Wand", "Sword", "Axe", "Mace", "Maul", "Claw",
+        "Dagger", "Sceptre", "Crossbow", "Quarterstaff", "Flail", "Spear"
     ]
     return any(kw in base_type for kw in weapon_keywords)
 
@@ -530,6 +539,7 @@ def _extract_skills(pob_root: dict) -> List[Skill]:
             skills.append(skill)
         except (ValueError, KeyError) as e:
             # Skip malformed skills (log for debugging)
+            print(f"[DEBUG] Skipped skill due to {type(e).__name__}: {e}")
             logger.debug(
                 "Skipped malformed skill during parsing: %s. Skill data: %s",
                 str(e), skill_data

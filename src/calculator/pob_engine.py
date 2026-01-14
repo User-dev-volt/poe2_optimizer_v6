@@ -92,6 +92,95 @@ class PoBCalculationEngine:
         self._lua_calculate_func = None  # Story 1.8 Task 2: Pre-compiled Calculate function
         self._tree_data_lua = None  # Story 1.8 Task 3: Pre-converted passive tree Lua table
 
+    def is_attack_skill(self, skill: 'Skill') -> bool:  # type: ignore
+        """
+        Determine if a skill is an attack-based skill.
+
+        Story 2.9.1 Phase 2 - Task 4: Skill type detection for hybrid routing.
+        Attack skills use weapon damage and are fast to calculate with MinimalCalc.
+        Spell/DOT/totem skills require subprocess fallback for accuracy.
+
+        Args:
+            skill: Skill object from BuildData
+
+        Returns:
+            True if skill is attack-based, False otherwise (spell/DOT/totem)
+
+        Detection Logic:
+            1. Look up skill in data.skills using skill_id
+            2. Check statSets[1].baseFlags.attack flag
+            3. Handle edge cases:
+               - Warcries with weapon scaling → treat as attack
+               - Minion skills → treat as non-attack
+               - Missing skill_id → default to False (safer to use subprocess)
+
+        References:
+            - Story Context AC-2.9.1.5: Skill classification function
+            - MinimalCalc.lua lines 473-476: baseFlags structure
+        """
+        self._ensure_initialized()
+
+        # Edge case: No skill_id means we can't classify it
+        if not skill.skill_id:
+            logger.warning(
+                f"Skill '{skill.name}' has no skill_id, defaulting to non-attack (subprocess)"
+            )
+            return False
+
+        try:
+            # Look up skill in Lua data.skills table
+            skills_table = self._lua.globals().data.skills
+            lua_skill = skills_table[skill.skill_id] if skill.skill_id in skills_table else None
+
+            if not lua_skill:
+                logger.warning(
+                    f"Skill ID '{skill.skill_id}' not found in PoB data, "
+                    f"defaulting to non-attack (subprocess)"
+                )
+                return False
+
+            # Check baseFlags from first statSet
+            if hasattr(lua_skill, 'statSets') and len(lua_skill.statSets) > 0:
+                first_statset = list(lua_skill.statSets.values())[0]
+                if hasattr(first_statset, 'baseFlags'):
+                    base_flags = first_statset.baseFlags
+
+                    # Primary check: attack flag present
+                    if 'attack' in base_flags:
+                        logger.debug(f"Skill '{skill.name}' is attack-based (baseFlags.attack)")
+                        return True
+
+                    # Edge case: Warcries with weapon scaling
+                    # Some warcries scale with weapon damage and should use MinimalCalc
+                    if 'warcry' in base_flags:
+                        # Check if warcry has weapon-related keywords
+                        # For now, treat all warcries as non-attack (safer)
+                        # TODO: Refine if specific warcries need attack path
+                        logger.debug(
+                            f"Skill '{skill.name}' is warcry-based, routing to subprocess"
+                        )
+                        return False
+
+                    # Not an attack skill (spell, DOT, totem, minion, etc.)
+                    logger.debug(
+                        f"Skill '{skill.name}' is non-attack "
+                        f"(baseFlags: {list(base_flags.keys())})"
+                    )
+                    return False
+
+            # Fallback: No baseFlags found, default to non-attack (safer)
+            logger.warning(
+                f"Skill '{skill.name}' has no baseFlags, defaulting to non-attack"
+            )
+            return False
+
+        except Exception as e:
+            logger.error(
+                f"Error detecting skill type for '{skill.name}': {e}, "
+                f"defaulting to non-attack (subprocess)"
+            )
+            return False
+
     def _ensure_initialized(self) -> None:
         """
         Lazy initialization of LuaJIT runtime.
@@ -307,7 +396,8 @@ class PoBCalculationEngine:
                         fire_max=item.stats.get("fire_max", 0),
                         # Attack modifiers
                         attack_speed_inc=item.stats.get("attack_speed_inc", 0),
-                        crit_chance_add=item.stats.get("crit_chance_add", 0)
+                        crit_chance_add=item.stats.get("crit_chance_add", 0),
+                        phys_damage_inc=item.stats.get("phys_damage_inc", 0)  # Story 2.9.1: Physical damage %
                     )
                     items_lua[i + 1] = item_table  # Lua is 1-indexed
 
@@ -323,7 +413,8 @@ class PoBCalculationEngine:
                 treeData=tree_data_lua_table,  # Story 1.8 Task 3: Fresh Lua table from cached dict
                 config=dict_to_lua_table(build.config),  # Enemy/calculation configuration from PoB
                 skills=skills_lua,  # Story 2.9 Phase 2: Active skills and supports
-                items=items_lua  # Story 2.9 Milestone 2: Equipment items with weapon stats
+                items=items_lua,  # Story 2.9 Milestone 2: Equipment items with weapon stats
+                mainSocketGroup=build.main_socket_group  # Story 2.9.2: Main skill selection
             )
 
             # Task 6: Implement 5-second timeout

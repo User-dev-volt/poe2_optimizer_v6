@@ -53,7 +53,18 @@ def load_build_from_xml(xml_path: Path) -> BuildData:
 
     config = {"input": {}, "placeholder": {}}
 
-    inputs = config_set.get("Input", [])
+    # Handle case where config_set might be a list instead of dict
+    if isinstance(config_set, list):
+        # If config_set is a list, look for dict entries with "Input" key
+        inputs = []
+        for item in config_set:
+            if isinstance(item, dict) and "Input" in item:
+                inputs.extend(item["Input"] if isinstance(item["Input"], list) else [item["Input"]])
+    elif isinstance(config_set, dict):
+        inputs = config_set.get("Input", [])
+    else:
+        inputs = []
+
     if isinstance(inputs, dict):
         inputs = [inputs]
     for inp in inputs:
@@ -71,6 +82,9 @@ def load_build_from_xml(xml_path: Path) -> BuildData:
     items = pob_parser._extract_items(pob_root)
     skills = pob_parser._extract_skills(pob_root)
 
+    # Story 2.9.2: Extract main socket group
+    main_socket_group = int(build_section.get("@mainSocketGroup") or build_section.get("@mainSkillIndex") or 1)
+
     build = BuildData(
         character_class=character_class,
         level=level,
@@ -80,7 +94,8 @@ def load_build_from_xml(xml_path: Path) -> BuildData:
         build_name=xml_path.stem,
         items=items,
         skills=skills,
-        config=config
+        config=config,
+        main_socket_group=main_socket_group  # Story 2.9.2
     )
 
     return build
