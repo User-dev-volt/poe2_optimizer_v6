@@ -9,7 +9,11 @@
       "Bash(git apply:*)",
       "Bash(find:*)",
       "Bash(pytest:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(git push:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
