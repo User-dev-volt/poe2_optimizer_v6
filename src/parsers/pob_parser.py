@@ -591,6 +591,11 @@ def _extract_config(pob_root: dict) -> dict:
         logger.debug(f"Processing Input: {input_elem}")
         if isinstance(input_elem, dict):
             name = input_elem.get("@name")
+            # Boolean config flags (conditionEnemyShocked, usePowerCharges, ...) are
+            # DPS-relevant; capture them rather than silently dropping them.
+            if name and "@boolean" in input_elem:
+                result["input"][name] = str(input_elem["@boolean"]).lower() == "true"
+                continue
             value = input_elem.get("@number") or input_elem.get("@string")
             if name and value is not None:
                 try:
@@ -614,6 +619,9 @@ def _extract_config(pob_root: dict) -> dict:
     for placeholder in placeholders:
         if isinstance(placeholder, dict):
             name = placeholder.get("@name")
+            if name and "@boolean" in placeholder:
+                result["placeholder"][name] = str(placeholder["@boolean"]).lower() == "true"
+                continue
             value = placeholder.get("@number") or placeholder.get("@string")
             if name and value is not None:
                 try:

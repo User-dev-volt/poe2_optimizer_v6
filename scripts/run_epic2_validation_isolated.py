@@ -40,6 +40,7 @@ from src.models.build_data import BuildData, CharacterClass
 from src.models.optimization_config import OptimizationConfiguration
 from src.optimizer.hill_climbing import optimize_build
 from src.parsers.xml_utils import parse_xml
+import src.parsers.pob_parser as pob_parser
 
 
 def load_build_from_xml(xml_path: Path) -> BuildData:
@@ -67,32 +68,14 @@ def load_build_from_xml(xml_path: Path) -> BuildData:
         except ValueError:
             pass
 
-    config_section = pob_root.get("Config", {})
-    config_set = config_section.get("ConfigSet", {}) if isinstance(config_section, dict) else {}
-    config = {"input": {}, "placeholder": {}}
+    # Use the production config parser (handles multi-<ConfigSet> XML + @boolean inputs).
+    config = pob_parser._extract_config(pob_root)
 
-    inputs = config_set.get("Input", [])
-    if isinstance(inputs, dict):
-        inputs = [inputs]
-    for inp in inputs:
-        if isinstance(inp, dict):
-            name = inp.get("@name")
-            if name:
-                if "@number" in inp:
-                    config["input"][name] = float(inp["@number"])
-                elif "@boolean" in inp:
-                    config["input"][name] = inp["@boolean"].lower() == "true"
-                elif "@string" in inp:
-                    config["input"][name] = inp["@string"]
-
-    placeholders = config_set.get("Placeholder", [])
-    if isinstance(placeholders, dict):
-        placeholders = [placeholders]
-    for ph in placeholders:
-        if isinstance(ph, dict):
-            name = ph.get("@name")
-            if name and "@number" in ph:
-                config["placeholder"][name] = float(ph["@number"])
+    # Load items AND skills so the calc is meaningful. Without them the build has no
+    # weapon/skill and DPS collapses to a degenerate ~1.5 baseline, making any
+    # optimization result meaningless (this was the original harness bug).
+    items = pob_parser._extract_items(pob_root)
+    skills = pob_parser._extract_skills(pob_root)
 
     return BuildData(
         character_class=character_class,
@@ -101,8 +84,8 @@ def load_build_from_xml(xml_path: Path) -> BuildData:
         passive_nodes=passive_nodes,
         tree_version=build_section.get("@targetVersion", "0_1"),
         build_name=xml_path.stem,
-        items=[],
-        skills=[],
+        items=items,
+        skills=skills,
         config=config
     )
 

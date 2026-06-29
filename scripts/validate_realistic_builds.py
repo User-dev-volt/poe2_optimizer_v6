@@ -90,37 +90,8 @@ def load_build_from_xml_file(xml_path: Path) -> tuple[BuildData, Dict[str, Any]]
                 except ValueError:
                     pass
 
-    # Extract config section for enemy settings
-    config_section = pob_root.get("Config", {})
-    config_set = config_section.get("ConfigSet", {}) if isinstance(config_section, dict) else {}
-
-    config = {"input": {}, "placeholder": {}}
-
-    # Extract Input elements
-    inputs = config_set.get("Input", [])
-    if isinstance(inputs, dict):
-        inputs = [inputs]
-    for inp in inputs:
-        if isinstance(inp, dict):
-            name = inp.get("@name")
-            if name:
-                if "@number" in inp:
-                    config["input"][name] = float(inp["@number"])
-                elif "@boolean" in inp:
-                    config["input"][name] = inp["@boolean"].lower() == "true"
-                elif "@string" in inp:
-                    config["input"][name] = inp["@string"]
-
-    # Extract Placeholder elements
-    placeholders = config_set.get("Placeholder", [])
-    if isinstance(placeholders, dict):
-        placeholders = [placeholders]
-    for ph in placeholders:
-        if isinstance(ph, dict):
-            name = ph.get("@name")
-            if name:
-                if "@number" in ph:
-                    config["placeholder"][name] = float(ph["@number"])
+    # Extract config via the production parser (handles multi-<ConfigSet> XML + @boolean inputs).
+    config = pob_parser._extract_config(pob_root)
 
     # Extract items and skills using parser functions (Story 2.9)
     items = pob_parser._extract_items(pob_root)

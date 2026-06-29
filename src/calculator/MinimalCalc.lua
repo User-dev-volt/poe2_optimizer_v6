@@ -331,7 +331,13 @@ data.misc = {
     DotDpsCap = 1000000000,  -- Required by CalcOffence.lua:5744 (DoT DPS cap at 1 billion for display purposes)
     -- EHP calculation constants (required by CalcDefence.lua:3020-3022)
     ehpCalcMaxDamage = 100000,  -- Maximum damage for EHP calculation iterations
-    ehpCalcMaxIterationsToCalc = 1000  -- Maximum iterations for EHP calculation
+    ehpCalcMaxIterationsToCalc = 1000,  -- Maximum iterations for EHP calculation
+    -- Keys referenced by CalcDefence.lua EHP/Impale paths but previously missing from
+    -- this stub, causing 'arithmetic on nil' crashes (e.g. lich_frost_mage_90 at
+    -- CalcDefence.lua:3072). Values mirror external/pob-engine/src/Modules/Data.lua.
+    ehpCalcSpeedUp = 8,  -- Data.lua:234 - EHP recursion acceleration multiplier (CalcDefence.lua:3067)
+    maxHitSmoothingPasses = 8,  -- Data.lua:240 - max-hit smoothing passes (CalcDefence.lua:3634)
+    ImpaleStoredDamageBase = 0.1  -- Data.lua:208 - impale stored damage fraction (CalcDefence.lua:2313)
 }
 
 -- Monster stat tables (required for enemy accuracy and evasion)
@@ -969,7 +975,13 @@ function Calculate(buildData)
                     group = treeNode.group,
                     orbit = treeNode.orbit,
                     orbitIndex = treeNode.orbitIndex,
-                    allocMode = "NORMAL",  -- Required by CalcSetup.lua:208
+                    -- allocMode MUST be the number 0 (not "NORMAL"). PoB CalcSetup.lua:205-214
+                    -- treats any non-zero allocMode as a weapon-set restriction and tags every
+                    -- node mod with a Condition "WeaponSet"..allocMode (e.g. "WeaponSetNORMAL"),
+                    -- which is never active, so ALL passive-tree mods get filtered out of the
+                    -- calc (passive allocation had zero effect on DPS/Life). 0 = allocated in
+                    -- all weapon sets (no condition added).
+                    allocMode = 0,
                 }
                 -- Story 2.9: Parse node stats into mods and populate modList
                 local modsFromNode = parseNodeStats(nodeObj, treeNode)

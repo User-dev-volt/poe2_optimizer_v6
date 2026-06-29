@@ -49,8 +49,22 @@ def load_results(results_dir: Path) -> List[Dict[str, Any]]:
     return results
 
 
+# TEMPORARY measurability threshold (Option 1). A build whose baseline DPS the
+# engine cannot compute (minion / warcry / non-damaging main skill) reports
+# baseline_dps ~ 0; such builds are marked N/A rather than counted as 0%
+# improvement, so they don't distort the optimizer metric. The intended finished
+# product supports ALL build types -- remove this split once minion/warcry/
+# main-skill calc support lands (tracked calc-coverage gap).
+MEASURABLE_DPS_THRESHOLD = 1.0
+
+
 def analyze_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Analyze results and calculate summary statistics."""
+    """Analyze results and calculate summary statistics.
+
+    Headline metrics (median/mean improvement, success rate) are computed over
+    MEASURABLE builds only (baseline_dps >= MEASURABLE_DPS_THRESHOLD). Degenerate
+    builds are reported separately as N/A (calc-coverage gap, support pending).
+    """
 
     if not results:
         return {
@@ -64,11 +78,21 @@ def analyze_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     successful = [r for r in results if r["status"] == "success"]
     errors = [r for r in results if r["status"] == "error"]
 
+    # Option 1 (temporary): split successful builds into MEASURABLE (real baseline
+    # DPS) and DEGENERATE (baseline_dps ~ 0 because the engine can't yet compute
+    # minion/warcry/non-damaging-main DPS). Degenerate builds are reported N/A, not
+    # 0%, so they don't drag the optimizer metric down. See MEASURABLE_DPS_THRESHOLD.
+    measurable = [r for r in successful if r.get("baseline_dps", 0) >= MEASURABLE_DPS_THRESHOLD]
+    degenerate = [r for r in successful if r.get("baseline_dps", 0) < MEASURABLE_DPS_THRESHOLD]
+
     # Calculate statistics for successful builds
     summary = {
         "total_builds": len(results),
         "successful": len(successful),
         "errors": len(errors),
+        "measurable": len(measurable),
+        "degenerate_na": len(degenerate),
+        "degenerate_builds": [r["build_name"] for r in degenerate],
         "success_rate_pct": 0,
         "median_improvement_pct": 0,
         "mean_improvement_pct": 0,
@@ -92,31 +116,30 @@ def analyze_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         }
     }
 
-    if not successful:
+    if not measurable:
         return summary
 
-    # DPS improvements
-    improvements = [r["improvement_pct"] for r in successful]
-    dps_improvements = [r for r in successful if r["improvement_pct"] > 0]
-    life_improvements = [r for r in successful if r["life_change"] > 0]
-    mana_improvements = [r for r in successful if r["mana_change"] > 0]
+    # Headline DPS metrics are computed over MEASURABLE builds only.
+    improvements = [r["improvement_pct"] for r in measurable]
+    dps_improvements = [r for r in measurable if r["improvement_pct"] > 0]
+    life_improvements = [r for r in measurable if r["life_change"] > 0]
+    mana_improvements = [r for r in measurable if r["mana_change"] > 0]
 
-    # Time statistics
+    # Time / budget statistics span ALL successful builds: degenerate builds were
+    # still optimized, so their completion time and budget use are valid signals.
     times = [r["time_seconds"] for r in successful]
-
-    # Node statistics
-    nodes_added = [r["nodes_added"] for r in successful]
-
-    # Budget violations (should be 0)
     budget_violations = len([r for r in successful if r["unallocated_used"] > 20])
 
-    # DPS/Life/Mana gains
-    total_dps_gain = sum(r["optimized_dps"] - r["baseline_dps"] for r in successful)
-    total_life_gain = sum(r["life_change"] for r in successful)
-    total_mana_gain = sum(r["mana_change"] for r in successful)
+    # Node statistics (measurable builds)
+    nodes_added = [r["nodes_added"] for r in measurable]
 
-    # Populate summary
-    summary["success_rate_pct"] = (len(dps_improvements) / len(successful) * 100) if successful else 0
+    # DPS/Life/Mana gains (measurable builds)
+    total_dps_gain = sum(r["optimized_dps"] - r["baseline_dps"] for r in measurable)
+    total_life_gain = sum(r["life_change"] for r in measurable)
+    total_mana_gain = sum(r["mana_change"] for r in measurable)
+
+    # Populate summary (median/mean/success-rate over MEASURABLE builds)
+    summary["success_rate_pct"] = (len(dps_improvements) / len(measurable) * 100) if measurable else 0
     summary["median_improvement_pct"] = median(improvements) if improvements else 0
     summary["mean_improvement_pct"] = mean(improvements) if improvements else 0
     summary["max_time_seconds"] = max(times) if times else 0
@@ -163,12 +186,20 @@ def print_report(summary: Dict[str, Any], results: List[Dict[str, Any]]):
     print(f"Total Builds: {summary['total_builds']}")
     print(f"Successful: {summary['successful']}")
     print(f"Errors: {summary['errors']}")
+    print(f"Measurable (real baseline DPS): {summary.get('measurable', summary['successful'])}")
+    _na = summary.get('degenerate_na', 0)
+    if _na:
+        print(f"N/A - calc gap, support PENDING (minion/warcry/non-damaging main): {_na}")
+        for _nm in summary.get('degenerate_builds', []):
+            print(f"    - {_nm}  [excluded from median until calc support lands]")
 
     if summary['successful'] > 0:
         print("\n" + "="*60)
         print("OPTIMIZATION STATISTICS")
         print("="*60)
-        print(f"Success Rate: {summary['success_rate_pct']:.1f}% ({summary['builds_with_dps_improvement']}/{summary['successful']} builds improved)")
+        _meas = summary.get('measurable', summary['successful'])
+        print(f"(headline stats below are over MEASURABLE builds only)")
+        print(f"Success Rate: {summary['success_rate_pct']:.1f}% ({summary['builds_with_dps_improvement']}/{_meas} measurable builds improved)")
         print(f"Median Improvement: {summary['median_improvement_pct']:.2f}%")
         print(f"Mean Improvement: {summary['mean_improvement_pct']:.2f}%")
         print(f"\nNodes Allocated:")
@@ -189,19 +220,19 @@ def print_report(summary: Dict[str, Any], results: List[Dict[str, Any]]):
 
     criteria = summary['task6_criteria']
 
-    def status_icon(passed): return "✅" if passed else "❌"
+    def status_icon(passed): return "[PASS]" if passed else "[FAIL]"
 
-    print(f"{status_icon(criteria['success_rate_70'])} Success rate >= 70%: {summary['success_rate_pct']:.1f}%")
-    print(f"{status_icon(criteria['median_improvement_5'])} Median improvement >= 5%: {summary['median_improvement_pct']:.2f}%")
+    print(f"{status_icon(criteria['success_rate_70'])} Success rate >= 70%: {summary['success_rate_pct']:.1f}% (measurable builds)")
+    print(f"{status_icon(criteria['median_improvement_5'])} Median improvement >= 5%: {summary['median_improvement_pct']:.2f}% (measurable builds)")
     print(f"{status_icon(criteria['all_under_5min'])} All completions < 5 minutes: {summary['max_time_seconds']:.1f}s")
     print(f"{status_icon(criteria['zero_budget_violations'])} Zero budget violations: {summary['budget_violations']}")
 
     print("\n" + "="*60)
     if criteria['overall_pass']:
-        print("✅ EPIC 2 VALIDATION: PASSED")
+        print("[PASS] EPIC 2 VALIDATION: PASSED")
         print("All acceptance criteria met!")
     else:
-        print("❌ EPIC 2 VALIDATION: FAILED")
+        print("[FAIL] EPIC 2 VALIDATION: FAILED")
         print("Some acceptance criteria not met (see above)")
     print("="*60 + "\n")
 
