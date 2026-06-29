@@ -228,3 +228,76 @@ def calculate_build_stats(build: BuildData) -> BuildStats:
         # Wrap unexpected errors in CalculationError
         logger.error("Unexpected error during calculation: %s", e, exc_info=True)
         raise CalculationError(f"Unexpected calculation error: {e}") from e
+
+
+# Baseline DPS at/below which the engine is effectively reporting a non-damaging
+# "main" skill -- an aura/utility/meta gem (e.g. Blood Mage "Life Remnants") or
+# the unarmed default-attack fallback. Mirrors the corpus measurability threshold
+# in scripts/aggregate_epic2_results.py and tests/integration/test_epic2_validation.py.
+_MEASURABLE_DPS_THRESHOLD = 1.0
+
+
+def resolve_main_socket_group(build: BuildData) -> int:
+    """Select the highest-DPS socket group as the build's main skill.
+
+    PoB stores a ``mainSocketGroup`` index, but for many builds it points at a
+    non-damaging aura/utility/meta skill (Blood Mage "Life Remnants", an aura, a
+    curse) or is misaligned after the parser drops label-only / disabled groups.
+    When the configured group computes ~0 DPS, the optimizer would otherwise be
+    maximizing a dead metric. This one-time pre-pass calculates DPS for each
+    candidate socket group and selects the strongest damage source -- the same
+    decision a PoB user makes with the main-skill dropdown.
+
+    Behavior:
+      * No-op when the build has fewer than 2 skills, or when the configured
+        group already yields measurable DPS (>= ``_MEASURABLE_DPS_THRESHOLD``):
+        the file's explicit choice is respected.
+      * Otherwise sweeps ``main_socket_group`` over ``1..len(skills)`` and keeps
+        the argmax-DPS index. If nothing beats the original (a genuinely
+        no-damage build), the original is left untouched.
+
+    Call this ONCE before optimization: it costs up to N in-process calculations,
+    after which the resolved index is held fixed for every neighbor (``apply``
+    preserves it via ``dataclasses.replace``). Mutates ``build.main_socket_group``
+    in place and returns the resolved value.
+    """
+    n = len(build.skills)
+    if n < 2:
+        return build.main_socket_group
+
+    original = build.main_socket_group
+
+    def _dps_for(idx: int) -> float:
+        build.main_socket_group = idx
+        try:
+            return calculate_build_stats(build).total_dps
+        except Exception as exc:  # a bad group must never abort resolution
+            logger.debug("Main-skill probe: socket group %d failed: %s", idx, exc)
+            return 0.0
+
+    current_dps = _dps_for(original)
+    if current_dps >= _MEASURABLE_DPS_THRESHOLD:
+        build.main_socket_group = original  # already damaging; respect the file
+        return original
+
+    best_idx, best_dps = original, current_dps
+    for idx in range(1, n + 1):
+        if idx == original:
+            continue
+        dps = _dps_for(idx)
+        if dps > best_dps:
+            best_idx, best_dps = idx, dps
+
+    build.main_socket_group = best_idx
+    if best_idx != original:
+        logger.info(
+            "Resolved main socket group for '%s': %d -> %d (DPS %.2f -> %.2f)",
+            build.build_name or "?", original, best_idx, current_dps, best_dps,
+        )
+    else:
+        logger.debug(
+            "Main-skill resolver: no damaging socket group found for '%s' "
+            "(best DPS %.2f); leaving main_socket_group=%d",
+            build.build_name or "?", best_dps, original,
+        )
+    return best_idx

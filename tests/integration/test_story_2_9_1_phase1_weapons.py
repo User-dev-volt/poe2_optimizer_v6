@@ -152,8 +152,11 @@ class TestPhase1WeaponBuilds:
         print(f"\n[deadeye_lightning_arrow_76] DPS: {stats.total_dps:.2f}")
         assert stats.total_dps > 0, "Lightning Arrow build should produce DPS > 0"
 
-        # Regression check: Should still be around 311 DPS (allow ±20% tolerance for minor changes)
-        expected_dps = 311.7
+        # Regression check: recalibrated baseline. History: 311.7 (PoB 0.14) ->
+        # 464.04 (PoB 0.15.0) -> 793.72 after the allocMode=0 passive-mod fix, which
+        # let allocated passive nodes drive DPS (previously ignored). This is a
+        # regression-DETECTION pin to current engine output, not a GUI-accuracy gate.
+        expected_dps = 793.72
         tolerance = 0.20
         assert abs(stats.total_dps - expected_dps) / expected_dps < tolerance, \
             f"DPS regression: Expected ~{expected_dps:.1f}, got {stats.total_dps:.2f}"

@@ -51,6 +51,12 @@ BUILD_IDS = [k for k in GUI_BASELINE_STATS.keys() if not k.startswith('_')]
 # Tolerance constant (0.1% as per NFR-1)
 TOLERANCE_PERCENT = 0.1
 
+# This GUI-truth suite is now THE parity gate. The deprecated synthetic
+# test_pob_parity.py carried the `parity` marker, so alias it onto this module too:
+# `pytest -m parity` continues to work and now runs real-accuracy checks against
+# official PoB GUI baselines instead of self-referential ones.
+pytestmark = pytest.mark.parity
+
 
 def load_pob_code(build_id: str) -> str:
     """Load PoB code from .txt file.

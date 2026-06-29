@@ -38,8 +38,8 @@ def create_valid_pob_code(
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <PathOfBuilding>
   <Build className="{class_name}" level="{level}" buildName="Test Build"/>
-  <Tree activeSpec="{tree_version}">
-    <Spec nodes="{passive_nodes}"/>
+  <Tree activeSpec="1">
+    <Spec treeVersion="{tree_version}" nodes="{passive_nodes}"/>
   </Tree>
   <Items/>
   <Skills/>

@@ -136,7 +136,7 @@ class TestNeighborGeneration:
         assert isinstance(neighbors, list)
         assert len(neighbors) == 0
 
-    @patch('optimizer.hill_climbing._generate_neighbors_placeholder')
+    @patch('optimizer.hill_climbing.generate_neighbors')
     @patch('optimizer.hill_climbing.calculate_build_stats')
     def test_optimize_build_calls_neighbor_generator(
         self,
@@ -164,11 +164,11 @@ class TestNeighborGeneration:
         # Assert - neighbor generator called
         assert mock_generate_neighbors.call_count >= 1
 
-        # Assert - called with current build and budget info
+        # Assert - called with current build, passive tree, and budget state
+        # Real signature: generate_neighbors(build, tree, budget, prioritize_adds=True)
         call_args = mock_generate_neighbors.call_args
-        assert isinstance(call_args[0][0], BuildData)
-        assert isinstance(call_args[0][1], (int, float))  # unallocated_remaining
-        assert isinstance(call_args[0][2], (int, float))  # respec_remaining
+        assert isinstance(call_args[0][0], BuildData)               # current build
+        assert call_args[0][2].__class__.__name__ == "BudgetState"  # budget state
 
 
 class TestNeighborEvaluation:
@@ -338,8 +338,15 @@ class TestBestNeighborSelection:
             )
         ]
 
+        # Mutations aligned to evaluations (real signature: evaluations, mutations, metric)
+        mutations = [
+            Mock(nodes_added={4}, nodes_removed=set()),
+            Mock(nodes_added={5}, nodes_removed=set()),
+            Mock(nodes_added={6}, nodes_removed=set()),
+        ]
+
         # Act
-        best = _select_best_neighbor(evaluations, "dps")
+        best = _select_best_neighbor(evaluations, mutations, "dps")
 
         # Assert
         assert best is not None
@@ -349,7 +356,7 @@ class TestBestNeighborSelection:
     def test_select_best_neighbor_no_evaluations_returns_none(self):
         """Verify _select_best_neighbor() returns None for empty evaluations"""
         # Act
-        best = _select_best_neighbor([], "dps")
+        best = _select_best_neighbor([], [], "dps")
 
         # Assert
         assert best is None
@@ -374,7 +381,7 @@ class TestBestNeighborSelection:
 class TestConvergence:
     """Test suite for AC-2.1.5: Algorithm repeats until convergence"""
 
-    @patch('optimizer.hill_climbing._generate_neighbors_placeholder')
+    @patch('optimizer.hill_climbing.generate_neighbors')
     @patch('optimizer.hill_climbing.calculate_build_stats')
     def test_optimize_build_converges_no_neighbors(
         self,

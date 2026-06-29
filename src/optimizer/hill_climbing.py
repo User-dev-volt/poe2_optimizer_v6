@@ -33,7 +33,7 @@ from src.models.optimization_config import (
     OptimizationConfiguration,
     OptimizationResult
 )
-from src.calculator.build_calculator import calculate_build_stats
+from src.calculator.build_calculator import calculate_build_stats, resolve_main_socket_group
 from src.calculator.passive_tree import get_passive_tree
 from src.optimizer.convergence import ConvergenceDetector
 from src.optimizer.progress import ProgressTracker
@@ -96,6 +96,17 @@ def optimize_build(config: OptimizationConfiguration) -> OptimizationResult:
     )
 
     start_time = time.time()
+
+    # ========================================
+    # Story 2.9.2: Resolve main skill before baselining (DPS-driven metrics)
+    # ========================================
+    # Several builds name a non-damaging aura/utility group as "main" (e.g. Blood
+    # Mage "Life Remnants"), or the index is misaligned after the parser drops
+    # label-only/disabled groups -- which makes the DPS metric dead (baseline ~0)
+    # and the build N/A in the corpus. Pick the highest-DPS socket group ONCE, up
+    # front; dataclasses.replace in TreeMutation.apply holds it fixed per neighbor.
+    if config.metric in ("dps", "balanced"):
+        resolve_main_socket_group(config.build)
 
     # ========================================
     # Task 1.4: Calculate baseline stats (AC #1)
@@ -222,9 +233,15 @@ def optimize_build(config: OptimizationConfiguration) -> OptimizationResult:
             if nodes_added and nodes_removed:
                 swaps_count += 1
 
-            # Update budget
-            unallocated_remaining -= len(nodes_added)
-            respec_remaining -= len(nodes_removed) if respec_remaining != float('inf') else 0
+            # Update budget (dual-budget model, matching neighbor_generator's
+            # can_add/can_swap gating): a swap reuses the slot freed by the node it
+            # removes, so only NET-new allocations (adds beyond removes) draw from the
+            # unallocated pool; each removal draws a respec point. Charging every add
+            # to unallocated double-counted swaps and drove unallocated_remaining
+            # negative once the free pool was exhausted (used > available crash).
+            unallocated_remaining -= max(0, len(nodes_added) - len(nodes_removed))
+            if respec_remaining != float('inf'):
+                respec_remaining -= len(nodes_removed)
 
             # Update current state
             current_build = improved_build

@@ -36,7 +36,7 @@ def load_build_from_xml(xml_path: str) -> BuildData:
         ascendancy=None,
         passive_nodes=_extract_passive_nodes(pob_section),
         skills=_extract_skills(pob_section),
-        items=_extract_items(pob_data),
+        items=_extract_items(pob_section),
         config=_extract_config(pob_section),
     )
 

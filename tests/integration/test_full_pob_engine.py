@@ -128,11 +128,24 @@ class TestAC292PassiveTreeStats:
 
         stats_20pct = engine.get_stats()
 
-        # Stats should generally decrease with fewer nodes
-        # (EHP is a good proxy for overall build power)
-        assert stats_20pct.effective_hp <= stats_10pct.effective_hp or \
-               stats_20pct.life <= stats_10pct.life, \
-            "Stats should generally decrease as more nodes are removed"
+        # Removing allocated nodes must measurably weaken the build SOMEWHERE. We
+        # cannot assume WHICH stat drops -- the first 20% of nodes (in set order)
+        # may be damage, life, or utility -- so the old life/EHP-only check was a
+        # flaky proxy. Require at least one core stat to fall vs the initial
+        # allocation. This is the anti-no-op guard: before the allocMode=0 fix,
+        # passive nodes were ignored and nothing changed at all.
+        assert (
+            stats_20pct.effective_hp < stats_initial.effective_hp or
+            stats_20pct.life < stats_initial.life or
+            stats_20pct.total_dps < stats_initial.total_dps or
+            stats_20pct.mana < stats_initial.mana
+        ), (
+            "Removing 20% of allocated passive nodes should weaken at least one core "
+            f"stat. initial=(life={stats_initial.life}, ehp={stats_initial.effective_hp:.0f}, "
+            f"dps={stats_initial.total_dps:.1f}, mana={stats_initial.mana}) -> "
+            f"20%-removed=(life={stats_20pct.life}, ehp={stats_20pct.effective_hp:.0f}, "
+            f"dps={stats_20pct.total_dps:.1f}, mana={stats_20pct.mana})"
+        )
 
 
 class TestAC293ItemsAndSkills:

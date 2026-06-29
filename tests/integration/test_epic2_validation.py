@@ -22,6 +22,7 @@ Task: 6 - Validate Epic 2 Success Criteria
 import pytest
 import json
 import time
+from statistics import median
 from pathlib import Path
 from typing import Set
 
@@ -37,6 +38,16 @@ CORPUS_DIR = Path("tests/fixtures/realistic_builds")
 RESULTS_DIR = Path("docs/validation")
 OPTIMIZATION_BUDGET = 20  # unallocated points per build
 MAX_TIME_SECONDS = 300  # 5 minutes per build (Task 6 AC)
+
+# --- Aggregate gate thresholds (Task 6 AC) --------------------------------
+# Ported verbatim from scripts/aggregate_epic2_results.py so the in-suite gate
+# and the standalone report agree. A build whose baseline DPS the engine cannot
+# compute (minion / warcry / non-damaging main skill) reports baseline_dps ~ 0;
+# such builds are MEASURABLE-excluded (reported N/A) rather than counted as 0%
+# improvement, so they do not distort the optimizer metric.
+MEASURABLE_DPS_THRESHOLD = 1.0    # baseline_dps >= this  => measurable build
+MEDIAN_IMPROVEMENT_TARGET = 5.0   # Task 6 AC: median improvement >= 5%
+SUCCESS_RATE_TARGET = 70.0        # Task 6 AC: >= 70% of measurable builds improve
 
 
 def load_build_from_xml(xml_path: Path) -> BuildData:
@@ -242,3 +253,92 @@ def test_epic2_optimize_build(build_path: Path, results_collector: Path):
     result_file = results_collector / f"{build_path.stem}.json"
     with open(result_file, 'w') as f:
         json.dump(result, f, indent=2)
+
+
+def test_epic2_aggregate_success_criteria(results_collector: Path):
+    """SESSION-FINAL aggregate gate over the whole corpus (Task 6 AC).
+
+    Runs AFTER every parametrized ``test_epic2_optimize_build`` because it is
+    defined last in this file and, under the supported invocations (``-n 1`` per
+    CLAUDE.md, or ``-n auto --dist=loadfile`` per this module's docstring), the
+    ENTIRE file executes on a single worker in definition order. It therefore
+    shares the same session-scoped ``results_collector`` directory the per-build
+    tests wrote their JSON into.
+
+    This ADDS to (does not replace) the per-build budget/time asserts, which
+    still fail their own build immediately. It exists to catch the failure mode
+    where every per-build test passes (budget + time OK) yet the optimizer found
+    ~0% improvement -- the exact way Epic 2 once "passed" at 0% median.
+
+    Metric definition is ported verbatim from scripts/aggregate_epic2_results.py:
+      - successful = status == "success"
+      - measurable = successful AND baseline_dps >= MEASURABLE_DPS_THRESHOLD
+      - median improvement and success rate are taken over MEASURABLE builds only
+    """
+    expected = len(get_all_builds())
+    result_files = sorted(results_collector.glob("*.json"))
+    found = len(result_files)
+
+    # --- Degrade safely on incomplete data --------------------------------
+    if found == 0:
+        pytest.skip(
+            "No per-build result files found -- the parametrized corpus tests "
+            "did not run in this process. Run the full file with `-n 1` "
+            "(CLAUDE.md) or `-n auto --dist=loadfile` so this gate can evaluate."
+        )
+    if found < expected:
+        pytest.skip(
+            f"Partial corpus: {found}/{expected} per-build results present. "
+            f"This occurs on a deselected subset (-k), when a build errored or "
+            f"violated budget/time (no JSON is written and that build's own test "
+            f"is already failing), or under `--dist=load`, which fragments "
+            f"results across workers. The corpus-wide median is only meaningful "
+            f"over a complete run; use `-n 1` or `--dist=loadfile`."
+        )
+
+    # --- Load results (same loader contract as aggregate_epic2_results.py) -
+    results = []
+    for rf in result_files:
+        with open(rf) as f:
+            results.append(json.load(f))
+
+    successful = [r for r in results if r.get("status") == "success"]
+    measurable = [r for r in successful
+                  if r.get("baseline_dps", 0) >= MEASURABLE_DPS_THRESHOLD]
+    degenerate = [r["build_name"] for r in successful
+                  if r.get("baseline_dps", 0) < MEASURABLE_DPS_THRESHOLD]
+
+    assert measurable, (
+        f"No MEASURABLE builds in corpus (all {len(successful)} successful builds "
+        f"have baseline_dps < {MEASURABLE_DPS_THRESHOLD}). The optimizer metric "
+        f"cannot be evaluated -- this is itself a regression."
+    )
+
+    improvements = [r.get("improvement_pct", 0.0) for r in measurable]
+    median_improvement = median(improvements)
+    improved = [i for i in improvements if i > 0]
+    success_rate = len(improved) / len(measurable) * 100.0
+
+    # Visible breadcrumb in -v / -s output.
+    print(
+        f"\n[Epic2 aggregate] builds={found} successful={len(successful)} "
+        f"measurable={len(measurable)} degenerate_na={len(degenerate)} "
+        f"median_improvement={median_improvement:.2f}% "
+        f"success_rate={success_rate:.1f}%"
+    )
+    if degenerate:
+        print(f"[Epic2 aggregate] N/A (calc-coverage gap): {', '.join(degenerate)}")
+
+    # --- Task 6 aggregate ACs (this is the gate) --------------------------
+    assert median_improvement >= MEDIAN_IMPROVEMENT_TARGET, (
+        f"Epic 2 regression: median improvement {median_improvement:.2f}% < "
+        f"{MEDIAN_IMPROVEMENT_TARGET}% over {len(measurable)} measurable builds. "
+        f"The optimizer stopped meaningfully improving builds even though "
+        f"per-build budget/time checks passed. Per-build improvements: "
+        f"{sorted(round(i, 2) for i in improvements)}"
+    )
+    assert success_rate >= SUCCESS_RATE_TARGET, (
+        f"Epic 2 regression: only {success_rate:.1f}% of {len(measurable)} "
+        f"measurable builds improved (< {SUCCESS_RATE_TARGET}% target). "
+        f"{len(improved)} improved, {len(measurable) - len(improved)} did not."
+    )

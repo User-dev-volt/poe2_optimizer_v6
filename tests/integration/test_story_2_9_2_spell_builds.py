@@ -45,7 +45,10 @@ BUILD_CONFIGS = [
     ("warrior_ballista_93.xml", 1, "Siege Ballista", "totem_attack", True),  # DPS: 66.52 (totem attack working!)
 
     # === WARCRY BUILD ===
-    ("titan_infernal_cry_72.xml", 1, "Supercharged Slam", "weapon_attack", False),  # Weapon attack - produces DPS=0 (weapon/build issue)
+    # activeSkillSet fix: the parser now reads the active 8-skill set (id=10) instead
+    # of the SkillSet[0] leveling stub, so group 1 is the real main (Mace Strike,
+    # DPS=78.54), not the stub's "Supercharged Slam" (which computed 0).
+    ("titan_infernal_cry_72.xml", 1, "Mace Strike", "weapon_attack", True),
 ]
 
 

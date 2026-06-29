@@ -466,10 +466,25 @@ def _extract_skills(pob_root: dict) -> List[Skill]:
     if not isinstance(skills_section, dict):
         return skills
 
-    # Handle SkillSet wrapper (PoE 2 format)
+    # Handle SkillSet wrapper (PoE 2 format). A build can carry many SkillSets
+    # (leveling stubs, gear swaps); <Skills activeSkillSet="N"> names the one in
+    # use by its @id. Ids are non-contiguous (a build may have ids 1-7,9,10 with no
+    # 8), so match by @id, NOT list position. Always defaulting to the first set
+    # parses a leveling stub for some builds (e.g. titan_infernal_cry: a 3-skill
+    # stub instead of the real 8-skill set), whose skills then compute 0 DPS -> N/A.
     skill_set = skills_section.get("SkillSet", {})
     if isinstance(skill_set, list):
-        skill_set = skill_set[0] if skill_set else {}
+        active_id = skills_section.get("@activeSkillSet")
+        chosen = None
+        if active_id is not None:
+            chosen = next(
+                (s for s in skill_set
+                 if isinstance(s, dict) and str(s.get("@id")) == str(active_id)),
+                None,
+            )
+        if chosen is None:  # no/unknown activeSkillSet -> first set (prior behavior)
+            chosen = next((s for s in skill_set if isinstance(s, dict)), {})
+        skill_set = chosen
     elif not isinstance(skill_set, dict):
         skill_set = {}
 
