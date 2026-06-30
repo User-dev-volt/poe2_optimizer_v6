@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoE2 Build Optimizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>PoE2 Build Optimizer</h1>
+            <p class="subtitle">Paste a Path of Building code, set a budget, and discover a stronger passive tree.</p>
+        </header>
+
+        <!-- ============================ INPUT ============================ -->
+        <section class="card" id="input-card">
+            <div class="field">
+                <div class="field-header">
+                    <label for="pob-code">Path of Building code</label>
+                    <button type="button" class="btn btn-ghost btn-sm" id="clear-btn">Clear</button>
+                </div>
+                <textarea
+                    id="pob-code"
+                    class="code-input"
+                    spellcheck="false"
+                    autocomplete="off"
+                    placeholder="Paste your Path of Building code here..."></textarea>
+                <div class="field-foot">
+                    <span class="char-count" id="char-count">0 / 100,000 characters</span>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="unallocated-points">Unallocated points</label>
+                    <input type="number" id="unallocated-points" class="num-input"
+                           min="0" step="1" value="10" inputmode="numeric">
+                    <span class="field-hint">Free passive points to spend.</span>
+                </div>
+                <div class="field">
+                    <label for="respec-points">Respec points</label>
+                    <input type="number" id="respec-points" class="num-input"
+                           min="0" step="1" placeholder="unlimited" inputmode="numeric">
+                    <span class="field-hint">Points for removing nodes. Blank = unlimited.</span>
+                </div>
+                <div class="field">
+                    <label for="metric">Optimization goal</label>
+                    <select id="metric" class="select-input">
+                        <option value="dps" selected>Maximize DPS</option>
+                        <option value="ehp">Maximize EHP</option>
+                        <option value="balanced">Balanced</option>
+                    </select>
+                    <span class="field-hint">What the optimizer maximizes.</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="btn btn-primary" id="optimize-btn">Optimize</button>
+            </div>
+        </section>
+
+        <!-- ===================== MESSAGE (error/info) ==================== -->
+        <section class="message-box hidden" id="message-box" role="alert" aria-live="polite">
+            <h3 class="message-title" id="message-title"></h3>
+            <p class="message-body" id="message-body"></p>
+        </section>
+
+        <!-- ========================== PROGRESS ========================== -->
+        <section class="card hidden" id="progress-section" aria-live="polite">
+            <h2 class="section-title">Optimizing&hellip;</h2>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar">0%</div>
+            </div>
+            <p class="status-text" id="status-text">Starting&hellip;</p>
+            <div class="event-log" id="event-log" aria-label="Optimization event log"></div>
+        </section>
+
+        <!-- =========================== RESULTS ========================== -->
+        <section class="card hidden" id="results-section">
+            <h2 class="section-title">Results</h2>
+
+            <div class="headline">
+                <span class="headline-label">Improvement</span>
+                <span class="headline-value" id="improvement-headline">&mdash;</span>
+            </div>
+            <p class="results-summary" id="results-summary"></p>
+
+            <div class="table-wrap">
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th class="col-stat">Stat</th>
+                            <th class="col-num">Before</th>
+                            <th class="col-num">After</th>
+                            <th class="col-num">Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody"></tbody>
+                </table>
+            </div>
+
+            <p class="accuracy-legend">
+                <span class="badge-estimate">estimate &mdash; not PoB-accurate</span>
+                stats are produced by the fast in-process calculator and should be treated as rough
+                directional estimates. Improvement %, node counts, budget used, and Life are reliable.
+            </p>
+
+            <div class="actions">
+                <button type="button" class="btn btn-primary hidden" id="export-btn">Export Optimized Build</button>
+                <span class="export-note hidden" id="export-note"></span>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/sse_client.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</body>
+</html>

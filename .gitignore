@@ -1,1 +1,6 @@
 epic2_validation_output.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo

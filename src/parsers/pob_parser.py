@@ -7,9 +7,9 @@ Reference: tech-spec-epic-1.md:272-313, workflow at lines 390-426
 import base64
 import logging
 import zlib
-from typing import Set, List, Optional
+from typing import Set, List, Optional, Iterable
 
-from .xml_utils import parse_xml
+from .xml_utils import parse_xml, build_xml
 from .exceptions import PoBParseError, InvalidFormatError, UnsupportedVersionError
 from ..models.build_data import BuildData, CharacterClass, Item, Skill
 
@@ -151,6 +151,113 @@ def parse_pob_code(code: str) -> BuildData:
         raise
     except Exception as e:
         raise PoBParseError(f"Failed to extract build data: {e}") from e
+
+
+def encode_pob_code(original_code: str, optimized_nodes: Iterable[int]) -> str:
+    """Encode an optimized passive tree back into a PoB import code.
+
+    Uses a ROUND-TRIP-AND-PATCH strategy (NOT a rebuild-from-BuildData): the
+    original code is decoded with the exact same codec as ``parse_pob_code``
+    (Base64 -> zlib -> XML dict), then ONLY the active passive tree's
+    ``Spec @nodes`` attribute is replaced with the comma-joined, numerically
+    sorted ``optimized_nodes``. Every other section (character class, level,
+    items, skills, config, notes, tree version, ...) is preserved byte-for-byte
+    in structure, so the resulting code differs from the original solely in the
+    allocated passive nodes.
+
+    The codec mirrors ``parse_pob_code`` exactly and inverts it:
+    ``base64.b64decode`` -> ``zlib.decompress`` becomes
+    ``zlib.compress(level=9)`` -> ``base64.b64encode`` (STANDARD base64, never
+    urlsafe, because ``parse_pob_code`` would silently drop ``-``/``_`` chars).
+    No header bytes or whitespace are added or stripped, matching the decode
+    path which feeds the raw string straight to ``base64.b64decode``.
+
+    Args:
+        original_code: The original Base64 PoB import code to patch.
+        optimized_nodes: Iterable of allocated passive node IDs to write into
+            the active tree spec. Order does not matter; the IDs are sorted
+            numerically before being joined.
+
+    Returns:
+        A standard Base64 PoB import code identical to ``original_code`` except
+        for the active tree spec's allocated nodes.
+
+    Raises:
+        InvalidFormatError: If ``original_code`` cannot be decoded/parsed or is
+            missing the passive tree structure, or if re-serialization fails.
+    """
+    # Step 1: Decode exactly as parse_pob_code does (no header/whitespace handling).
+    try:
+        compressed_data = base64.b64decode(original_code)
+    except Exception as e:
+        raise InvalidFormatError(
+            f"Invalid Base64 encoding. The original PoB code appears to be corrupted. "
+            f"Cause: {e}"
+        ) from e
+
+    try:
+        xml_str = zlib.decompress(compressed_data).decode('utf-8')
+    except Exception as e:
+        raise InvalidFormatError(
+            f"Failed to decompress (corrupted data). The original PoB code may be "
+            f"incomplete or damaged. Cause: {e}"
+        ) from e
+
+    try:
+        data = parse_xml(xml_str)
+    except InvalidFormatError:
+        raise
+    except Exception as e:
+        raise InvalidFormatError(f"Unable to parse XML structure: {e}") from e
+
+    # Step 2: Locate the PathOfBuilding(2) root and its Tree section.
+    pob_root = data.get("PathOfBuilding2") or data.get("PathOfBuilding")
+    if not pob_root:
+        raise InvalidFormatError(
+            "Missing PathOfBuilding or PathOfBuilding2 root element in XML"
+        )
+
+    tree_section = pob_root.get("Tree")
+    if not isinstance(tree_section, dict):
+        raise InvalidFormatError("Missing or malformed Tree section in PoB XML")
+
+    spec = tree_section.get("Spec")
+    if spec is None:
+        raise InvalidFormatError("Missing Tree>Spec element in PoB XML")
+
+    # Build the patched nodes string: numerically sorted, comma-joined.
+    nodes_str = ",".join(str(n) for n in sorted(int(node) for node in optimized_nodes))
+
+    # Step 3: Patch ONLY the active Spec's @nodes attribute.
+    if isinstance(spec, list):
+        # Tree>Spec is a list of specs; the active one is selected by the
+        # Tree @activeSpec index (1-indexed, default 1).
+        try:
+            active_index = int(tree_section.get("@activeSpec", 1))
+        except (ValueError, TypeError):
+            active_index = 1
+        if not 1 <= active_index <= len(spec):
+            active_index = 1
+        target_spec = spec[active_index - 1]
+        if not isinstance(target_spec, dict):
+            raise InvalidFormatError("Active Tree>Spec is not a valid element")
+        target_spec["@nodes"] = nodes_str
+    elif isinstance(spec, dict):
+        spec["@nodes"] = nodes_str
+    else:
+        raise InvalidFormatError("Unexpected Tree>Spec structure in PoB XML")
+
+    # Step 4: Re-serialize the patched dict back to XML.
+    try:
+        patched_xml = build_xml(data)
+    except InvalidFormatError:
+        raise
+    except Exception as e:
+        raise InvalidFormatError(f"Unable to build XML from patched data: {e}") from e
+
+    # Step 5: Compress (level 9) + STANDARD Base64 encode (inverse of decode).
+    compressed_out = zlib.compress(patched_xml.encode('utf-8'), 9)
+    return base64.b64encode(compressed_out).decode('ascii')
 
 
 def _extract_tree_version(pob_root: dict) -> str:

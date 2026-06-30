@@ -15,3 +15,6 @@ pytest-cov>=4.1.0
 pytest-benchmark>=4.0.0
 pytest-xdist>=3.5.0  # Process isolation to handle LuaJIT Windows exceptions (Windows-compatible)
 psutil>=5.9.0
+
+# Web framework (Epic 3: web UI)
+Flask==3.0.0
