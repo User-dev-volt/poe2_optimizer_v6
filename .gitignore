@@ -4,3 +4,8 @@ epic2_validation_output.txt
 __pycache__/
 *.pyc
 *.pyo
+
+# Impeccable — local design tooling (re-installable via `npx impeccable install`)
+.claude/skills/impeccable/
+.gemini/skills/
+.impeccable/
