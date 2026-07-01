@@ -28,6 +28,7 @@
     // Which stats to show, how to format, and how to flag accuracy.
     //   approx:   soft "(approx)" note (DPS magnitude is only roughly right)
     //   estimate: amber "estimate - not PoB-accurate" badge (calc is broken here)
+    //   (none):   reliable - Life and Mana ride the same calc rails (flat + increased mods)
     var STAT_ROWS = [
         { key: "total_dps",            label: "Total DPS",           fmt: "num", approx: true },
         { key: "life",                 label: "Life",                fmt: "int" },

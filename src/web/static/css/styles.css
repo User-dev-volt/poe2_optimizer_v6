@@ -11,7 +11,7 @@
     --border:      #2a313c;
     --text:        #e6e9ef;
     --text-muted:  #9aa4b2;
-    --text-faint:  #6b7480;
+    --text-faint:  #828b9b;   /* lifted from #6b7480 to clear WCAG AA (>=4.5:1 on --surface); do not darken */
 
     --accent:      #6ea8fe;
     --accent-700:  #3d6fd6;
@@ -337,13 +337,13 @@ label {
 }
 .note-approx {
     font-size: 11px;
-    color: var(--text-faint);
+    color: var(--text-muted);   /* trust copy: most legible tier, not the faintest */
     font-style: italic;
 }
 
 .accuracy-legend {
     font-size: 12px;
-    color: var(--text-faint);
+    color: var(--text-muted);   /* first-class trust copy, not fine print */
     margin: 18px 0 4px;
     line-height: 1.6;
 }
@@ -357,6 +357,17 @@ label {
 
 /* ----------------------------- utils ------------------------------ */
 .hidden { display: none !important; }
+
+/* ------------------------- reduced motion ------------------------- */
+/* PRODUCT.md: respect prefers-reduced-motion for the progress animation. */
+@media (prefers-reduced-motion: reduce) {
+    .progress-fill,
+    .btn,
+    .code-input,
+    .num-input,
+    .select-input { transition: none; }
+    .btn:active { transform: none; }
+}
 
 @media (max-width: 620px) {
     .field-row { grid-template-columns: 1fr; }
