@@ -142,6 +142,58 @@ Properties and verification (all runs 2026-07-02):
 
 ---
 
+## 8. Ratification addendum — story 3.5.1 closeout (2026-07-02)
+
+Ratified against story 3.5.1 AC-3.5.1.1 .. AC-3.5.1.5 (`docs/stories/story-3.5.1-pob-engine-forensics.md`). One AC element was missing from the report as landed and is closed here; everything else verified present. No file under `external/` was modified during ratification — fresh evidence below is read-only directory listings.
+
+### 8.1 Closing the AC-3.5.1.4 gap: `src/Export/stub_functions.lua` dispositioned by name
+
+- **Disposition: ABSENT FROM CURRENT TREE — historical documentation reference only; no hunk exists to adopt or reject.**
+- `docs/architecture/pob-engine-dependencies.md:734` records a project-authored `external/pob-engine/src/Export/stub_functions.lua`, and the same doc's line 342 shows the historical loader call (`dofile(pobPath .. "/src/Export/stub_functions.lua") -- Headless stubs`). The file does not exist in today's vendored tree, and the section 2.2 file census independently corroborates this: 0 added files vs the clean v0.15.0 tracked set — a project-authored file would have appeared as an untracked extra.
+- Most likely lost in the 2026-01-30 re-vendor (section 3 timeline: v0.15.0 source tree manually dropped in at 00:26, only Global.lua / ModStore.lua / CalcOffence.lua re-patched afterward). Per story 3.5.1 Dev Notes, the MinimalCalc dependency on this file is itself stale — either MinimalCalc no longer depends on it, or the architecture doc's reference needs updating; the pipeline has been running without the file since 2026-01-30.
+- Consequence for the inventory: classification totals are unchanged (3 KEEP-AS-PATCH / 0 REJECT / 0 GENERATED / 1,067 EOL-NOISE). There is nothing to draft as a patch and nothing for 3.5.2-style repair to preserve. If a headless-stub file is ever needed again it is a new authored artifact, not a recovered local edit.
+
+**Fresh evidence (2026-07-02, read-only):**
+
+```
+PS> Test-Path external\pob-engine\src\Export\stub_functions.lua
+False
+PS> Get-ChildItem external\pob-engine\src\Export | Select-Object Name
+Bases  Classes  Enemies  ggpk  Minions  Scripts  Skills  Tree  Uniques
+browse.lua  Launch.lua  Main.lua  passives.lua  spec.lua  statdesc.lua
+```
+
+Directory contains upstream v0.15.0 content only — `stub_functions.lua` is absent.
+
+### 8.2 AC-3.5.1.1 completion note — scratch clone command
+
+The evidence header records method and commit but not the exact scratch clone command. For reproducibility, the clean reference checkout used by probe C is reproduced by:
+
+```
+git -c core.autocrlf=false -c core.eol=lf clone https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2.git <scratch>/pob-0.15.0
+git -C <scratch>/pob-0.15.0 checkout --detach 3e1b71c92dc5f7c295031700746a418558117b06
+```
+
+(`<scratch>` = session scratchpad, outside this repo; matches the Appendix's `pob-0.15.0/` at HEAD `3e1b71c9...` and the remote recorded in `.gitmodules`.)
+
+### 8.3 Fresh cross-check — `docs/forensics/proposed-patches/` contents vs report claims
+
+Directory listing (2026-07-02): `.gitattributes` (14 B), `0001-global-lua-nil-safety.patch` (4,318 B), `0001-global-lua-nil-safety-v0220.patch` (3,966 B), `0002-modstore-evalmod-nil-safety.patch` (1,474 B), `0003-calcoffence-ailment-buildup-nil-safety.patch` (2,557 B). This matches section 5's four staged deliverables plus the parked v0.22.0 variant of 0001 recorded in section 7 answer 3 after the same-day jump-and-fallback. Consistent; no unexplained files.
+
+### 8.4 Ratification statement per AC
+
+| AC | Verdict | Basis |
+|---|---|---|
+| AC-3.5.1.1 | PASS (with 8.2 note) | Hash `3e1b71c9...` + `manifest.xml:3` version in header/S1-S2; scratch clone outside repo (Appendix); clone command completed in 8.2 |
+| AC-3.5.1.2 | PASS | `--stat` first (S2.2 / diff-stat.txt), full hunks (161-line diff + per-file hunks), EOL-controlled throughout, ModCache/generated classified separately (S4), census covers added/deleted/extras (S2.2: 0/0/0) |
+| AC-3.5.1.3 | PASS | S4: exactly one disposition per hunk; 3 KEEP-AS-PATCH (= adopt-as-patch), 0 REJECT, 0 GENERATED; completeness proven by byte-identical reconstruction (S5); zero undispositioned |
+| AC-3.5.1.4 | PASS (as of this addendum) | Global.lua dispositioned by name incl. verification vs the pre-existing patch (S4 cross-reference); ModStore.lua guards dispositioned by name (S4 #2, doc 444/464 -> live 458 drift acknowledged); stub_functions.lua dispositioned by name in 8.1: ABSENT |
+| AC-3.5.1.5 | PASS | Read-only guarantee stated in header and S5; drafts staged under `docs/forensics/proposed-patches/`, never `external/patches/`; this ratification pass was likewise read-only |
+
+**Story 3.5.1 is ratified complete.** The inventory stands as the authoritative diff-before-destroy record for plan risk #2; the only correction needed was the by-name stub_functions.lua verdict recorded above.
+
+---
+
 ## Appendix — scratch artifacts (session-local, not committed)
 
 Probe C's raw evidence lives under the session scratchpad `.../scratchpad/forensics/`: `diff-stat.txt`, `diff-vs-0.15.0.patch` (161 lines), `status-vs-0.15.0.txt` (1,070 ` M`), `diff-stat-vs-69b825bda.txt` (754-file distance), `ls-remote-tags.txt`, per-file `hunks/`, and the clean clone `pob-0.15.0/` (HEAD `3e1b71c9...`). Everything durable from them is embodied in section 4 and the committed draft patches; the scratchpad is disposable.

@@ -1,6 +1,6 @@
 # Story 3.5.5: GUI Baseline Harvester + 6–8 Geared Tier-A Baselines (attack, spell-hit, DoT first)
 
-Status: drafted
+Status: in-progress
 
 **Epic:** 3.5 — Substrate & Trust (lite) → milestone v0.9 (internal) [Source: docs/pebo-master-plan.md:168-184]
 **Tracking key:** `3.5-5-gui-baseline-harvest` (docs/sprint-status.yaml:98)
@@ -42,28 +42,28 @@ so that **Epic 4's parity work starts against real geared-build truth instead of
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement harvester CLI (AC: 3.5.5.1, 3.5.5.4)
-  - [ ] Subtask 1.1: `scripts/harvest_gui_baselines.py` with argparse: positional input path(s) (XML file or directory), `--output-dir` (default: the gui-baselines fixture dir), `--archetype` (recorded in metadata), `--force`
-  - [ ] Subtask 1.2: Parse with stdlib `xml.etree.ElementTree` — flat attribute extraction of `<PlayerStat>`; values parsed as floats at full precision (see Project Structure Notes for the xmltodict variance rationale)
-  - [ ] Subtask 1.3: Read PoB version (commit + version string) from the generated `POB_VERSION.txt`; if the file is missing or lacks the 3.5.2 generation marker, refuse to stamp a version (harvest continues only with `--force`, emitting `"stale": true` + a warning)
-  - [ ] Subtask 1.4: Refuse to overwrite an existing fixture unless `--force`
-  - [ ] Subtask 1.5: Guard: no `src.calculator` (or Lua/lupa) imports anywhere in the script
-- [ ] Task 2: Define + document the baseline fixture JSON schema (AC: 3.5.5.1, 3.5.5.5)
-  - [ ] Subtask 2.1: Metadata block + stats map with a `schema_version` field (sketch in Dev Notes); one JSON file per build
-  - [ ] Subtask 2.2: Document the schema in the script docstring and in `tests/fixtures/gui_baselines/README.md` (incl. the minion/totem/trap deferral note per AC-3.5.5.3)
-  - [ ] Subtask 2.3: Agree field names with story 3.5.4 (verify reads them) and record the stale-flag semantics shared with 3.5.2 AC4
-- [ ] Task 3: Golden test on the deadeye fixture (AC: 3.5.5.2)
-  - [ ] Subtask 3.1: Unit test `tests/unit/test_harvest_gui_baselines.py`: harvest `deadeye_lightning_arrow_76.xml`; assert `TotalDPS == 18097.067904221`, spot-check `Life`/`CritChance`/`AverageDamage`, assert 102 stats total
-  - [ ] Subtask 3.2: Negative cases: XML without `<PlayerStat>` (clear error), duplicate stat name (rejected/flagged), overwrite without `--force` (refused)
-  - [ ] Subtask 3.3: Pure-Python test — no LuaJIT, runs under plain `pytest tests/unit/`
+- [x] Task 1: Implement harvester CLI (AC: 3.5.5.1, 3.5.5.4)
+  - [x] Subtask 1.1: `scripts/harvest_gui_baselines.py` with argparse: positional input path(s) (XML file or directory), `--output-dir` (default: the gui-baselines fixture dir), `--archetype` (recorded in metadata), `--force`
+  - [x] Subtask 1.2: Parse with stdlib `xml.etree.ElementTree` — flat attribute extraction of `<PlayerStat>`; values parsed as floats at full precision (see Project Structure Notes for the xmltodict variance rationale)
+  - [x] Subtask 1.3: Read PoB version (commit + version string) from the generated `POB_VERSION.txt`; if the file is missing or lacks the 3.5.2 generation marker, refuse to stamp a version (harvest continues only with `--force`, emitting `"stale": true` + a warning)
+  - [x] Subtask 1.4: Refuse to overwrite an existing fixture unless `--force`
+  - [x] Subtask 1.5: Guard: no `src.calculator` (or Lua/lupa) imports anywhere in the script
+- [x] Task 2: Define + document the baseline fixture JSON schema (AC: 3.5.5.1, 3.5.5.5)
+  - [x] Subtask 2.1: Metadata block + stats map with a `schema_version` field (sketch in Dev Notes); one JSON file per build
+  - [x] Subtask 2.2: Document the schema in the script docstring and in `tests/fixtures/gui_baselines/README.md` (incl. the minion/totem/trap deferral note per AC-3.5.5.3)
+  - [x] Subtask 2.3: Agree field names with story 3.5.4 (verify reads them) and record the stale-flag semantics shared with 3.5.2 AC4
+- [x] Task 3: Golden test on the deadeye fixture (AC: 3.5.5.2)
+  - [x] Subtask 3.1: Unit test `tests/unit/test_harvest_gui_baselines.py`: harvest `deadeye_lightning_arrow_76.xml`; assert `TotalDPS == 18097.067904221`, spot-check `Life`/`CritChance`/`AverageDamage`, assert 102 stats total
+  - [x] Subtask 3.2: Negative cases: XML without `<PlayerStat>` (clear error), duplicate stat name (rejected/flagged), overwrite without `--force` (refused)
+  - [x] Subtask 3.3: Pure-Python test — no LuaJIT, runs under plain `pytest tests/unit/`
 - [ ] Task 4: Capture, harvest, and commit 6–8 geared baselines (AC: 3.5.5.3, 3.5.5.4)
   - [ ] Subtask 4.1: Source candidate geared builds — own builds and/or community codes (e.g. via `scripts/fetch_pobb_in_builds.py`) covering attack, spell-hit, DoT first
   - [ ] Subtask 4.2: Import each into PoB GUI **at the pinned release (v0.15.0 today — read `POB_VERSION.txt`, don't assume)**, let it recalculate, and SAVE the build XML from that GUI — the save is what stamps `<PlayerStat>` values at the pinned version (a pobb.in XML alone carries the *uploader's* unknown-version stats; see Dev Notes)
   - [ ] Subtask 4.3: Run the harvester over the saved XMLs with `--archetype`; commit source XML + fixture JSON pairs
   - [ ] Subtask 4.4: Write the deferral note (minion/totem/trap → Epic 4 mass capture) in the fixtures README
-- [ ] Task 5: Wire metadata into the stale-flag convention from 3.5.2/3.5.4 (AC: 3.5.5.5)
-  - [ ] Subtask 5.1: Confirm 3.5.4's `pob_env.verify()` can evaluate version-match/stale from the fixture files alone (no harvester import needed); adjust field names if 3.5.4 landed first
-  - [ ] Subtask 5.2: Test: a fixture whose metadata version ≠ current pin and lacking `"stale": true` is detectably invalid (the check itself may live in 3.5.4's suite — coordinate, don't duplicate)
+- [x] Task 5: Wire metadata into the stale-flag convention from 3.5.2/3.5.4 (AC: 3.5.5.5)
+  - [x] Subtask 5.1: Confirm 3.5.4's `pob_env.verify()` can evaluate version-match/stale from the fixture files alone (no harvester import needed); adjust field names if 3.5.4 landed first
+  - [x] Subtask 5.2: Test: a fixture whose metadata version ≠ current pin and lacking `"stale": true` is detectably invalid (the check itself may live in 3.5.4's suite — coordinate, don't duplicate)
 
 ## Dev Notes
 
@@ -125,13 +125,38 @@ so that **Epic 4's parity work starts against real geared-build truth instead of
 
 ### Agent Model Used
 
+claude-fable-5
+
 ### Debug Log References
 
 ### Completion Notes List
 
+- Tasks 1, 2, 3 and 5 implemented; **Task 4 (GUI capture at the pinned release) is deliberately untouched** — it needs a human at the PoB PoE2 GUI v0.15.0 (`3e1b71c9`, per the generated `external/POB_VERSION.txt`). No baselines were fabricated; `tests/fixtures/gui_baselines/` currently holds only `README.md`.
+- **Field-name contract (Subtask 2.3/5.1):** story 3.5.4 landed first, so the Dev Notes schema sketch was adjusted to what `src/pob_env.py` `verify()` check (d) actually reads: top-level `_metadata` (not `metadata`), `_metadata.pob_version` as a plain **string** exactly equal to the pinned manifest version (not the sketched `{"commit", "version"}` object — the commit moved to a sibling `_metadata.pob_commit`), and `_metadata.stale` as a JSON boolean. `stale_reason` accompanies every `stale: true` (3.5.2 AC4 convention; verify() does not parse it).
+- Harvester is stdlib-only (argparse / xml.etree.ElementTree / hashlib / json / pathlib / re / datetime); its single project import is `src.pob_env` for the shared `GENERATED_MARKER` + `VERSION_FILE` constants (coordinate-don't-duplicate; the source-guard unit test proves no `src.calculator`/`lupa` imports via AST walk).
+- `--force` carries both story meanings: overwrite an existing fixture, and harvest without a usable generated `POB_VERSION.txt` (fixture then gets `stale: true`, `pob_version`/`pob_commit` null — never fabricated — plus a warning). Added `--stale-reason TEXT` so corpus-provenance harvests (e.g. `realistic_builds/`) can be marked honestly stale per the Dev Notes requirement.
+- Exit codes follow the `setup_pob.py` convention (documented in the module docstring): 0 ok, 1 internal, 2 usage (argparse), 3 input problem (missing path/no XML/malformed/zero `<PlayerStat>`/duplicate stat names/non-numeric value), 4 version attestation refused without `--force`, 5 output exists without `--force`. Exit 3 also covers non-finite (nan/inf) stat values and same-stem input collisions (post-review fix batch).
+- Golden test proves exact round-trip: `TotalDPS == 18097.067904221` (raw digits also asserted verbatim in the serialized JSON), `Life`/`CritChance`/`AverageDamage` spot-checks, exactly 102 stats (count re-verified against the fixture), colon-named `Spec:LifeInc` kept verbatim, `<MinionStat>` ignored.
+- Task 5 contract tests run the REAL `pob_env.verify()` against an env double with a freshly harvested fixture at the `BASELINE_METADATA_FILES[0]` path: fresh fixture GREEN, version-mismatch-without-stale RED on (d), stale-flagged mismatch GREEN, and a `--force` unversioned fixture shown to be un-committable (fails (d) even when stale). `BASELINE_METADATA_FILES` itself is NOT extended yet — that happens in Task 4 when real fixtures are committed (extending it to not-yet-existing files would turn the guard red repo-wide).
+- Suite: `python -m pytest tests/unit/ -q` → 334 passed (303 pre-existing + 31 new).
+- **Post-review fix batch (same day):** adversarial review (3 verifier agents, 0 blocker/major) surfaced 5 distinct minors; 4 applied — same-stem input collision now refused up front (`EXIT_INPUT`, was silent clobber under `--force`), non-finite stat values (nan/inf) rejected + `json.dumps(..., allow_nan=False)` belt (RFC 8259 strictness), `is_file()` filter so a directory named `*.xml` can't crash the reader, and a **ratchet test** (`test_every_committed_baseline_fixture_is_guarded`) that fails the suite if a committed `*.baseline.json` is missing from `pob_env.BASELINE_METADATA_FILES` — converting the Task-4 allowlist extension from a documented convention into an enforced one. Fifth minor (check (d) globbing the fixture dir itself) deferred as an Epic 4 hardening option.
+
 ### File List
 
+- `scripts/harvest_gui_baselines.py` (new)
+- `tests/fixtures/gui_baselines/README.md` (new)
+- `tests/unit/test_harvest_gui_baselines.py` (new)
+- `docs/stories/story-3.5.5-gui-baseline-harvest.md` (this file: status, task ticks, Dev Agent Record, Change Log)
+
 ## Change Log
+
+**2026-07-02** — Tasks 1, 2, 3, 5 implemented (harvester + schema + golden/contract tests); Task 4 awaiting GUI capture
+- `scripts/harvest_gui_baselines.py`: stdlib-only CLI harvesting every `<PlayerStat>` verbatim into one `<name>.baseline.json` per build; version attestation from the generated `POB_VERSION.txt` (refuses hand-written/missing without `--force`); dual-meaning `--force`; `--stale-reason` for corpus-provenance harvests; setup_pob-style exit codes
+- Schema finalized against the SHIPPED 3.5.4 verifier: `_metadata` / string `pob_version` / boolean `stale` (+ `pob_commit`, `captured`, `source_xml`, `source_sha256`, `archetype`, `stale_reason`), documented in the script docstring and `tests/fixtures/gui_baselines/README.md` (incl. minion/totem/trap deferral note to Epic 4 item 6)
+- `tests/unit/test_harvest_gui_baselines.py`: 31 pure-Python tests — deadeye golden round-trip (TotalDPS 18097.067904221 exact, 102 stats), negative cases, version-attestation cases, AST source guard, end-to-end `pob_env.verify()` check (d) contract tests via the shared env double, and the `BASELINE_METADATA_FILES` ratchet; full unit suite green (334 passed)
+- Post-review fix batch: same-stem collision refusal, non-finite value rejection (`allow_nan=False`), `is_file()` glob filter, ratchet test (4 minors from the adversarial verify pass; 0 blockers/majors found)
+- **Task 4 NOT started**: 6-8 Tier-A baselines require a human capturing fresh GUI saves at the pinned release v0.15.0 (`3e1b71c9`); no fixtures committed, `BASELINE_METADATA_FILES` unextended until they exist
+- Status: drafted -> in-progress
 
 **2026-07-02** — Story created via correct-course sprint change proposal
 - Drafted from `docs/pebo-master-plan.md` section 6 (Epic 3.5, item 5) per `docs/sprint-change-proposal-2026-07-02.md` section 8.1 (correct-course workflow, batch mode)

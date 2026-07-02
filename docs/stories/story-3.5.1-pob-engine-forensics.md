@@ -1,6 +1,6 @@
 # Story 3.5.1: Submodule Forensics and Local-Edit Inventory
 
-Status: drafted
+Status: done
 
 ## Story
 
@@ -46,33 +46,33 @@ so that **the submodule repair in story 3.5.2 cannot clobber unknown hand-edits 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Confirm upstream remote and the 0.15.0 release commit (AC: 3.5.1.1)
-  - [ ] Subtask 1.1: Read the working tree's `external/pob-engine/manifest.xml` version string; confirm the upstream remote from `.gitmodules`
-  - [ ] Subtask 1.2: Resolve the release tag/commit matching that manifest version; record the full SHA
-  - [ ] Subtask 1.3: Clone upstream at that commit to a scratch directory outside the repo; record the exact clone command + commit in the report
+- [x] Task 1: Confirm upstream remote and the 0.15.0 release commit (AC: 3.5.1.1)
+  - [x] Subtask 1.1: Read the working tree's `external/pob-engine/manifest.xml` version string; confirm the upstream remote from `.gitmodules`
+  - [x] Subtask 1.2: Resolve the release tag/commit matching that manifest version; record the full SHA
+  - [x] Subtask 1.3: Clone upstream at that commit to a scratch directory outside the repo; record the exact clone command + commit in the report
 
-- [ ] Task 2: Capture the full recursive diff (AC: 3.5.1.2)
-  - [ ] Subtask 2.1: `git diff --no-index --stat` (or equivalent) first to bound the surface, then full hunks
-  - [ ] Subtask 2.2: Run EOL-controlled (`git -c core.autocrlf=false ... --ignore-cr-at-eol`) so CRLF phantoms are separated from content changes
-  - [ ] Subtask 2.3: Bucket results: source edits vs runtime/generated artifacts (ModCache etc.) vs EOL-noise; census added/deleted/ignored-extra files against the upstream tracked set
+- [x] Task 2: Capture the full recursive diff (AC: 3.5.1.2)
+  - [x] Subtask 2.1: `git diff --no-index --stat` (or equivalent) first to bound the surface, then full hunks
+  - [x] Subtask 2.2: Run EOL-controlled (`git -c core.autocrlf=false ... --ignore-cr-at-eol`) so CRLF phantoms are separated from content changes
+  - [x] Subtask 2.3: Bucket results: source edits vs runtime/generated artifacts (ModCache etc.) vs EOL-noise; census added/deleted/ignored-extra files against the upstream tracked set
 
-- [ ] Task 3: Disposition every source hunk (AC: 3.5.1.3)
-  - [ ] Subtask 3.1: Cross-check every hunk against `docs/architecture/pob-engine-dependencies.md` documented edits and `external/patches/README.md`
-  - [ ] Subtask 3.2: Assign exactly one disposition per hunk (adopt-as-patch / reject / generated-artifact) with a one-line justification each
-  - [ ] Subtask 3.3: Flag any hunk whose purpose is unknown for explicit decision — default reject-with-note (conscious rejection per plan)
+- [x] Task 3: Disposition every source hunk (AC: 3.5.1.3)
+  - [x] Subtask 3.1: Cross-check every hunk against `docs/architecture/pob-engine-dependencies.md` documented edits and `external/patches/README.md`
+  - [x] Subtask 3.2: Assign exactly one disposition per hunk (adopt-as-patch / reject / generated-artifact) with a one-line justification each
+  - [x] Subtask 3.3: Flag any hunk whose purpose is unknown for explicit decision — default reject-with-note (conscious rejection per plan)
 
-- [ ] Task 4: Explicitly disposition the three documented edits by name (AC: 3.5.1.4)
-  - [ ] Subtask 4.1: `Global.lua` nil-safety — verify tree matches the existing patch: grep sentinel `or 0  -- Handle nil arguments` (grep by content, not line number — README's cited lines 117/146/175 have drifted in the 0.15.0 tree) plus an EOL-safe reverse-apply check
-  - [ ] Subtask 4.2: `ModStore.lua` nil guards — locate the documented 444/464 edits in the current tree (line numbers may have drifted since the doc), confirm content, disposition
-  - [ ] Subtask 4.3: `src/Export/stub_functions.lua` — verify existence and disposition by name (verified ABSENT from the tree on 2026-07-02; see Dev Notes — the report must still record this verdict explicitly)
+- [x] Task 4: Explicitly disposition the three documented edits by name (AC: 3.5.1.4)
+  - [x] Subtask 4.1: `Global.lua` nil-safety — verify tree matches the existing patch: grep sentinel `or 0  -- Handle nil arguments` (grep by content, not line number — README's cited lines 117/146/175 have drifted in the 0.15.0 tree) plus an EOL-safe reverse-apply check
+  - [x] Subtask 4.2: `ModStore.lua` nil guards — locate the documented 444/464 edits in the current tree (line numbers may have drifted since the doc), confirm content, disposition
+  - [x] Subtask 4.3: `src/Export/stub_functions.lua` — verify existence and disposition by name (verified ABSENT from the tree on 2026-07-02; see Dev Notes — the report must still record this verdict explicitly)
 
-- [ ] Task 5: Write/complete the forensics report (AC: 3.5.1.1, 3.5.1.2, 3.5.1.3, 3.5.1.4)
-  - [ ] Subtask 5.1: Ratify/complete the landed kick-off report at `docs/forensics/pob-engine-forensics-2026-07-02.md` — verify each AC-required element is present and correct rather than re-running blindly; re-run only what fails verification
-  - [ ] Subtask 5.2: Evidence header complete: upstream commit hash, `manifest.xml` version string, superproject HEAD, date, method (per AC-3.5.1.1)
-  - [ ] Subtask 5.3: Per-file disposition table with justifications; any adopt-as-patch draft files staged under `docs/forensics/proposed-patches/` (NOT `external/patches/`)
+- [x] Task 5: Write/complete the forensics report (AC: 3.5.1.1, 3.5.1.2, 3.5.1.3, 3.5.1.4)
+  - [x] Subtask 5.1: Ratify/complete the landed kick-off report at `docs/forensics/pob-engine-forensics-2026-07-02.md` — verify each AC-required element is present and correct rather than re-running blindly; re-run only what fails verification
+  - [x] Subtask 5.2: Evidence header complete: upstream commit hash, `manifest.xml` version string, superproject HEAD, date, method (per AC-3.5.1.1)
+  - [x] Subtask 5.3: Per-file disposition table with justifications; any adopt-as-patch draft files staged under `docs/forensics/proposed-patches/` (NOT `external/patches/`)
 
-- [ ] Task 6: Verify the read-only guarantee (AC: 3.5.1.5)
-  - [ ] Subtask 6.1: Confirm no writes occurred under `external/pob-engine/` during this story (superproject `git status`, spot mtime checks) and state the guarantee in the report
+- [x] Task 6: Verify the read-only guarantee (AC: 3.5.1.5)
+  - [x] Subtask 6.1: Confirm no writes occurred under `external/pob-engine/` during this story (superproject `git status`, spot mtime checks) and state the guarantee in the report
 
 ## Dev Notes
 
@@ -119,13 +119,28 @@ so that **the submodule repair in story 3.5.2 cannot clobber unknown hand-edits 
 
 ### Context Reference
 
+- Ratification input: story ACs vs the landed kick-off report `docs/forensics/pob-engine-forensics-2026-07-02.md`; fresh read-only evidence gathered 2026-07-02 (Test-Path / directory listings only).
+
 ### Agent Model Used
+
+claude-fable-5
 
 ### Debug Log References
 
+- None — no code executed beyond read-only filesystem checks (`Test-Path`, `Get-ChildItem`, grep over docs).
+
 ### Completion Notes List
 
+- **Ratification, not a re-run.** The landed kick-off report already satisfied AC-3.5.1.2, AC-3.5.1.3, and AC-3.5.1.5 in full (EOL-controlled `--stat`-first diff, complete census 0 added/0 deleted/0 extras, exactly one disposition per hunk with byte-identical reconstruction proof, explicit read-only guarantee). Only what failed verification was completed, per Subtask 5.1 — via a dated ratification addendum (report section 8), no forensics re-run needed.
+- **AC-3.5.1.4 gap closed (the story's known gap):** `src/Export/stub_functions.lua` was never dispositioned by name in the landed report (grep for "stub" = 0 hits). Addendum 8.1 records the verdict: ABSENT FROM CURRENT TREE — historical doc reference only (pob-engine-dependencies.md:734, loader call at :342), no hunk to adopt/reject, likely lost in the 2026-01-30 re-vendor; fresh evidence (Test-Path False; Export/ holds upstream v0.15.0 content only) plus the report's own 0-added-files census corroborate. Classification totals unchanged (3 KEEP-AS-PATCH / 0 REJECT / 0 GENERATED / 1,067 EOL-NOISE).
+- **AC-3.5.1.1 minor gap closed:** the exact scratch clone command was absent from the evidence header (an equivalent appeared only as S6 remediation guidance); addendum 8.2 restates it explicitly for reproducibility.
+- **Fresh cross-check (addendum 8.3):** `docs/forensics/proposed-patches/` contents (0001, parked 0001-v0220, 0002, 0003, `.gitattributes`) match report S5 + S7-answer-3 claims exactly; no unexplained files.
+- Report terminology KEEP-AS-PATCH treated as equivalent to the AC's adopt-as-patch. Nothing under `external/` was read-modified or written during ratification; per-AC verdicts in addendum 8.4 — all five ACs PASS.
+
 ### File List
+
+- `docs/forensics/pob-engine-forensics-2026-07-02.md` (modified — section 8 ratification addendum appended before the Appendix)
+- `docs/stories/story-3.5.1-pob-engine-forensics.md` (modified — status, task checkboxes, Dev Agent Record, Change Log)
 
 ## Change Log
 
@@ -136,3 +151,8 @@ so that **the submodule repair in story 3.5.2 cannot clobber unknown hand-edits 
 
 **2026-07-02 (later)** — Decisions recorded: patches promoted (0001 regenerated for v0.22.0), pin retargeted to v0.22.0
 - Promotion executed same-day (was 3.5.2 scope); this story's remaining scope = ratify the inventory + close the stub_functions.lua disposition gap (AC-3.5.1.4)
+
+**2026-07-02** — Story closed: ratified the landed kick-off report against AC-3.5.1.1..5
+- Ratification addendum (report section 8) appended: closed the AC-3.5.1.4 gap with the by-name `src/Export/stub_functions.lua` disposition (ABSENT FROM CURRENT TREE, fresh read-only evidence); restated the scratch clone command for AC-3.5.1.1 reproducibility; cross-checked `docs/forensics/proposed-patches/` contents against report claims
+- All five ACs PASS (addendum 8.4); ratification pass was read-only w.r.t. `external/`
+- Status: done

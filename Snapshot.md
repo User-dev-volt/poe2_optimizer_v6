@@ -28,7 +28,7 @@ Story 2.9.2: Spell/DOT MinimalCalc Enhancement
 ---
 
 ## Next Action
-Act on adversarial review panel findings (when complete), then execute dual-story commits (3.5.3 + 3.5.4) with full changeset validation.
+Story 3.5.5 Task 4 — Alec captures 6-8 geared builds in PoB PoE2 GUI **v0.15.0** (must equal the `external/POB_VERSION.txt` pin `3e1b71c9` — NOT a newer auto-updated install), saves the XMLs, drops them in `tests/fixtures/gui_baselines/xml/`. Then: run `scripts/harvest_gui_baselines.py` per archetype, extend `pob_env.BASELINE_METADATA_FILES` (ratchet test enforces this), commit XML+JSON pairs → 3.5.5 done → Epic 3.5 retro → Epic 4 kickoff. (Done 2026-07-02 this session: 3.5-1 closed via ratification addendum; 3.5.5 Tasks 1-3+5 landed — harvester + golden tests + README, unit suite 334 green, uncommitted.)
 
 ---
 
