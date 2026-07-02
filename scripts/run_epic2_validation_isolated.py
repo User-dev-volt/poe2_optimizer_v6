@@ -8,6 +8,13 @@ Each build gets its own fresh Python interpreter with no LuaJIT state carryover.
 Usage:
     python scripts/run_epic2_validation_isolated.py
 
+Exit codes:
+    0  validation ran and passed
+    1  validation ran and failed (missing corpus, errors, or gate miss)
+    2  PoB environment verification failed (story 3.5.4): the engine is
+       drifted/unverifiable, so no corpus time is spent — run
+       `python scripts/setup_pob.py` and retry
+
 Author: Amelia (Dev Agent)
 Date: 2025-11-26
 """
@@ -18,6 +25,11 @@ import sys
 from pathlib import Path
 from datetime import datetime
 from statistics import median, mean
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.pob_env import verify  # noqa: E402  (needs the path insert above)
 
 # Windows: when stdout is redirected to a file, Python defaults to cp1252 and
 # printing '→'/'✅' raises UnicodeEncodeError — which the per-build except block
@@ -231,6 +243,16 @@ def run_build_isolated(xml_path: Path) -> dict:
 
 def main():
     """Run validation on all builds."""
+    # Environment guard (story 3.5.4 AC-3.5.4.3): corpus evidence produced
+    # against a drifted engine is worthless — fail fast, before any corpus
+    # machine time, with the same verifier the parity test guard uses.
+    env = verify(PROJECT_ROOT)
+    if not env.ok:
+        print("ERROR: PoB environment verification failed:")
+        print(env.summary())
+        print("Fix: python scripts/setup_pob.py")
+        return 2
+
     if not CORPUS_DIR.exists():
         print(f"ERROR: Corpus directory not found: {CORPUS_DIR}")
         return 1

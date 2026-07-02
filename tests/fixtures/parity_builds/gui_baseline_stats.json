@@ -5,7 +5,7 @@
     "date_recorded": "2025-10-21",
     "note": "TRUE GUI parity baseline - stats calculated by official PoB application and extracted from exported XML files",
     "stale": true,
-    "stale_reason": "Captured from GUI 0.12.2; engine pinned to v0.22.0 (860f4268299739ce9df87c4f373abe35824101cf) on 2026-07-02 (story 3.5.2 AC-3.5.2.4) - every comparison against these values crosses engine versions until re-capture",
+    "stale_reason": "Captured from GUI 0.12.2; engine pinned to v0.15.0 (3e1b71c92dc5f7c295031700746a418558117b06) on 2026-07-02 (story 3.5.2, AC5 fallback from the attempted v0.22.0 jump) - every comparison against these values crosses engine versions until re-capture",
     "recapture": "story 3.5.5 harvests fresh Tier-A baselines from GUI v0.22.0; mass capture is Epic 4 item 6"
   },
   "build_01_witch_90": {

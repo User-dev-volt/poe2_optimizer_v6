@@ -1,6 +1,7 @@
 # Story 3.5.4: pob_env.verify() — Autouse Conftest Enforcement (FAIL, not skip)
 
-Status: drafted
+Status: review  <!-- executed 2026-07-02; awaiting SM review. Guard verifies GREEN on today's repo; red-not-skip proven end-to-end against the real conftest -->
+
 
 Epic: 3.5 — Substrate & Trust (lite) (`docs/pebo-master-plan.md:168`)
 Sprint key: `3.5-4-pob-env-verify-conftest-guard`
@@ -48,26 +49,26 @@ so that **parity evidence can never again be produced against a drifted engine �
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement `pob_env.verify()` (AC: 3.5.4.1, 3.5.4.2, 3.5.4.5)
-  - [ ] Subtask 1.1: Create `src/pob_env.py` with `verify(repo_root=None) -> PobEnvResult` (`PobEnvResult`: `ok`, `violations` list, human-readable `summary()`)
-  - [ ] Subtask 1.2: Implement checks (a)–(d): real-repo, HEAD==gitlink, `POB_VERSION.txt` marker + commit match, baseline metadata match-or-stale-flag
-  - [ ] Subtask 1.3: Implement check (e) by iterating `external/patches/*.patch` with `git apply --reverse --check` per patch (absolute paths, explicit `cwd`, no `shell=True`)
-  - [ ] Subtask 1.4: Actionable violation messages: name the invariant, observed vs expected values, and the fix command
-- [ ] Task 2: Wire the autouse conftest guard (AC: 3.5.4.3)
-  - [ ] Subtask 2.1: New `tests/conftest.py`: session-cached verify result + autouse fixture dispatching on `request.node.get_closest_marker("parity")` / `("gui_parity")`
-  - [ ] Subtask 2.2: `pytest.fail(result.summary(), pytrace=False)` on violation; strict no-op (no subprocess spawned) when the item carries neither marker
-  - [ ] Subtask 2.3: Keep the guarded path fast (<200ms target): one lazy verify per session, triggered by the first marked test, result reused by all others
-- [ ] Task 3: Fail-fast the corpus entry path (AC: 3.5.4.3)
-  - [ ] Subtask 3.1: In `scripts/run_epic2_validation_isolated.py` `main()` (scripts/run_epic2_validation_isolated.py:232), call `verify()` before any corpus work; print violations and exit nonzero with a distinct exit code (Story 3.5.3 dev notes reserve distinct codes for exactly this branching)
-- [ ] Task 4: Negative-path tests with tmp-dir env doubles (AC: 3.5.4.4; positive coverage of AC 3.5.4.1–3.5.4.2)
-  - [ ] Subtask 4.1: Unit tests for `verify()` against fabricated env doubles in `tmp_path`: missing `.git`, gitlink mismatch, marker-less/hand-edited `POB_VERSION.txt`, unflagged stale baseline metadata, unapplied patch — each yields its expected violation
-  - [ ] Subtask 4.2: Guard-level negative test: run a parity-marked dummy test against a broken env double (pytester, or a subprocess pytest run with the verify root overridden) and assert red-not-skip with the expected message
-  - [ ] Subtask 4.3: Positive path: with a well-formed env double (all invariants hold), `verify()` returns ok and the marked dummy test passes
-- [ ] Task 5: Document the guard (AC: 3.5.4.3)
-  - [ ] Subtask 5.1: One paragraph in README's testing section plus a note beside CLAUDE.md's Test Markers list: what the guard checks, that parity/corpus runs FAIL (not skip) on a bad environment, and that `python scripts/setup_pob.py` is the fix
-- [ ] Task 6: Flask smoke tests — the folded-in rider (AC: 3.5.4.6)
-  - [ ] Subtask 6.1: `tests/integration/test_web_smoke.py` using Flask's test client: `POST /optimize` happy path on the smallest working corpus fixture with a tiny iteration budget → successful terminal event; assert the export code re-parses via `parse_pob_code` (round-trip)
-  - [ ] Subtask 6.2: Keep them unmarked-for-parity (guard no-op applies) and document the `-n 1` requirement in the module docstring
+- [x] Task 1: Implement `pob_env.verify()` (AC: 3.5.4.1, 3.5.4.2, 3.5.4.5)
+  - [x] Subtask 1.1: Create `src/pob_env.py` with `verify(repo_root=None) -> PobEnvResult` (`PobEnvResult`: `ok`, `violations` list, human-readable `summary()`)
+  - [x] Subtask 1.2: Implement checks (a)–(d): real-repo, HEAD==gitlink, `POB_VERSION.txt` marker + commit match, baseline metadata match-or-stale-flag
+  - [x] Subtask 1.3: Implement check (e) by iterating `external/patches/*.patch` with `git apply --reverse --check` per patch (absolute paths, explicit `cwd`, no `shell=True`)
+  - [x] Subtask 1.4: Actionable violation messages: name the invariant, observed vs expected values, and the fix command
+- [x] Task 2: Wire the autouse conftest guard (AC: 3.5.4.3)
+  - [x] Subtask 2.1: New `tests/conftest.py`: session-cached verify result + autouse fixture dispatching on `request.node.get_closest_marker("parity")` / `("gui_parity")`
+  - [x] Subtask 2.2: `pytest.fail(result.summary(), pytrace=False)` on violation; strict no-op (no subprocess spawned) when the item carries neither marker
+  - [x] Subtask 2.3: Keep the guarded path fast (<200ms target): one lazy verify per session, triggered by the first marked test, result reused by all others
+- [x] Task 3: Fail-fast the corpus entry path (AC: 3.5.4.3)
+  - [x] Subtask 3.1: In `scripts/run_epic2_validation_isolated.py` `main()` (scripts/run_epic2_validation_isolated.py:232), call `verify()` before any corpus work; print violations and exit nonzero with a distinct exit code (Story 3.5.3 dev notes reserve distinct codes for exactly this branching)
+- [x] Task 4: Negative-path tests with tmp-dir env doubles (AC: 3.5.4.4; positive coverage of AC 3.5.4.1–3.5.4.2)
+  - [x] Subtask 4.1: Unit tests for `verify()` against fabricated env doubles in `tmp_path`: missing `.git`, gitlink mismatch, marker-less/hand-edited `POB_VERSION.txt`, unflagged stale baseline metadata, unapplied patch — each yields its expected violation
+  - [x] Subtask 4.2: Guard-level negative test: run a parity-marked dummy test against a broken env double (pytester, or a subprocess pytest run with the verify root overridden) and assert red-not-skip with the expected message
+  - [x] Subtask 4.3: Positive path: with a well-formed env double (all invariants hold), `verify()` returns ok and the marked dummy test passes
+- [x] Task 5: Document the guard (AC: 3.5.4.3)
+  - [x] Subtask 5.1: One paragraph in README's testing section plus a note beside CLAUDE.md's Test Markers list: what the guard checks, that parity/corpus runs FAIL (not skip) on a bad environment, and that `python scripts/setup_pob.py` is the fix
+- [x] Task 6: Flask smoke tests — the folded-in rider (AC: 3.5.4.6)
+  - [x] Subtask 6.1: `tests/integration/test_web_smoke.py` using Flask's test client: `POST /optimize` happy path on the smallest working corpus fixture with a tiny iteration budget → successful terminal event; assert the export code re-parses via `parse_pob_code` (round-trip)
+  - [x] Subtask 6.2: Keep them unmarked-for-parity (guard no-op applies) and document the `-n 1` requirement in the module docstring
 
 ## Dev Notes
 
@@ -113,13 +114,48 @@ so that **parity evidence can never again be produced against a drifted engine �
 
 ### Context Reference
 
+- Executed 2026-07-02 on branch `feat/story-3.5.3-3.5.4-setup-and-guard`, immediately after story 3.5.3 (same session). Scouts pre-mapped: web API contract (verified end-to-end incl. a live tiny-budget optimize run), pytest/marker infrastructure, baseline metadata shape, patch-check convention.
+
 ### Agent Model Used
+
+claude-fable-5 (Claude Code, ultracode session)
 
 ### Debug Log References
 
+- Live `python -m src.pob_env` → "PoB environment OK (all five invariants hold)", exit 0 (the story's built-in sanity check, post-3.5.2/3.5.3 = GREEN as predicted)
+- Guard red-not-skip subprocess evidence inside `tests/unit/test_pob_env.py::TestConftestGuard`
+- `pytest -n 1 tests/integration/test_web_smoke.py` → 2 passed in 12.05s
+
 ### Completion Notes List
 
+1. **AC-3.5.4.1:** `src/pob_env.py` — first top-level utility module in `src/` as planned. `verify(repo_root=None) -> PobEnvResult` (frozen dataclasses: `ok`, ordered `violations` tuple, human `summary()`); checks (a) resolvable `.git` + rev-parse probe, (b) submodule HEAD vs `git ls-tree HEAD` gitlink, (c) generation marker + `Commit:` line vs gitlink, (d) baseline `_metadata.pob_version` match-or-stale-flag (pinned version read from the submodule's `manifest.xml`; missing metadata/file = violation; `"stale": true` passes as the honest state), (e) per-patch `git -c core.autocrlf=false apply --reverse --check` from repo root. Every violation names the invariant, observed vs expected, and the fix (`python scripts/setup_pob.py`). Never raises on a bad env.
+2. **AC-3.5.4.2:** patch verification iterates `external/patches/*.patch` sorted — no filename, count, or content marker hardcoded anywhere (ADR-004's grep-marker method superseded); empty/missing patch dir passes trivially. Retiring a patch = deleting its file.
+3. **AC-3.5.4.3:** new `tests/conftest.py` (first conftest in the repo): autouse fixture dispatching on `request.node.get_closest_marker("parity"/"gui_parity")` (catches module-level `pytestmark` and per-test markers), lazy one-verify-per-session cache (per xdist worker), `pytest.fail(summary, pytrace=False)` → red as setup ERROR, never skip. Strict no-op for unmarked tests (returns before any subprocess). Corpus path guarded identically: `scripts/run_epic2_validation_isolated.py` calls the same `verify()` first thing in `main()` and exits **2** (distinct from its existing 0/1) printing the violation list; its docstring documents the code.
+4. **AC-3.5.4.4:** negative proof runs the REAL conftest guard, not a replica: `tests/unit/test_pob_env.py::TestConftestGuard` drops a parity-marked dummy test under `tests/` (so the actual conftest chain loads) and runs pytest in a subprocess with `POB_ENV_GUARD_ROOT` pointing at a fabricated broken env double → asserts nonzero exit, the violation banner, "1 error"/"1 failed", and explicitly NOT skipped/passed. Positive twin: well-formed double → "1 passed". (Subprocess-pytest was chosen over pytester: `pytest_plugins` is only legal in a rootdir conftest, and the subprocess route exercises the genuine guard end-to-end — the story's sanctioned alternative.)
+5. **AC-3.5.4.5:** verifier is stdlib + git subprocess only, zero pytest imports, explicit `repo_root` param; consumed unchanged by conftest and the corpus script; `python -m src.pob_env` CLI included. The `GENERATED_MARKER` literal is mirrored from `scripts/generate_pob_version.py` (src must not import scripts/) and a unit test pins the two constants equal.
+6. **AC-3.5.4.6 (rider):** `tests/integration/test_web_smoke.py` — the first automated tests importing `src.web`. Happy path: `deadeye_lightning_arrow_76.xml` (attack build → MinimalCalc fast path; the parity_builds codes carry zero skills and are gate-rejected) encoded to a PoB code, caps monkeypatched on `src.web.routes` (MAX_ITERATIONS=2 — routes reads them by name, patching config would be invisible), POST `/optimize` → poll `/result` to `complete` → GET `/export` → exported code re-parses via `parse_pob_code` with node-change consistency asserted. Second test: garbage code → structured 400. NOT parity-marked (guard no-ops); `-n 1` requirement in the module docstring. Verified: 2 passed in 12.05s.
+7. **Env doubles:** fabricated as REAL git repos in `tmp_path` — genuine mode-160000 gitlink via `git update-index --add --cacheinfo` (no clone/network), tiny submodule repo with manifest + patchable target file. 9 violation/positive unit tests, each isolating one invariant.
+8. **Data correction:** `gui_baseline_stats.json` `_metadata.stale_reason` still claimed the pin was v0.22.0 `860f4268` (written before 3.5.2's AC5 fallback executed) — corrected to v0.15.0 `3e1b71c9`. The `stale: true` flag itself was already correct, so check (d) semantics are unchanged.
+9. **Sequencing sanity check:** live verify is GREEN on today's repaired repo (as the dev notes demanded post-3.5.2/3.5.3); a real parity-marked test (`test_gui_parity_build[build_01_witch_90]`) executes through the guard and fails only on its pre-existing stale-baseline/MinimalCalc parity assertion — proving the guard neither blocks nor masks the suite. Full unit suite: 288 passed (262 pre-existing + 26 new).
+10. **Docs:** README testing section gained the guard paragraph; CLAUDE.md gained the enforcement note beside Test Markers.
+11. **Ultracode adversarial review round (same day, 61-agent panel, 22 confirmed findings across both stories) hardened the verifier:**
+    - **(e) is now byte-exact:** `patched_tree_mismatches()` reconstructs "pristine pinned blobs + full patch set applied once" in a scratch repo and byte-compares (EOL-normalized — the live v0.15.0 checkout renders CRLF over LF blobs; git treats them identical) every patched file, and flags any OTHER tracked submodule file with local modifications. This closes the reviewer-reproduced blind spot where a double-applied 0002 still passes `--reverse --check`, and catches unrecorded engine edits (plan risk #2). Shared with `setup_pob.py` (single implementation).
+    - **(c) strengthened:** also validates the `Version:` line against the pinned manifest and that every present patch has an entry line. Full regenerate-and-compare remains available as `generate_pob_version.py --check` for release gates (residual: a hand-edit forging exactly commit+version+patch lines in place passes (c) but cannot change what (e) byte-verifies).
+    - **(b) pin source deviation (justified):** the gitlink is read from the **index** (`git ls-files -s`), not the AC's `git ls-tree HEAD` — setup_pob.py and generate_pob_version.py define "the pin" from the index, and one definition across all three tools prevents a staged-pin-bump from producing a contradictory "setup says OK / verify says drift / fix says run setup" loop. Unmerged gitlink stages are reported, never guessed.
+    - **Never-raises belt:** decode/OS/JSON errors become violations; any internal crash returns an `(internal) verifier-error` violation instead of propagating — the corpus script's exit 2 can no longer collapse into a misclassified exit 1.
+    - **Guard:** cache keyed by verified root; an active `POB_ENV_GUARD_ROOT` override is named in the failure banner. Probe files renamed to non-`test_*.py` (a leaked probe dir is inert for collection) and the broken-env run now ALSO proves an unmarked test passes in the same session (no over-gating) plus the violation-specific message reaching output. Corpus guard covered by a unit test (exit 2 + message).
+    - Final counts: 303 unit tests pass (22 in test_pob_env.py, 19 in test_setup_pob.py); live verify GREEN; setup double-run still byte-identical.
+
 ### File List
+
+- `src/pob_env.py` — new
+- `tests/conftest.py` — new (first conftest in the repo)
+- `tests/unit/test_pob_env.py` — new
+- `tests/integration/test_web_smoke.py` — new
+- `scripts/run_epic2_validation_isolated.py` — modified (env guard at `main()` start, exit 2; docstring exit-code table)
+- `README.md` — modified (guard paragraph in Testing)
+- `CLAUDE.md` — modified (guard note beside Test Markers)
+- `tests/fixtures/parity_builds/gui_baseline_stats.json` — modified (`stale_reason` v0.22.0 → v0.15.0 correction)
 
 ## Change Log
 
@@ -129,3 +165,11 @@ so that **parity evidence can never again be produced against a drifted engine �
 **2026-07-02 (later)** — Flask smoke-test rider folded in; patch-set facts refreshed
 - Alec decision: rider (proposal section 7.6, ~2h) becomes AC-3.5.4.6 / Task 6; effort 4–6h → 6–8h
 - external/patches/ now holds the promoted 0001..0003 set (0001 targets the v0.22.0 pin); pre-repair guard-RED expectation documented
+
+**2026-07-02 (execution)** — Story executed; status → review
+- `src/pob_env.py` + `tests/conftest.py` guard + corpus fail-fast (exit 2) + unit tests + 2 Flask smoke tests delivered
+- Guard GREEN on the repaired repo; red-not-skip proven against the real conftest via subprocess pytest with `POB_ENV_GUARD_ROOT` env doubles
+- `gui_baseline_stats.json` stale_reason corrected (v0.22.0 → v0.15.0 `3e1b71c9`, the AC5 fallback reality)
+
+**2026-07-02 (review hardening)** — Ultracode adversarial review round applied (Completion Note 11)
+- (e) byte-exact ratified-state reconciliation + unrecorded-edit detection; (c) Version/patch-entry checks; pin read from index (one pin definition across tools); never-raises belt; guard cache keyed by root; inert-if-leaked probes; unmarked-unaffected + corpus-guard tests
