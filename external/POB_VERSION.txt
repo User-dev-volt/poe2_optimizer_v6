@@ -1,0 +1,14 @@
+# GENERATED FILE - DO NOT EDIT BY HAND
+# Generator: scripts/generate_pob_version.py (story 3.5.2 AC-3.5.2.3)
+# Regenerate: python scripts/generate_pob_version.py  (setup_pob.py does this on every run -- story 3.5.3)
+# Hand-edits are detected by regenerate-and-compare (story 3.5.4 check (c)).
+
+Commit: 3e1b71c92dc5f7c295031700746a418558117b06
+Version: 0.15.0
+Repository: https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2.git
+Submodule: external/pob-engine
+
+## Applied patches (external/patches/, filename order)
+- 0001-global-lua-nil-safety.patch: applied
+- 0002-modstore-evalmod-nil-safety.patch: applied
+- 0003-calcoffence-ailment-buildup-nil-safety.patch: applied

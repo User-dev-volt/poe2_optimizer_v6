@@ -9,17 +9,23 @@ patches 0002/0003 below existed solely as untracked hand-edits from Story 2.9.2 
 
 ## Patch set (applies in filename order)
 
-**Pin target: upstream tag `v0.22.0` = `860f4268299739ce9df87c4f373abe35824101cf`**
-(decided 2026-07-02 — see `docs/sprint-change-proposal-2026-07-02.md`, Decisions; story
-3.5.2 executes the re-pin). The live vendored tree is still 0.15.0-era with all three
-edits baked in; this set becomes operative on the fresh v0.22.0 checkout.
+**Active pin: upstream tag `v0.15.0` = `3e1b71c92dc5f7c295031700746a418558117b06`** —
+the fallback lane. The decided v0.22.0 jump (`860f4268`) was **attempted and rolled back
+the same day** (2026-07-02): MinimalCalc's bootstrap is incompatible with v0.22.0's new
+`CalcSetup` API (`env.spec:CollectGrantedPassiveNodesFromItems` et al.; 119 integration
+failures). Per story 3.5.2 AC5's pre-committed fallback, the submodule is pinned at
+v0.15.0; the jump re-lands with Epic 4's real pipeline (which deletes MinimalCalc). The
+v0.22.0-regenerated Global.lua patch is parked at
+`docs/forensics/proposed-patches/0001-global-lua-nil-safety-v0220.patch` for that day.
 
 ### `0001-global-lua-nil-safety.patch`
 - **Target**: `external/pob-engine/src/Data/Global.lua` — nil guards in `OR64`/`AND64`/`XOR64`/`NOT64`
 - **Why**: spell builds pass nil to the 64-bit bitwise ops during init → `attempt to perform arithmetic on a nil value`
-- **Provenance**: ADR-004 / Story 2.9.2. Regenerated 2026-07-02 against v0.22.0 (upstream
-  still lacks the guards; only the `#args < 2` early-return is nil-safe). v0.15.0-targeted
-  draft preserved at `docs/forensics/proposed-patches/0001-global-lua-nil-safety.patch`.
+- **Provenance**: ADR-004 / Story 2.9.2. This is the v0.15.0-targeted patch (from the
+  forensics draft). A v0.22.0-regenerated variant is parked at
+  `docs/forensics/proposed-patches/0001-global-lua-nil-safety-v0220.patch` — verified
+  apply-clean + LuaJIT-compile on the v0.22.0 tag (upstream still lacks the guards there;
+  only the `#args < 2` early-return is nil-safe). Swap it in when Epic 4 executes the jump.
 - **Sentinel**: `grep -c "or 0  -- Handle nil arguments" external/pob-engine/src/Data/Global.lua` → `3`
 
 ### `0002-modstore-evalmod-nil-safety.patch`

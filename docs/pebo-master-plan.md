@@ -172,10 +172,12 @@ epic is "fix the optimizer," and everything below waits.
    of what was hand-edited in that tree.)*
 2. Re-establish the real submodule, pin to the 0.15.0 release commit; `POB_VERSION.txt`
    becomes *generated* from the gitlink, never hand-edited.
-   *(Amended 2026-07-02: pin target = **v0.22.0** `860f4268`, latest upstream — Alec
-   decision, `sprint-change-proposal-2026-07-02.md` §Decisions. Forensics ran same day:
-   tree = clean 0.15.0 + exactly 3 nil-safety edits, promoted to `external/patches/0001..0003`;
-   0001 regenerated + verified against v0.22.0.)*
+   *(Amended 2026-07-02: forensics ran same day — tree = clean 0.15.0 + exactly 3
+   nil-safety edits, promoted to `external/patches/0001..0003`. Alec decided a jump to
+   **v0.22.0**; it was executed and **rolled back the same day** (MinimalCalc cannot boot
+   v0.22.0's CalcSetup API — story 3.5.2 AC5 fallback). **Active pin: v0.15.0 `3e1b71c9`,
+   real submodule.** The v0.22.0 jump re-lands with Epic 4's Truth Engine, which deletes
+   MinimalCalc; see `sprint-change-proposal-2026-07-02.md` §8.4.)*
 3. `scripts/setup_pob.py` (idempotent): submodule init/update + auto-apply all patches
    (`git apply --check --reverse` skip-if-applied); the ONE setup command in README.
 4. Enforcement that cannot be forgotten: autouse conftest fixture `pob_env.verify()` —
@@ -190,8 +192,9 @@ epic is "fix the optimizer," and everything below waits.
 ### Epic 4 — Truth Engine (~80–140h) → **v1 ships here**
 1. **Timeboxed spike (2 weeks hard, go/no-go pre-committed):** `driver.lua` boots the full
    Launch→Main→Data chain under Lupa in a worker process; loads a real geared PoB code;
-   `output.TotalDPS` matches the pinned GUI release within ±0.1% *(0.15.0 at writing;
-   v0.22.0 per the 2026-07-02 pin amendment)*. Boot crash → flip to the `luajit.exe`
+   `output.TotalDPS` matches the pinned GUI release within ±0.1% *(v0.15.0 — the active
+   pin after the 2026-07-02 jump-fallback; this spike also executes the deferred v0.22.0
+   jump, since the blocker was MinimalCalc and E4 deletes it)*. Boot crash → flip to the `luajit.exe`
    subprocess lane the same week (same driver file). Also answers: is the ADR-004 patch
    even needed under the real ModParser?
 2. `FullCalcEngine` behind the existing `build_calculator.py` interface; XML-direct build
@@ -199,8 +202,9 @@ epic is "fix the optimizer," and everything below waits.
    flag lands here** (same loop the batch-eval rewire touches).
 3. **Tree 0_3→0_4 bump** in `passive_tree.py` + startup assert artifact-version ==
    calc-version; imports routed through `PassiveSpec` `convert=true`.
-   *(2026-07-02: the v0.22.0 pin ships `TreeData/0_5/` — the bump and all E5 tree
-   artifacts target 0_5, not 0_4.)*
+   *(2026-07-02: under the active v0.15.0 pin the tree data tops at 0_4; v0.22.0 ships
+   `TreeData/0_5/`, so when E4's deferred jump lands, the bump and all E5 tree artifacts
+   target 0_5.)*
    **Acceptance criteria: weapon-set (allocMode) and dual-ascendancy nodes preserved and
    calc-correct on the corpus; optimizer treats them as frozen allocations in v1.**
 4. Optimizer rewire: one `EVAL_NEIGHBORS` batch per iteration via `getMiscCalculator` with

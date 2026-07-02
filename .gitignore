@@ -1,5 +1,9 @@
 epic2_validation_output.txt
 
+# Story 3.5.2 pre-repair backup of the vendored engine (delete only after the
+# post-repair test gate is green — story 3.5.2 Task 6.4)
+external/pob-engine.pre-repair-*/
+
 # Python
 __pycache__/
 *.pyc

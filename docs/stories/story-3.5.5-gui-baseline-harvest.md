@@ -5,7 +5,7 @@ Status: drafted
 **Epic:** 3.5 — Substrate & Trust (lite) → milestone v0.9 (internal) [Source: docs/pebo-master-plan.md:168-184]
 **Tracking key:** `3.5-5-gui-baseline-harvest` (docs/sprint-status.yaml:98)
 **Effort:** 7–10h [Source: docs/sprint-change-proposal-2026-07-02.md section 8.1]
-**Dependencies:** 3.5.2 (pinned v0.22.0 submodule + *generated* `POB_VERSION.txt` — the harvester reads it for baseline metadata; pin retargeted from 0.15.0 to v0.22.0 by the 2026-07-02 decision). Harvester implementation and the golden test (Tasks 1–3) may start in parallel with 3.5.3/3.5.4; committing Tier-A fixtures (Task 4) requires 3.5.2 done. Story 3.5.4 consumes this story's metadata convention (see AC-3.5.5.5).
+**Dependencies:** 3.5.2 (pinned submodule + *generated* `POB_VERSION.txt` — the harvester reads it for baseline metadata; active pin = **v0.15.0 `3e1b71c9`** after the 2026-07-02 v0.22.0 jump-and-fallback — always capture at whatever `POB_VERSION.txt` says at capture time). Harvester implementation and the golden test (Tasks 1–3) may start in parallel with 3.5.3/3.5.4; committing Tier-A fixtures (Task 4) requires 3.5.2 done. Story 3.5.4 consumes this story's metadata convention (see AC-3.5.5.5).
 
 ## Story
 
@@ -27,7 +27,7 @@ so that **Epic 4's parity work starts against real geared-build truth instead of
 
 3. **AC-3.5.5.3:** 6–8 geared Tier-A baselines captured and committed
    - Fixtures committed for 6–8 geared builds covering **at least** the attack, spell-hit, and DoT archetypes — one per v1-gated archetype first, then fill to 6–8 (plan wording: "one per v1-gated archetype: attack, spell-hit, DoT first")
-   - Each source XML was **saved by PoB GUI at the same release as the 3.5.2 pin (v0.22.0 per the 2026-07-02 decision)** — mixing capture and pin versions recreates the four-way drift E3.5 exists to kill
+   - Each source XML was **saved by PoB GUI at the same release as the ACTIVE 3.5.2 pin** (v0.15.0 after the 2026-07-02 fallback; confirm against the generated `POB_VERSION.txt` before capturing — if Epic 4's deferred v0.22.0 jump landed first, capture there) — mixing capture and pin versions recreates the four-way drift E3.5 exists to kill
    - Archetype is recorded in each fixture's metadata so Epic 4's Tier-A/B assignment is a lookup, not archaeology
    - Minion/totem/trap capture is explicitly deferred to Epic 4 item 6 mass capture (20–24 builds, after the spike verdict) with a written note in the fixtures directory README — do not capture them here
 
@@ -58,7 +58,7 @@ so that **Epic 4's parity work starts against real geared-build truth instead of
   - [ ] Subtask 3.3: Pure-Python test — no LuaJIT, runs under plain `pytest tests/unit/`
 - [ ] Task 4: Capture, harvest, and commit 6–8 geared baselines (AC: 3.5.5.3, 3.5.5.4)
   - [ ] Subtask 4.1: Source candidate geared builds — own builds and/or community codes (e.g. via `scripts/fetch_pobb_in_builds.py`) covering attack, spell-hit, DoT first
-  - [ ] Subtask 4.2: Import each into PoB GUI **v0.22.0 (same release as the 3.5.2 pin)**, let it recalculate, and SAVE the build XML from that GUI — the save is what stamps `<PlayerStat>` values at the pinned version (a pobb.in XML alone carries the *uploader's* unknown-version stats; see Dev Notes)
+  - [ ] Subtask 4.2: Import each into PoB GUI **at the pinned release (v0.15.0 today — read `POB_VERSION.txt`, don't assume)**, let it recalculate, and SAVE the build XML from that GUI — the save is what stamps `<PlayerStat>` values at the pinned version (a pobb.in XML alone carries the *uploader's* unknown-version stats; see Dev Notes)
   - [ ] Subtask 4.3: Run the harvester over the saved XMLs with `--archetype`; commit source XML + fixture JSON pairs
   - [ ] Subtask 4.4: Write the deferral note (minion/totem/trap → Epic 4 mass capture) in the fixtures README
 - [ ] Task 5: Wire metadata into the stale-flag convention from 3.5.2/3.5.4 (AC: 3.5.5.5)
@@ -68,7 +68,7 @@ so that **Epic 4's parity work starts against real geared-build truth instead of
 ## Dev Notes
 
 - **The version-attestation problem is the core design constraint.** GUI-saved XML does NOT embed the app version that computed it: the root element is bare `<PathOfBuilding2>` (deadeye_lightning_arrow_76.xml:2) and `Build@targetVersion="0_1"` is the *passive-tree* version, not the app version. The harvester therefore stamps the pinned version from the generated `POB_VERSION.txt`, and the capture protocol (Task 4.2) is what makes that stamp true. Today's `POB_VERSION.txt` is the hand-written v0.12.2 pin (commit `69b825bda`, pinned 2025-10-12) — this story must consume the *generated* replacement from 3.5.2 AC3, which is why 3.5.2 is a hard dependency for Task 4.
-- **Existing corpus XMLs are harvester food, not Tier-A truth.** All 15 files in `tests/fixtures/realistic_builds/` contain `<PlayerStat>` blocks, but their values were computed by whatever PoB version the original uploader ran (pobb.in provenance, pre-pin). They exercise the harvester (the deadeye golden test) — any fixture harvested from them must carry `"stale": true` (or simply not be committed as a baseline). The 6–8 committed Tier-A candidates come from fresh GUI saves at the pinned release only (v0.22.0).
+- **Existing corpus XMLs are harvester food, not Tier-A truth.** All 15 files in `tests/fixtures/realistic_builds/` contain `<PlayerStat>` blocks, but their values were computed by whatever PoB version the original uploader ran (pobb.in provenance, pre-pin). They exercise the harvester (the deadeye golden test) — any fixture harvested from them must carry `"stale": true` (or simply not be committed as a baseline). The 6–8 committed Tier-A candidates come from fresh GUI saves at the pinned release only (v0.15.0 after the 2026-07-02 fallback).
 - **Scope guards (v1 NOT-list and plan deferrals — do not invent scope):**
   - Mass capture (20–24 builds incl. minion/totem/trap) is Epic 4 item 6, after the spike verdict — not here
   - Known-gaps ratchet + trust-tier generator are explicitly deferred to Epic 4 (plan Epic 3.5 item 6: "they'd measure MinimalCalc, which Epic 4 deletes") — this story produces fixtures, not gates
@@ -81,7 +81,7 @@ so that **Epic 4's parity work starts against real geared-build truth instead of
   {
     "schema_version": 1,
     "metadata": {
-      "pob_version": {"commit": "<40-hex gitlink>", "version": "0.22.0"},
+      "pob_version": {"commit": "<40-hex gitlink>", "version": "0.15.0"},
       "captured": "YYYY-MM-DD",
       "source_xml": "tests/fixtures/gui_baselines/xml/<name>.xml",
       "source_sha256": "<hex>",

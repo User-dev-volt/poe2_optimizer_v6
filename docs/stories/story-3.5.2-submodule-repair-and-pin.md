@@ -1,8 +1,10 @@
 # Story 3.5.2: Re-establish Real Submodule Pinned to v0.22.0; Generated POB_VERSION.txt
 
 > **Retargeted 2026-07-02:** Alec's decision (`docs/sprint-change-proposal-2026-07-02.md`, Decisions) moved the pin from the forensics-recommended v0.15.0 to **v0.22.0** (latest upstream release) and pre-approved patch promotion — which was **executed the same day**: `external/patches/` now holds `0001` (regenerated + verified against v0.22.0), `0002`/`0003` (verified on both tags), `.gitattributes`, and a rewritten README; the stale 0.12.2 patch is retired. This story text was amended accordingly; v0.15.0 references remain only where they describe the *current* tree or the forensic diff base.
+>
+> **⚠ FALLBACK EXECUTED (same day, later):** the v0.22.0 jump was attempted and **rolled back per AC-3.5.2.5's pre-committed fallback lane**. MinimalCalc cannot boot v0.22.0's `CalcSetup` (`:875 env.spec:CollectGrantedPassiveNodesFromItems` — a new granted-passive-nodes + weapon-slot-keystone API our `spec`/`itemsTab` doubles don't implement); canary 18/18 failed, full integration 119 failed / 125 passed. **The story landed at pin v0.15.0 `3e1b71c9`** — real submodule, same mechanics, all patches applied, tree content-identical to the pre-repair backup (EOL-controlled diff: 0 entries). The jump re-lands with Epic 4's Truth Engine (which deletes MinimalCalc); the v0.22.0 patch variant is parked at `docs/forensics/proposed-patches/0001-global-lua-nil-safety-v0220.patch`, and the submodule's git history already contains v0.22.0 (no re-clone needed). Read the ACs below through that lens: every mechanical AC holds at the v0.15.0 pin.
 
-Status: drafted
+Status: review
 
 **Epic:** 3.5 — Substrate & Trust (lite) → v0.9 (internal)
 **Tracking key:** `3.5-2-submodule-repair-and-pin` (`docs/sprint-status.yaml:95`)
@@ -141,15 +143,38 @@ so that **the engine version is verifiable by tooling, the four-way version drif
 
 ### Context Reference
 
-<!-- Story context XML/report to be generated at dev kickoff -->
+Executed directly from this story + `docs/forensics/pob-engine-forensics-2026-07-02.md` + proposal §8.4 decisions (no separate context XML; the forensics report IS the context).
 
 ### Agent Model Used
 
+claude-fable-5 (Claude Code, session 2026-07-02)
+
 ### Debug Log References
+
+- Pre-flight: `git apply --check` ×3 PASS on fresh v0.22.0 checkout (Subtask 2.5)
+- `git submodule status` → ` 860f4268... external/pob-engine (v0.22.0)` (clean, tag resolved)
+- Sentinels post-apply: Global 3 / ModStore 1 / CalcOffence 2; backup tree also 3/1/2 (fix continuity across the jump)
+- `generate_pob_version.py` double-run md5-identical: `7ae23140e099bb14c35ad64aec6026a4`; `--check` mode green
 
 ### Completion Notes List
 
+1. **Task 1** — backup by move (instant, same volume): `external/pob-engine.pre-repair-2026-07-02/`; gitignored via new `.gitignore` pattern `external/pob-engine.pre-repair-*/`. Retain until Task 6 gate confirmed + soak (do NOT delete this session).
+2. **Task 2** — promotion had been executed earlier the same day (proposal §8.4); Subtask 2.5 re-verification: all three patches apply-check PASS against the fresh clone at `860f4268`.
+3. **Task 3** — full clone (1.9 GB incl. history), `checkout --detach 860f4268299739ce9df87c4f373abe35824101cf`, `git submodule init` + `absorbgitdirs` (gitdir migrated to `.git/modules/external/pob-engine`, `.git` gitfile left in place), `git add` replaced the phantom gitlink. `manifest.xml` reads `0.22.0`.
+4. **EOL deviation (documented, accepted):** upstream v0.22.0 **blobs are CRLF in-repo** — `* text=auto` skips eol conversion for already-CRLF blobs, so the faithful checkout is CRLF regardless of `core.eol=lf`. The story's "LF working tree" wording assumed LF blobs (true of the 0.15.0-era vendored tree, not of v0.22.0 upstream). Actions: repo-local `core.autocrlf=false` + `core.eol=lf` set as policy; patches (LF, `-text`-protected) apply cleanly via git's attribute-aware matching; `git status` clean pre-patch; runtime is EOL-neutral for Lua. 3.5.3/3.5.4 must use `git apply`-based checks (already the design), not byte comparisons, for applied-state.
+5. **Task 4** — applied 0001→0003 from repo root; submodule shows exactly the 3 patched files modified (+26/−14); AC-3.5.2.2's mechanical equivalent holds by construction (fresh tag checkout + verified patches; nothing else differs).
+6. **Task 5** — `scripts/generate_pob_version.py` (importable; `generate(repo_root, check_only)`); output is a pure function of gitlink + manifest + patch states (timestamp-free per 3.5.3 reconciliation); refuses to stamp when submodule HEAD ≠ gitlink; URL read from `.gitmodules` (no second hardcoded copy); `--check` mode = the 3.5.4 hand-edit detection primitive. `external/POB_VERSION.txt` regenerated (previously untracked + hand-written; now tracked + generated; the hazardous `git submodule update --remote` advice is gone).
+7. **Task 6** — `gui_baseline_stats.json` `_metadata` gained `stale: true` + machine-readable reason + recapture pointer (AC-3.5.2.4). Unit suite: **262 passed** (baseline 252 + newer tests). Integration: v0.22.0 attempt **119F/125P** (blocked, see note 8); fallback pin canary **18/18 passed**; full-suite result on the fallback pin recorded in the Change Log.
+8. **AC-3.5.2.5 fallback exercised** — v0.22.0's `CalcSetup.lua:875` calls `env.spec:CollectGrantedPassiveNodesFromItems` (+ `SetGrantedPassiveNodes`/`UpdateSockets`/`ValidateWeaponSlots` behind it): new API contracts MinimalCalc's doubles don't satisfy. Triage verdict: stub-whack-a-mole against code Epic 4 deletes, with unvalidatable 0.22.0 semantics — fell back to `3e1b71c9` (v0.15.0) as pre-committed. Post-fallback: sentinels 3/1/2, gitlink re-pinned, `POB_VERSION.txt` regenerated (0.15.0), **EOL-controlled diff vs pre-repair backup = 0 entries** (the forensics byte-identical guarantee held). v0.22.0 objects remain in the submodule's history for the Epic 4 jump.
+
 ### File List
+
+- `external/pob-engine` — gitlink `4cf3563f6` (phantom) → `860f4268` (v0.22.0); real submodule re-established
+- `external/POB_VERSION.txt` — regenerated (first time tracked)
+- `scripts/generate_pob_version.py` — new (shared generator, 3.5.3 consumes)
+- `tests/fixtures/parity_builds/gui_baseline_stats.json` — `_metadata` stale flag
+- `.gitignore` — backup-dir pattern
+- `docs/stories/story-3.5.2-submodule-repair-and-pin.md` — this record
 
 ## Change Log
 
@@ -161,3 +186,9 @@ so that **the engine version is verifiable by tooling, the four-way version drif
 **2026-07-02 (later)** — Retargeted to v0.22.0; promotion executed
 - Alec decisions (proposal Decisions section): promote patches ✓ (executed — Task 2 marked done, verify-only at kickoff), pin = v0.22.0 `860f4268` (jump, superseding 0.15.0), real submodule ✓
 - 0001 regenerated + verified against v0.22.0 (upstream still unguarded); 0002/0003 verified on both tags; jump caveat added to AC5; TreeData 0_5 ripple noted; decision gate resolved
+
+**2026-07-02 (execution)** — Story EXECUTED; v0.22.0 jump attempted → AC5 fallback to v0.15.0
+- Backup by move → fresh full clone (1.9 GB) → detach `860f4268` → absorbgitdirs → patches → generator: all mechanics green at v0.22.0, but MinimalCalc cannot boot the v0.22.0 `CalcSetup` API (canary 18/18 F, integration 119F/125P) → **fallback executed**: detach `3e1b71c9` (v0.15.0), 0001 swapped to the v0.15.0 variant (v0.22.0 variant parked as `...-v0220.patch`), patches re-applied (sentinels 3/1/2), gitlink re-pinned, `POB_VERSION.txt` regenerated (0.15.0, deterministic, `--check` green)
+- Validation: EOL-controlled diff vs pre-repair backup = **0 entries**; unit **262 passed**; canary **18/18 passed**; full integration on fallback pin = **14 failed / 231 passed / 2 xfailed in 23:06** — the 14 verified to be exactly `tests/integration/test_gui_parity.py`'s tracked calc-gap reds (module re-run: 14F/21P; the deliberately-kept GUI-truth tracker per the 2026-06-29 baseline, now also stale-flagged per AC4). **Zero unexpected failures → AC-3.5.2.5 PASS.**
+- EOL finding: upstream blobs are CRLF in-repo (`text=auto` skips converted-checkout for them) — LF config retained as policy, applied-state checks must stay `git apply`-based (they are)
+- Status → review (SM: verify AC1-AC4 mechanically; AC5 via the suite results; backup dir retained pending soak)
