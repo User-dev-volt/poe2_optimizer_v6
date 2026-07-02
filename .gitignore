@@ -13,3 +13,7 @@ __pycache__/
 .claude/skills/impeccable/
 .gemini/skills/
 .impeccable/
+
+# Local agent tooling (personal, not project state)
+.agent/
+.gitaccount
