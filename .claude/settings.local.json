@@ -1,21 +1,35 @@
 {
   "permissions": {
     "allow": [
+      "Bash(tree:*)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
       "Bash(python:*)",
-      "Bash(for build in bloodmage_remnants_95 gemling_frost_mage_100 lich_storm_mage_90 ritualist_lightning_spear_96)",
-      "Bash(do)",
-      "Bash(echo:*)",
-      "Bash(done)",
-      "Bash(git apply:*)",
-      "Bash(find:*)",
-      "Bash(pytest:*)",
-      "Bash(tee:*)",
-      "Bash(git push:*)",
-      "Bash(git rm:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)"
-    ],
-    "deny": [],
-    "ask": []
-  }
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "Bash(where:*)",
+      "Bash(C:Python314python.exe -m venv:*)",
+      "Bash(/c/Python314/python.exe -m venv:*)",
+      "Bash(./venv/Scripts/pip.exe install:*)",
+      "Bash(./venv/Scripts/pytest.exe -n 1 tests/integration/test_story_2_9_1_phase1_weapons.py -v --tb=short)",
+      "Bash(venvScriptspython.exe -m pytest -n 1 tests/integration/test_story_2_9_1_phase1_weapons.py -v --tb=short)",
+      "Bash(./venv/Scripts/python.exe -m pytest:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/hook.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking UI changes"
+          }
+        ]
+      }
+    ]
+  },
+  "description": "Impeccable design detector: runs after Edit/Write/MultiEdit on UI files and surfaces findings as system reminders."
 }

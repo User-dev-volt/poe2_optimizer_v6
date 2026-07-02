@@ -16,6 +16,7 @@ This checklist covers **two sequential phases**:
 
 - [ ] Acceptance criteria are available (from story file OR inline)
 - [ ] Test suite exists (or gaps are acknowledged and documented)
+- [ ] If tests are missing, recommend `*atdd` (trace does not run it automatically)
 - [ ] Test directory path is correct (`test_dir` variable)
 - [ ] Story file is accessible (if using BMad mode)
 - [ ] Knowledge base is loaded (test-priorities, traceability, risk-governance)
@@ -374,12 +375,6 @@ Knowledge fragments referenced:
 
 ### Step 5: Status Updates and Notifications
 
-**Status File Updated:**
-
-- [ ] Gate decision appended to bmm-workflow-status.md (if append_to_history: true)
-- [ ] Format correct: `[DATE] Gate Decision: DECISION - Target {ID} - {rationale}`
-- [ ] Status file committed or staged for commit
-
 **Gate YAML Created:**
 
 - [ ] Gate YAML snippet generated with decision and criteria
@@ -478,13 +473,6 @@ Knowledge fragments referenced:
 ---
 
 ## Phase 2 Integration Points
-
-### BMad Workflow Status
-
-- [ ] Gate decision added to `bmm-workflow-status.md`
-- [ ] Format matches existing gate history entries
-- [ ] Timestamp is accurate
-- [ ] Decision summary is concise (<80 chars)
 
 ### CI/CD Pipeline
 
