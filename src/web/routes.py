@@ -106,6 +106,35 @@ def detect_unsupported_build_type(build) -> Optional[str]:
     return None
 
 
+def _build_summary(build) -> dict:
+    """Compact, display-ready identity for a parsed build (never runs LuaJIT).
+
+    Pure read of already-parsed :class:`BuildData` so the UI can show real
+    context (class / level / ascendancy / main skill) the moment a code is
+    accepted, before the optimizer finishes.
+    """
+
+    def _class_name(cls):
+        for attr in ("value", "name"):
+            v = getattr(cls, attr, None)
+            if isinstance(v, str) and v:
+                return v
+        return str(cls) if cls is not None else None
+
+    skills = getattr(build, "skills", None) or []
+    idx = getattr(build, "main_socket_group", 1) or 1
+    if not 1 <= idx <= len(skills):
+        idx = 1
+    main_skill = getattr(skills[idx - 1], "name", None) if skills else None
+
+    return {
+        "class": _class_name(getattr(build, "character_class", None)),
+        "level": getattr(build, "level", None),
+        "ascendancy": getattr(build, "ascendancy", None),
+        "main_skill": main_skill,
+    }
+
+
 def register_routes(app) -> None:
     """Register all five HTTP endpoints on ``app``."""
 
@@ -219,7 +248,16 @@ def register_routes(app) -> None:
         )
         thread.start()
 
-        return jsonify({"session_id": session_id, "status": "pending"}), 200
+        return (
+            jsonify(
+                {
+                    "session_id": session_id,
+                    "status": "pending",
+                    "build": _build_summary(build),
+                }
+            ),
+            200,
+        )
 
     @app.route("/progress/<session_id>", methods=["GET"])
     def progress(session_id):

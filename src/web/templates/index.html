@@ -1,116 +1,206 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-accent="teal">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PoE2 Build Optimizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600;700&display=swap">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <div class="container">
-        <header class="app-header">
-            <h1>PoE2 Build Optimizer</h1>
-            <p class="subtitle">Paste a Path of Building code, set a budget, and discover a stronger passive tree.</p>
+    <div class="app">
+        <!-- ============================== TOP BAR ============================= -->
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+                        <path d="M4 20V6l8-2 8 2v14" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M12 4v16M4 13h16M4 9.5l8 2 8-2" stroke="currentColor" stroke-width="1.5"
+                              stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="brand-name">PoE2 <b>Optimizer</b></span>
+            </div>
+            <div class="topbar-right">
+                <span class="engine-status" id="engine-status" aria-live="polite">
+                    <span class="dot" aria-hidden="true"></span><span id="engine-text">engine ready</span>
+                </span>
+                <div class="accent-toggle" role="group" aria-label="Accent color">
+                    <button type="button" class="accent-opt" data-accent-val="teal" aria-pressed="true">Teal</button>
+                    <button type="button" class="accent-opt" data-accent-val="gold" aria-pressed="false">Gold</button>
+                </div>
+            </div>
         </header>
 
-        <!-- ============================ INPUT ============================ -->
-        <section class="card" id="input-card">
-            <div class="field">
-                <div class="field-header">
-                    <label for="pob-code">Path of Building code</label>
-                    <button type="button" class="btn btn-ghost btn-sm" id="clear-btn">Clear</button>
-                </div>
-                <textarea
-                    id="pob-code"
-                    class="code-input"
-                    spellcheck="false"
-                    autocomplete="off"
-                    placeholder="Paste your Path of Building code here..."></textarea>
-                <div class="field-foot">
-                    <span class="char-count" id="char-count">0 / 100,000 characters</span>
-                </div>
-            </div>
+        <div class="workspace">
+            <!-- =========================== LEFT RAIL ========================= -->
+            <aside class="rail" aria-label="Build input and controls">
+                <form id="optimize-form" class="rail-form" autocomplete="off" novalidate>
+                    <section class="block">
+                        <div class="block-head">
+                            <span class="block-label" id="code-label">Path of Building code</span>
+                            <button type="button" class="linkbtn" id="clear-btn">Clear</button>
+                        </div>
+                        <textarea id="pob-code" class="code-input" spellcheck="false" autocomplete="off"
+                                  aria-labelledby="code-label"
+                                  placeholder="Paste your PoB export code&hellip;"></textarea>
+                        <div class="code-foot">
+                            <span class="char-count" id="char-count">0 / 100,000</span>
+                        </div>
+                    </section>
 
-            <div class="field-row">
-                <div class="field">
-                    <label for="unallocated-points">Unallocated points</label>
-                    <input type="number" id="unallocated-points" class="num-input"
-                           min="0" step="1" value="10" inputmode="numeric">
-                    <span class="field-hint">Free passive points to spend.</span>
-                </div>
-                <div class="field">
-                    <label for="respec-points">Respec points</label>
-                    <input type="number" id="respec-points" class="num-input"
-                           min="0" step="1" placeholder="unlimited" inputmode="numeric">
-                    <span class="field-hint">Points for removing nodes. Blank = unlimited.</span>
-                </div>
-                <div class="field">
-                    <label for="metric">Optimization goal</label>
-                    <select id="metric" class="select-input">
-                        <option value="dps" selected>Maximize DPS</option>
-                        <option value="ehp">Maximize EHP</option>
-                        <option value="balanced">Balanced</option>
-                    </select>
-                    <span class="field-hint">What the optimizer maximizes.</span>
-                </div>
-            </div>
+                    <!-- Parsed build identity (revealed once a code is accepted) -->
+                    <section class="block build-id hidden" id="build-id" aria-live="polite">
+                        <span class="block-label">Build</span>
+                        <dl class="idlist">
+                            <div class="idrow"><dt>Class</dt><dd id="bi-class">&mdash;</dd></div>
+                            <div class="idrow"><dt>Ascendancy</dt><dd id="bi-asc">&mdash;</dd></div>
+                            <div class="idrow"><dt>Level</dt><dd id="bi-level">&mdash;</dd></div>
+                            <div class="idrow"><dt>Main skill</dt><dd id="bi-skill">&mdash;</dd></div>
+                        </dl>
+                    </section>
 
-            <div class="actions">
-                <button type="button" class="btn btn-primary" id="optimize-btn">Optimize</button>
-            </div>
-        </section>
+                    <section class="block">
+                        <span class="block-label">Budget</span>
+                        <div class="dual">
+                            <div class="field">
+                                <label for="unallocated-points">Unallocated</label>
+                                <input type="number" id="unallocated-points" class="num-input"
+                                       min="0" step="1" value="10" inputmode="numeric">
+                            </div>
+                            <div class="field">
+                                <label for="respec-points">Respec</label>
+                                <input type="number" id="respec-points" class="num-input"
+                                       min="0" step="1" placeholder="&#8734;" inputmode="numeric">
+                            </div>
+                        </div>
+                        <p class="field-hint">Free points to spend / cost to remove nodes. Respec blank = unlimited.</p>
+                    </section>
 
-        <!-- ===================== MESSAGE (error/info) ==================== -->
-        <section class="message-box hidden" id="message-box" role="alert" aria-live="polite">
-            <h3 class="message-title" id="message-title"></h3>
-            <p class="message-body" id="message-body"></p>
-        </section>
+                    <section class="block">
+                        <span class="block-label">Goal</span>
+                        <div class="segmented" role="radiogroup" aria-label="Optimization goal" id="goal-seg">
+                            <button type="button" class="seg" data-goal="dps" role="radio" aria-checked="true">DPS</button>
+                            <button type="button" class="seg" data-goal="ehp" role="radio" aria-checked="false">EHP</button>
+                            <button type="button" class="seg" data-goal="balanced" role="radio" aria-checked="false">Balanced</button>
+                        </div>
+                    </section>
 
-        <!-- ========================== PROGRESS ========================== -->
-        <section class="card hidden" id="progress-section" aria-live="polite">
-            <h2 class="section-title">Optimizing&hellip;</h2>
-            <div class="progress-track">
-                <div class="progress-fill" id="progress-bar">0%</div>
-            </div>
-            <p class="status-text" id="status-text">Starting&hellip;</p>
-            <div class="event-log" id="event-log" aria-label="Optimization event log"></div>
-        </section>
+                    <div class="rail-actions">
+                        <button type="submit" class="btn btn-primary" id="optimize-btn">Optimize</button>
+                    </div>
+                </form>
+            </aside>
 
-        <!-- =========================== RESULTS ========================== -->
-        <section class="card hidden" id="results-section">
-            <h2 class="section-title">Results</h2>
+            <!-- ============================ RIGHT STAGE ====================== -->
+            <main class="stage" id="stage">
+                <!-- EMPTY / FIRST-RUN -->
+                <section class="pane state-empty" id="state-empty">
+                    <div class="empty-inner">
+                        <div class="empty-glyph" aria-hidden="true">
+                            <svg viewBox="0 0 64 64" width="56" height="56" fill="none">
+                                <circle cx="32" cy="32" r="22" stroke="currentColor" stroke-width="1.25" opacity="0.5"/>
+                                <circle cx="32" cy="32" r="12" stroke="currentColor" stroke-width="1.25" opacity="0.8"/>
+                                <path d="M32 2v12M32 50v12M2 32h12M50 32h12" stroke="currentColor"
+                                      stroke-width="1.25" stroke-linecap="round"/>
+                                <circle cx="32" cy="32" r="2.5" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <h1 class="empty-title">Find a stronger tree</h1>
+                        <p class="empty-lead">
+                            Paste a Path of Building export, set your point budget and goal, then run the
+                            optimizer. You get a before/after you can trust and an optimized code to import back.
+                        </p>
+                        <ol class="empty-steps">
+                            <li><span class="step-n">1</span> Paste your PoB code</li>
+                            <li><span class="step-n">2</span> Set budget &amp; goal</li>
+                            <li><span class="step-n">3</span> Optimize &amp; compare</li>
+                        </ol>
+                    </div>
+                </section>
 
-            <div class="headline">
-                <span class="headline-label">Improvement</span>
-                <span class="headline-value" id="improvement-headline">&mdash;</span>
-            </div>
-            <p class="results-summary" id="results-summary"></p>
+                <!-- MESSAGE (error / unsupported) -->
+                <section class="pane state-msg hidden" id="state-msg" role="alert">
+                    <div class="msg-inner">
+                        <span class="msg-kind" id="msg-kind">Error</span>
+                        <h2 class="msg-title" id="msg-title"></h2>
+                        <p class="msg-body" id="msg-body"></p>
+                    </div>
+                </section>
 
-            <div class="table-wrap">
-                <table class="stats-table">
-                    <thead>
-                        <tr>
-                            <th class="col-stat">Stat</th>
-                            <th class="col-num">Before</th>
-                            <th class="col-num">After</th>
-                            <th class="col-num">Change</th>
-                        </tr>
-                    </thead>
-                    <tbody id="results-tbody"></tbody>
-                </table>
-            </div>
+                <!-- RUNNING -->
+                <section class="pane state-running hidden" id="state-running">
+                    <div class="run-top">
+                        <div class="run-readout">
+                            <span class="run-imp" id="run-imp">&mdash;</span>
+                            <span class="run-imp-label">live improvement</span>
+                        </div>
+                        <div class="run-meta">
+                            <span class="run-stat"><span class="run-k">iter</span> <span id="run-iter">0 / 0</span></span>
+                            <span class="run-stat"><span class="run-k">best</span> <span id="run-best">&mdash;</span></span>
+                            <span class="run-stat"><span class="run-k">elapsed</span> <span id="run-elapsed">0.0s</span></span>
+                        </div>
+                    </div>
+                    <div class="meter" role="progressbar" aria-label="Optimization progress"
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meter">
+                        <div class="meter-fill" id="progress-bar"></div>
+                    </div>
+                    <div class="event-log" id="event-log" aria-label="Optimization log"></div>
+                </section>
 
-            <p class="accuracy-legend">
-                <span class="badge-estimate">estimate &mdash; not PoB-accurate</span>
-                stats are produced by the fast in-process calculator and should be treated as rough
-                directional estimates. Improvement %, node counts, budget used, Life, and Mana are reliable.
-            </p>
+                <!-- RESULTS -->
+                <section class="pane state-results hidden" id="state-results">
+                    <header class="results-head">
+                        <div class="headline">
+                            <span class="headline-value" id="improvement-headline">&mdash;</span>
+                            <span class="headline-unit">improvement</span>
+                        </div>
+                        <p class="results-summary" id="results-summary"></p>
+                    </header>
 
-            <div class="actions">
-                <button type="button" class="btn btn-primary hidden" id="export-btn">Export Optimized Build</button>
-                <span class="export-note hidden" id="export-note"></span>
-            </div>
-        </section>
+                    <section class="nodediff" id="nodediff" aria-label="Passive tree changes">
+                        <div class="nd-figs">
+                            <span class="nd-fig nd-add"><b id="nd-added">0</b> added</span>
+                            <span class="nd-fig nd-rem"><b id="nd-removed">0</b> removed</span>
+                            <span class="nd-fig nd-swap"><b id="nd-swapped">0</b> swapped</span>
+                        </div>
+                        <div class="nd-bar" id="nd-bar" aria-hidden="true">
+                            <span class="nd-seg nd-seg-add" id="nd-seg-add"></span>
+                            <span class="nd-seg nd-seg-rem" id="nd-seg-rem"></span>
+                        </div>
+                    </section>
+
+                    <div class="readout">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="col-stat">Stat</th>
+                                    <th scope="col" class="num">Before</th>
+                                    <th scope="col" class="num">After</th>
+                                    <th scope="col" class="num">Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <p class="accuracy-legend">
+                        <span class="chip chip-estimate">estimate</span> stats are fast in-process
+                        approximations &mdash; treat as directional, not PoB-accurate.
+                        <span class="chip chip-reliable">reliable</span> improvement&#37;, node counts, budget,
+                        Life and Mana.
+                    </p>
+
+                    <div class="results-actions">
+                        <button type="button" class="btn btn-primary" id="export-btn">Copy optimized PoB code</button>
+                        <span class="export-note hidden" id="export-note" aria-live="polite"></span>
+                    </div>
+                </section>
+            </main>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/sse_client.js') }}" defer></script>

@@ -1,102 +1,89 @@
-/* ============================================================
-   main.js
-   UI controller: gather inputs, POST /optimize, stream progress over SSE,
-   render the before/after results table, and export the optimized build.
+/* ============================================================================
+   main.js — UI controller for the two-panel optimizer workspace.
 
-   Result field names mirror OptimizationResult.to_dict():
+   Gathers input, POSTs /optimize, streams progress over SSE (sse_client.js),
+   renders the before/after readout, and exports the optimized build. Backend
+   contract is unchanged:
+     POST /optimize -> { session_id, status, build:{class,level,ascendancy,main_skill} }
+     SSE  /progress/<id> -> progress | complete(OptimizationResult) | error
+     GET  /export/<id> -> { pob_code }
+   Result fields mirror OptimizationResult.to_dict():
      { improvement_pct, baseline_stats, optimized_stats,
        budget_usage:{unallocated_used, respec_used},
-       node_changes:{added[], removed[], swapped},
-       convergence:{reason, iterations_run, time_elapsed_seconds} }
-   ...and BuildStats.to_dict() for each *_stats object:
-     { total_dps, effective_hp, life, energy_shield, mana,
-       resistances:{fire,cold,lightning,chaos},
-       armour, evasion, block_chance, spell_block_chance, movement_speed }
+       node_changes:{added[], removed[], swapped}, convergence:{...} }
    All reads are defensive (missing keys render as a dash).
-   ============================================================ */
-
+   ============================================================================ */
 (function () {
     "use strict";
 
     var MAX_CODE_LEN = 100000;
-
-    // Em dash / middle dot / ellipsis built from char codes so the source stays ASCII.
+    var ACCENT_KEY = "poe2opt.accent";
     var EM_DASH = String.fromCharCode(0x2014);
     var DOT = String.fromCharCode(0x00b7);
     var ELLIPSIS = String.fromCharCode(0x2026);
 
-    // Which stats to show, how to format, and how to flag accuracy.
-    //   approx:   soft "(approx)" note (DPS magnitude is only roughly right)
-    //   estimate: amber "estimate - not PoB-accurate" badge (calc is broken here)
-    //   (none):   reliable - Life and Mana ride the same calc rails (flat + increased mods)
+    // Trust tier per stat: (none) = reliable, approx = rough magnitude,
+    // estimate = the calc is only a directional approximation here.
     var STAT_ROWS = [
-        { key: "total_dps",            label: "Total DPS",           fmt: "num", approx: true },
-        { key: "life",                 label: "Life",                fmt: "int" },
-        { key: "mana",                 label: "Mana",                fmt: "int" },
-        { key: "energy_shield",        label: "Energy Shield",       fmt: "int", estimate: true },
-        { key: "effective_hp",         label: "Effective HP",        fmt: "num", estimate: true },
-        { key: "resistances.fire",     label: "Fire Resistance",     fmt: "pct", estimate: true },
-        { key: "resistances.cold",     label: "Cold Resistance",     fmt: "pct", estimate: true },
-        { key: "resistances.lightning",label: "Lightning Resistance",fmt: "pct", estimate: true },
-        { key: "evasion",              label: "Evasion",             fmt: "int", estimate: true },
-        { key: "armour",               label: "Armour",              fmt: "int", estimate: true },
-        { key: "movement_speed",       label: "Movement Speed",      fmt: "pct", estimate: true }
+        { key: "total_dps",             label: "Total DPS",            fmt: "num", approx: true },
+        { key: "life",                  label: "Life",                 fmt: "int" },
+        { key: "mana",                  label: "Mana",                 fmt: "int" },
+        { key: "energy_shield",         label: "Energy Shield",        fmt: "int", estimate: true },
+        { key: "effective_hp",          label: "Effective HP",         fmt: "num", estimate: true },
+        { key: "resistances.fire",      label: "Fire Resistance",      fmt: "pct", estimate: true },
+        { key: "resistances.cold",      label: "Cold Resistance",      fmt: "pct", estimate: true },
+        { key: "resistances.lightning", label: "Lightning Resistance", fmt: "pct", estimate: true },
+        { key: "evasion",               label: "Evasion",              fmt: "int", estimate: true },
+        { key: "armour",                label: "Armour",               fmt: "int", estimate: true },
+        { key: "movement_speed",        label: "Movement Speed",       fmt: "pct", estimate: true }
     ];
 
     var els = {};
     var currentSessionId = null;
     var isRunning = false;
+    var selectedGoal = "dps";
 
-    // ---------------------------------------------------------------- utils
-
+    // ------------------------------------------------------------ formatting
     function num(v) {
         if (typeof v === "number") return v;
         if (v === null || v === undefined || v === "") return NaN;
         return Number(v);
     }
-
     function get(obj, key, fallback) {
         if (obj && obj[key] !== undefined && obj[key] !== null) return obj[key];
         return fallback;
     }
-
     function getStat(stats, dotted) {
         if (!stats) return undefined;
-        var parts = dotted.split(".");
-        var cur = stats;
+        var parts = dotted.split("."), cur = stats;
         for (var i = 0; i < parts.length; i++) {
             if (cur === null || cur === undefined) return undefined;
             cur = cur[parts[i]];
         }
         return cur;
     }
-
     function fmtNum(v, digits) {
         var n = num(v);
         if (!isFinite(n)) return EM_DASH;
         return n.toLocaleString(undefined, { maximumFractionDigits: digits || 0 });
     }
-
     function fmtSigned(v, digits) {
         var n = num(v);
         if (!isFinite(n)) return EM_DASH;
         var sign = n > 0 ? "+" : (n < 0 ? "-" : "");
         return sign + Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: digits || 0 });
     }
-
     function formatValue(kind, v) {
         var n = num(v);
         if (!isFinite(n)) return EM_DASH;
         if (kind === "pct") return fmtNum(n, 1) + "%";
         return fmtNum(n, 0);
     }
-
     function formatDelta(kind, d) {
         if (d === null || !isFinite(d)) return EM_DASH;
         if (kind === "pct") return fmtSigned(d, 1) + "%";
         return fmtSigned(d, 0);
     }
-
     function parseIntOr(raw, fallback) {
         if (raw === null || raw === undefined) return fallback;
         var s = String(raw).trim();
@@ -104,7 +91,12 @@
         var n = parseInt(s, 10);
         return isNaN(n) ? fallback : n;
     }
-
+    function prettyClass(s) {
+        if (!s) return null;
+        return String(s).split(/[_\s]+/).map(function (w) {
+            return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w;
+        }).join(" ");
+    }
     function humanizeErrorType(type) {
         var known = {
             unsupported_build_type: "Build Type Not Supported (Yet!)",
@@ -115,61 +107,64 @@
             too_long: "Build Code Too Long",
             invalid_format: "Invalid Build Code",
             unsupported_version: "Unsupported PoB Version",
-            parse_error: "Could Not Read Build"
+            parse_error: "Could Not Read Build",
+            calculation_error: "Calculation Failed"
         };
         if (known[type]) return known[type];
-        return String(type)
-            .replace(/[_\-]+/g, " ")
-            .replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        return String(type).replace(/[_\-]+/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
     }
 
-    // ----------------------------------------------------------- log / state
+    // --------------------------------------------------------------- states
+    function showState(name) {
+        els.stateEmpty.classList.toggle("hidden", name !== "empty");
+        els.stateMsg.classList.toggle("hidden", name !== "msg");
+        els.stateRunning.classList.toggle("hidden", name !== "running");
+        els.stateResults.classList.toggle("hidden", name !== "results");
+    }
+    function setEngine(state, text) {
+        els.engineStatus.setAttribute("data-state", state);
+        els.engineText.textContent = text;
+    }
+    function setRunning(running) {
+        isRunning = running;
+        els.optimizeBtn.disabled = running;
+        els.optimizeBtn.textContent = running ? "Optimizing" + ELLIPSIS : "Optimize";
+        setEngine(running ? "busy" : "idle", running ? "optimizing" + ELLIPSIS : "engine ready");
+    }
 
     function appendLog(msg, kind) {
         var line = document.createElement("div");
         line.className = "log-line" + (kind ? " log-" + kind : "");
-        var time = document.createElement("span");
-        time.className = "log-time";
-        time.textContent = "[" + new Date().toLocaleTimeString() + "] ";
-        line.appendChild(time);
+        var t = document.createElement("span");
+        t.className = "log-time";
+        t.textContent = "[" + new Date().toLocaleTimeString() + "] ";
+        line.appendChild(t);
         line.appendChild(document.createTextNode(msg));
         els.eventLog.appendChild(line);
         els.eventLog.scrollTop = els.eventLog.scrollHeight;
     }
 
-    function setRunning(running) {
-        isRunning = running;
-        els.optimizeBtn.disabled = running;
-        els.optimizeBtn.textContent = running ? "Optimizing" + ELLIPSIS : "Optimize";
-    }
-
-    function finishRun() {
-        setRunning(false);
-    }
-
-    function showProgress() {
-        els.progressSection.classList.remove("hidden");
-    }
-
-    function resetProgress() {
+    function resetRunning() {
         els.eventLog.innerHTML = "";
         els.progressBar.style.width = "0%";
-        els.progressBar.textContent = "0%";
-        els.statusText.textContent = "Starting" + ELLIPSIS;
+        els.meter.setAttribute("aria-valuenow", "0");
+        els.runImp.textContent = EM_DASH;
+        els.runIter.textContent = "0 / 0";
+        els.runBest.textContent = EM_DASH;
+        els.runElapsed.textContent = "0.0s";
     }
 
-    function hideResults() {
-        els.resultsSection.classList.add("hidden");
-        els.exportBtn.classList.add("hidden");
-        els.exportNote.classList.add("hidden");
-    }
-
-    function hideMessage() {
-        els.messageBox.classList.add("hidden");
+    function setBuildIdentity(build) {
+        if (!build) { els.buildId.classList.add("hidden"); return; }
+        var cls = prettyClass(build["class"]);
+        els.biClass.textContent = cls || EM_DASH;
+        els.biAsc.textContent = build.ascendancy || EM_DASH;
+        els.biLevel.textContent = (build.level !== null && build.level !== undefined) ? String(build.level) : EM_DASH;
+        els.biSkill.textContent = build.main_skill || EM_DASH;
+        els.buildId.classList.remove("hidden");
     }
 
     // -------------------------------------------------------------- progress
-
     function updateProgress(data) {
         var maxIter = num(data.max_iterations);
         if (!isFinite(maxIter) || maxIter <= 0) maxIter = 1;
@@ -178,75 +173,48 @@
 
         var pct = Math.max(0, Math.min(100, Math.round((iter / maxIter) * 100)));
         els.progressBar.style.width = pct + "%";
-        els.progressBar.textContent = pct + "%";
+        els.meter.setAttribute("aria-valuenow", String(pct));
 
         var imp = num(data.improvement_pct);
-        var t = num(data.time_elapsed);
         var best = num(data.best_metric);
+        var t = num(data.time_elapsed);
 
-        els.statusText.textContent =
-            "Iteration " + Math.round(iter) + " / " + Math.round(maxIter) +
-            "  " + DOT + "  " + (isFinite(imp) ? fmtSigned(imp, 1) + "%" : EM_DASH) +
-            "  " + DOT + "  best " + (isFinite(best) ? fmtNum(best, 0) : EM_DASH) +
-            (isFinite(t) ? "  " + DOT + "  " + t.toFixed(1) + "s" : "");
+        els.runImp.textContent = isFinite(imp) ? fmtSigned(imp, 1) + "%" : EM_DASH;
+        els.runIter.textContent = Math.round(iter) + " / " + Math.round(maxIter);
+        els.runBest.textContent = isFinite(best) ? fmtNum(best, 0) : EM_DASH;
+        els.runElapsed.textContent = isFinite(t) ? t.toFixed(1) + "s" : EM_DASH;
 
         var budget = data.budget_used || {};
         appendLog(
             "iter " + Math.round(iter) + "/" + Math.round(maxIter) +
             "  best " + (isFinite(best) ? fmtNum(best, 0) : EM_DASH) +
             (isFinite(imp) ? "  " + fmtSigned(imp, 1) + "%" : "") +
-            "  budget " + get(budget, "unallocated", "?") + " alloc / " +
-            get(budget, "respec", "?") + " respec"
+            "  budget " + get(budget, "unallocated", "?") + " alloc / " + get(budget, "respec", "?") + " respec"
         );
     }
 
     // --------------------------------------------------------------- results
-
-    function displayResults(result) {
-        result = result || {};
-        var before = result.baseline_stats || {};
-        var after = result.optimized_stats || {};
-
-        // Headline improvement (accurate, no badge).
-        var imp = num(result.improvement_pct);
-        els.improvementHeadline.textContent = isFinite(imp) ? fmtSigned(imp, 1) + "%" : EM_DASH;
-        els.improvementHeadline.className =
-            "headline-value " + (isFinite(imp) ? (imp > 0 ? "pos" : (imp < 0 ? "neg" : "neutral")) : "neutral");
-
-        // Summary line (accurate facts: node counts + budget used).
-        var budget = result.budget_usage || {};
-        var nodes = result.node_changes || {};
-        var conv = result.convergence || {};
+    function renderNodeDiff(nodes) {
         var added = (nodes.added || []).length;
         var removed = (nodes.removed || []).length;
         var swapped = get(nodes, "swapped", 0);
-        var parts = [
-            added + " nodes added",
-            removed + " removed",
-            swapped + " swapped",
-            "budget used: " + get(budget, "unallocated_used", 0) + " allocate / " +
-                get(budget, "respec_used", 0) + " respec"
-        ];
-        if (conv && conv.iterations_run !== undefined && conv.iterations_run !== null) {
-            parts.push(conv.iterations_run + " iterations");
-        }
-        if (conv && conv.reason) {
-            parts.push("stopped: " + conv.reason);
-        }
-        els.resultsSummary.textContent = parts.join("  " + DOT + "  ");
+        els.ndAdded.textContent = String(added);
+        els.ndRemoved.textContent = String(removed);
+        els.ndSwapped.textContent = String(swapped);
+        var total = added + removed;
+        els.ndSegAdd.style.width = total > 0 ? (added / total * 100) + "%" : "0%";
+        els.ndSegRem.style.width = total > 0 ? (removed / total * 100) + "%" : "0%";
+    }
 
-        // Before / after table.
+    function renderTable(before, after) {
         els.resultsTbody.innerHTML = "";
         STAT_ROWS.forEach(function (row) {
-            var bVal = getStat(before, row.key);
-            var aVal = getStat(after, row.key);
-            var bN = num(bVal);
-            var aN = num(aVal);
+            var bVal = getStat(before, row.key), aVal = getStat(after, row.key);
+            var bN = num(bVal), aN = num(aVal);
             var delta = (isFinite(bN) && isFinite(aN)) ? (aN - bN) : null;
 
             var tr = document.createElement("tr");
 
-            // label + badges
             var tdLabel = document.createElement("td");
             tdLabel.className = "col-stat";
             var wrap = document.createElement("div");
@@ -256,71 +224,92 @@
             name.textContent = row.label;
             wrap.appendChild(name);
             if (row.approx) {
-                var approx = document.createElement("span");
-                approx.className = "note-approx";
-                approx.textContent = "(approx)";
-                wrap.appendChild(approx);
+                var ap = document.createElement("span");
+                ap.className = "note-approx";
+                ap.textContent = "approx";
+                wrap.appendChild(ap);
             }
             if (row.estimate) {
-                var badge = document.createElement("span");
-                badge.className = "badge-estimate";
-                badge.textContent = "estimate " + EM_DASH + " not PoB-accurate";
-                wrap.appendChild(badge);
+                var chip = document.createElement("span");
+                chip.className = "chip chip-estimate";
+                chip.textContent = "estimate";
+                chip.title = "Fast in-process estimate — not PoB-accurate";
+                wrap.appendChild(chip);
             }
             tdLabel.appendChild(wrap);
 
-            var tdBefore = document.createElement("td");
-            tdBefore.className = "col-num";
-            tdBefore.textContent = formatValue(row.fmt, bVal);
+            var tdB = document.createElement("td");
+            tdB.className = "num";
+            tdB.textContent = formatValue(row.fmt, bVal);
 
-            var tdAfter = document.createElement("td");
-            tdAfter.className = "col-num";
-            tdAfter.textContent = formatValue(row.fmt, aVal);
+            var tdA = document.createElement("td");
+            tdA.className = "num";
+            tdA.textContent = formatValue(row.fmt, aVal);
 
-            var tdDelta = document.createElement("td");
-            var deltaClass = (delta === null || delta === 0) ? "neutral" : (delta > 0 ? "pos" : "neg");
-            tdDelta.className = "col-num delta " + deltaClass;
-            tdDelta.textContent = formatDelta(row.fmt, delta);
+            var tdD = document.createElement("td");
+            var dClass = (delta === null || delta === 0) ? "neutral" : (delta > 0 ? "pos" : "neg");
+            tdD.className = "num delta " + dClass;
+            tdD.textContent = formatDelta(row.fmt, delta);
 
             tr.appendChild(tdLabel);
-            tr.appendChild(tdBefore);
-            tr.appendChild(tdAfter);
-            tr.appendChild(tdDelta);
+            tr.appendChild(tdB);
+            tr.appendChild(tdA);
+            tr.appendChild(tdD);
             els.resultsTbody.appendChild(tr);
         });
+    }
 
-        els.resultsSection.classList.remove("hidden");
-        els.exportBtn.classList.remove("hidden");
+    function displayResults(result) {
+        result = result || {};
+        var before = result.baseline_stats || {};
+        var after = result.optimized_stats || {};
+
+        var imp = num(result.improvement_pct);
+        els.headline.textContent = isFinite(imp) ? fmtSigned(imp, 1) + "%" : EM_DASH;
+        els.headline.className = "headline-value " + (isFinite(imp) ? (imp > 0 ? "pos" : (imp < 0 ? "neg" : "")) : "");
+
+        var budget = result.budget_usage || {};
+        var nodes = result.node_changes || {};
+        var conv = result.convergence || {};
+        var parts = [
+            "budget used: " + get(budget, "unallocated_used", 0) + " allocate / " + get(budget, "respec_used", 0) + " respec"
+        ];
+        if (conv && conv.iterations_run !== undefined && conv.iterations_run !== null) parts.push(conv.iterations_run + " iterations");
+        if (conv && conv.reason) parts.push("stopped: " + conv.reason);
+        els.resultsSummary.textContent = parts.join("  " + DOT + "  ");
+
+        renderNodeDiff(nodes);
+        renderTable(before, after);
+
+        showState("results");
+        els.exportNote.classList.add("hidden");
+        els.exportBtn.disabled = false;
     }
 
     // ---------------------------------------------------------------- errors
-
     function displayError(err) {
         err = err || {};
         var type = err.error_type || "error";
         var reason = err.reason || "Something went wrong.";
-
         if (type === "unsupported_build_type") {
-            // Friendly info box, not a scary error (per product decision).
-            els.messageBox.className = "message-box info";
-            els.messageTitle.textContent = "Build Type Not Supported (Yet!)";
-            els.messageBody.textContent =
-                "Coming in V2: Minion builds, Totems, traps, mines, Trigger-based builds.";
+            els.stateMsg.className = "pane state-msg info";
+            els.msgKind.textContent = "Not yet supported";
+            els.msgTitle.textContent = "Build Type Not Supported (Yet!)";
+            els.msgBody.textContent = "Coming in V2: Minion builds, Totems, traps, mines, and Trigger-based builds.";
         } else {
-            els.messageBox.className = "message-box";
-            els.messageTitle.textContent = humanizeErrorType(type);
-            els.messageBody.textContent = reason;
+            els.stateMsg.className = "pane state-msg";
+            els.msgKind.textContent = "Error";
+            els.msgTitle.textContent = humanizeErrorType(type);
+            els.msgBody.textContent = reason;
         }
-        els.messageBox.classList.remove("hidden");
+        showState("msg");
         appendLog("Error: " + reason, "error");
     }
 
     // ------------------------------------------------------------- optimize
-
-    function onOptimizeClick() {
+    function onOptimize(e) {
+        if (e) e.preventDefault();
         if (isRunning) return;
-        hideMessage();
-        hideResults();
 
         var code = els.pobCode.value.trim();
         if (!code) {
@@ -330,13 +319,12 @@
         if (code.length > MAX_CODE_LEN) {
             displayError({
                 error_type: "too_long",
-                reason: "Build code is " + code.length.toLocaleString() +
-                    " characters, which exceeds the " + MAX_CODE_LEN.toLocaleString() + " character limit."
+                reason: "Build code is " + code.length.toLocaleString() + " characters, exceeding the " +
+                    MAX_CODE_LEN.toLocaleString() + " character limit."
             });
             return;
         }
 
-        var metric = els.metric.value;
         var unalloc = parseIntOr(els.unalloc.value, 0);
         if (unalloc < 0) unalloc = 0;
         var respecRaw = els.respec.value.trim();
@@ -344,18 +332,16 @@
         if (respec !== null && respec < 0) respec = 0;
 
         setRunning(true);
-        showProgress();
-        resetProgress();
-        appendLog("Submitting build (" + code.length.toLocaleString() + " chars, metric=" + metric + ")" + ELLIPSIS);
+        resetRunning();
+        showState("running");
+        appendLog("Submitting build (" + code.length.toLocaleString() + " chars, goal=" + selectedGoal + ")" + ELLIPSIS);
 
         fetch("/optimize", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                pob_code: code,
-                metric: metric,
-                unallocated_points: unalloc,
-                respec_points: respec
+                pob_code: code, metric: selectedGoal,
+                unallocated_points: unalloc, respec_points: respec
             })
         })
         .then(function (resp) {
@@ -365,39 +351,35 @@
         })
         .then(function (res) {
             if (!res.ok) {
-                var err = (res.body && res.body.error_type)
-                    ? res.body
+                var err = (res.body && res.body.error_type) ? res.body
                     : { error_type: "request_failed", reason: "Optimization request failed (HTTP " + res.status + ")." };
                 displayError(err);
-                finishRun();
+                setRunning(false);
                 return;
             }
             currentSessionId = res.body && res.body.session_id;
             if (!currentSessionId) {
                 displayError({ error_type: "request_failed", reason: "Server did not return a session id." });
-                finishRun();
+                setRunning(false);
                 return;
             }
+            setBuildIdentity(res.body.build);
             appendLog("Session " + currentSessionId + " accepted. Streaming progress" + ELLIPSIS, "success");
             connectSSE(currentSessionId);
         })
-        .catch(function (e) {
-            displayError({ error_type: "request_failed", reason: "Could not reach the server: " + e });
-            finishRun();
+        .catch(function (e2) {
+            displayError({ error_type: "request_failed", reason: "Could not reach the server: " + e2 });
+            setRunning(false);
         });
     }
 
     // --------------------------------------------------------------- export
-
     function legacyCopy(text) {
         try {
             var ta = document.createElement("textarea");
-            ta.value = text;
-            ta.setAttribute("readonly", "");
-            ta.style.position = "absolute";
-            ta.style.left = "-9999px";
-            document.body.appendChild(ta);
-            ta.select();
+            ta.value = text; ta.setAttribute("readonly", "");
+            ta.style.position = "absolute"; ta.style.left = "-9999px";
+            document.body.appendChild(ta); ta.select();
             var ok = document.execCommand("copy");
             document.body.removeChild(ta);
             if (!ok && window.console) console.log("Optimized PoB code:", text);
@@ -407,27 +389,20 @@
             return false;
         }
     }
-
     function copyToClipboard(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            return navigator.clipboard.writeText(text).then(
-                function () { return true; },
-                function () { return legacyCopy(text); }
-            );
+            return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return legacyCopy(text); });
         }
         return Promise.resolve(legacyCopy(text));
     }
-
-    function showExportNote(msg, success) {
+    function showExportNote(msg, ok) {
         els.exportNote.textContent = msg;
-        els.exportNote.style.color = success ? "var(--pos)" : "var(--neg)";
+        els.exportNote.className = "export-note " + (ok ? "ok" : "err");
         els.exportNote.classList.remove("hidden");
     }
-
-    function onExportClick() {
+    function onExport() {
         if (!currentSessionId) return;
         els.exportNote.classList.add("hidden");
-
         fetch("/export/" + encodeURIComponent(currentSessionId))
         .then(function (resp) {
             return resp.json().catch(function () { return {}; }).then(function (body) {
@@ -436,85 +411,143 @@
         })
         .then(function (res) {
             if (!res.ok || !res.body || !res.body.pob_code) {
-                var reason = (res.body && res.body.reason)
-                    ? res.body.reason
-                    : "Export failed (HTTP " + res.status + ").";
-                showExportNote(reason, false);
+                showExportNote((res.body && res.body.reason) ? res.body.reason : "Export failed (HTTP " + res.status + ").", false);
                 return;
             }
             copyToClipboard(res.body.pob_code).then(function (ok) {
-                if (ok) {
-                    showExportNote("Copied optimized build code to clipboard.", true);
-                } else {
-                    showExportNote("Could not copy automatically " + EM_DASH + " code logged to the console.", false);
-                }
+                showExportNote(ok ? "Copied optimized build code to clipboard." :
+                    "Could not copy automatically " + EM_DASH + " code logged to the console.", ok);
             });
         })
-        .catch(function (e) {
-            showExportNote("Export failed: " + e, false);
-        });
+        .catch(function (e) { showExportNote("Export failed: " + e, false); });
     }
 
-    // ------------------------------------------------------------- char count
-
+    // ------------------------------------------------------------- controls
     function updateCharCount() {
         var len = els.pobCode.value.length;
-        els.charCount.textContent =
-            len.toLocaleString() + " / " + MAX_CODE_LEN.toLocaleString() + " characters";
+        els.charCount.textContent = len.toLocaleString() + " / " + MAX_CODE_LEN.toLocaleString();
         var over = len > MAX_CODE_LEN;
         els.charCount.classList.toggle("over-limit", over);
         els.pobCode.classList.toggle("over-limit", over);
     }
 
-    // ----------------------------------------------------------------- init
+    function applyAccent(accent) {
+        var val = (accent === "gold") ? "gold" : "teal";
+        document.documentElement.setAttribute("data-accent", val);
+        var opts = document.querySelectorAll(".accent-opt");
+        for (var i = 0; i < opts.length; i++) {
+            opts[i].setAttribute("aria-pressed", String(opts[i].getAttribute("data-accent-val") === val));
+        }
+        try { localStorage.setItem(ACCENT_KEY, val); } catch (e) { /* ignore */ }
+    }
 
+    function wireGoal() {
+        var segs = els.goalSeg.querySelectorAll(".seg");
+        function select(seg) {
+            selectedGoal = seg.getAttribute("data-goal");
+            for (var i = 0; i < segs.length; i++) {
+                var on = segs[i] === seg;
+                segs[i].setAttribute("aria-checked", String(on));
+                segs[i].tabIndex = on ? 0 : -1;
+            }
+        }
+        for (var i = 0; i < segs.length; i++) {
+            (function (seg) {
+                seg.addEventListener("click", function () { select(seg); });
+            })(segs[i]);
+        }
+        els.goalSeg.addEventListener("keydown", function (ev) {
+            var idx = -1, list = els.goalSeg.querySelectorAll(".seg");
+            for (var i = 0; i < list.length; i++) { if (list[i].getAttribute("aria-checked") === "true") { idx = i; break; } }
+            if (idx < 0) return;
+            var next = idx;
+            if (ev.key === "ArrowRight" || ev.key === "ArrowDown") next = (idx + 1) % list.length;
+            else if (ev.key === "ArrowLeft" || ev.key === "ArrowUp") next = (idx - 1 + list.length) % list.length;
+            else return;
+            ev.preventDefault();
+            select(list[next]); list[next].focus();
+        });
+    }
+
+    // ----------------------------------------------------------------- init
     function init() {
         els.pobCode = document.getElementById("pob-code");
         els.charCount = document.getElementById("char-count");
         els.clearBtn = document.getElementById("clear-btn");
         els.unalloc = document.getElementById("unallocated-points");
         els.respec = document.getElementById("respec-points");
-        els.metric = document.getElementById("metric");
+        els.goalSeg = document.getElementById("goal-seg");
+        els.optimizeForm = document.getElementById("optimize-form");
         els.optimizeBtn = document.getElementById("optimize-btn");
 
-        els.messageBox = document.getElementById("message-box");
-        els.messageTitle = document.getElementById("message-title");
-        els.messageBody = document.getElementById("message-body");
+        els.engineStatus = document.getElementById("engine-status");
+        els.engineText = document.getElementById("engine-text");
 
-        els.progressSection = document.getElementById("progress-section");
+        els.buildId = document.getElementById("build-id");
+        els.biClass = document.getElementById("bi-class");
+        els.biAsc = document.getElementById("bi-asc");
+        els.biLevel = document.getElementById("bi-level");
+        els.biSkill = document.getElementById("bi-skill");
+
+        els.stateEmpty = document.getElementById("state-empty");
+        els.stateMsg = document.getElementById("state-msg");
+        els.stateRunning = document.getElementById("state-running");
+        els.stateResults = document.getElementById("state-results");
+        els.msgKind = document.getElementById("msg-kind");
+        els.msgTitle = document.getElementById("msg-title");
+        els.msgBody = document.getElementById("msg-body");
+
+        els.runImp = document.getElementById("run-imp");
+        els.runIter = document.getElementById("run-iter");
+        els.runBest = document.getElementById("run-best");
+        els.runElapsed = document.getElementById("run-elapsed");
+        els.meter = document.getElementById("meter");
         els.progressBar = document.getElementById("progress-bar");
-        els.statusText = document.getElementById("status-text");
         els.eventLog = document.getElementById("event-log");
 
-        els.resultsSection = document.getElementById("results-section");
-        els.improvementHeadline = document.getElementById("improvement-headline");
+        els.headline = document.getElementById("improvement-headline");
         els.resultsSummary = document.getElementById("results-summary");
+        els.ndAdded = document.getElementById("nd-added");
+        els.ndRemoved = document.getElementById("nd-removed");
+        els.ndSwapped = document.getElementById("nd-swapped");
+        els.ndSegAdd = document.getElementById("nd-seg-add");
+        els.ndSegRem = document.getElementById("nd-seg-rem");
         els.resultsTbody = document.getElementById("results-tbody");
         els.exportBtn = document.getElementById("export-btn");
         els.exportNote = document.getElementById("export-note");
 
-        // Wire SSE hooks (sseClient + connectSSE provided by sse_client.js).
+        // Accent: restore persisted choice.
+        var saved = "teal";
+        try { saved = localStorage.getItem(ACCENT_KEY) || "teal"; } catch (e) { /* ignore */ }
+        applyAccent(saved);
+        var accentOpts = document.querySelectorAll(".accent-opt");
+        for (var i = 0; i < accentOpts.length; i++) {
+            (function (opt) {
+                opt.addEventListener("click", function () { applyAccent(opt.getAttribute("data-accent-val")); });
+            })(accentOpts[i]);
+        }
+
+        wireGoal();
+
+        // SSE hooks.
         sseClient.onProgress = updateProgress;
         sseClient.onComplete = function (data) {
             els.progressBar.style.width = "100%";
-            els.progressBar.textContent = "100%";
-            els.statusText.textContent = "Optimization complete.";
+            els.meter.setAttribute("aria-valuenow", "100");
             appendLog("Optimization complete.", "success");
             displayResults(data);
-            finishRun();
+            setRunning(false);
         };
-        sseClient.onError = function (err) {
-            displayError(err);
-            finishRun();
-        };
+        sseClient.onError = function (err) { displayError(err); setRunning(false); };
 
-        // Wire DOM events.
-        els.optimizeBtn.addEventListener("click", onOptimizeClick);
-        els.exportBtn.addEventListener("click", onExportClick);
+        // Events.
+        els.optimizeForm.addEventListener("submit", onOptimize);
+        els.exportBtn.addEventListener("click", onExport);
         els.clearBtn.addEventListener("click", function () {
             els.pobCode.value = "";
             updateCharCount();
-            hideMessage();
+            els.buildId.classList.add("hidden");
+            showState("empty");
             els.pobCode.focus();
         });
         els.pobCode.addEventListener("input", updateCharCount);
@@ -522,9 +555,6 @@
         updateCharCount();
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
-    } else {
-        init();
-    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
 })();

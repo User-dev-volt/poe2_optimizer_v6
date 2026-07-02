@@ -1,8 +1,19 @@
-diff --git a/src/Data/Global.lua b/src/Data/Global.lua
-index 522f0c8a1..94ccc09e6 100644
---- a/src/Data/Global.lua
-+++ b/src/Data/Global.lua
-@@ -108,26 +108,27 @@ function OR64(...)
+PEBO Epic 3.5 proposed patch 1/3 (DRAFT - not yet promoted to external/patches/)
+Subject: PoB Global.lua nil-safety for OR64/AND64/XOR64/NOT64
+Origin: ADR-004 (docs/decisions/ADR-004-pob-global-lua-nil-safety-patch.md), Story 2.9.2;
+  spell builds crash with "attempt to perform arithmetic on a nil value" without it.
+Regenerated: 2026-07-02 against clean upstream v0.15.0
+  (tag commit 3e1b71c92dc5f7c295031700746a418558117b06) from the live vendored tree at
+  superproject HEAD 0b8ca40. Supersedes external/patches/global-lua-nil-safety.patch,
+  which was cut against 0.12.2 and sits at a -2-line hunk offset on 0.15.0.
+Apply from repo root onto an LF checkout of v0.15.0 at external/pob-engine:
+  git -c core.autocrlf=false apply docs/forensics/proposed-patches/0001-global-lua-nil-safety.patch
+Verify applied: grep -c "or 0  -- Handle nil arguments" external/pob-engine/src/Data/Global.lua  # = 3
+diff --git a/external/pob-engine/src/Data/Global.lua b/external/pob-engine/src/Data/Global.lua
+index 7e8a178..45b232e 100644
+--- a/external/pob-engine/src/Data/Global.lua
++++ b/external/pob-engine/src/Data/Global.lua
+@@ -110,26 +110,27 @@ function OR64(...)
      if #args < 2 then
          return args[1] or 0
      end
@@ -39,7 +50,7 @@ index 522f0c8a1..94ccc09e6 100644
      return result
  end
  
-@@ -136,26 +137,27 @@ function AND64(...)
+@@ -138,26 +139,27 @@ function AND64(...)
      if #args < 2 then
          return args[1] or 0
      end
@@ -76,7 +87,7 @@ index 522f0c8a1..94ccc09e6 100644
      return result
  end
  
-@@ -164,30 +166,33 @@ function XOR64(...)
+@@ -166,30 +168,33 @@ function XOR64(...)
      if #args < 2 then
          return args[1] or 0
      end

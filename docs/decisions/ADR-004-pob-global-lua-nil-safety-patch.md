@@ -264,3 +264,29 @@ Add to CI pipeline (`.github/workflows/test.yml` or similar):
 ## Authors
 - Amelia (Dev Agent) - Implementation
 - Alec - Review and approval
+
+---
+
+## Addendum — 2026-07-02 (correct-course / forensics)
+
+The 2026-07-02 pob-engine forensics run (`docs/forensics/pob-engine-forensics-2026-07-02.md`)
+and the sprint change proposal Decisions section supersede parts of this ADR:
+
+1. **Patch file renamed/regenerated.** `external/patches/global-lua-nil-safety.patch`
+   (cut against 0.12.2) is retired. The nil-safety fix now lives at
+   `external/patches/0001-global-lua-nil-safety.patch`, regenerated against upstream
+   **v0.22.0** (`860f4268` — the pin target decided 2026-07-02; v0.22.0 was verified to
+   still lack these guards). Paths inside the patch are now repo-root-relative
+   (`git apply` from project root, no `cd` into the submodule).
+2. **Two sibling patches discovered and captured.** Story 2.9.2 also hand-edited
+   `src/Classes/ModStore.lua` (EvalMod nil guard) and `src/Modules/CalcOffence.lua`
+   (ailment buildupTypes guard) directly in the vendored tree with **no patch file
+   anywhere** — exactly the failure mode this ADR warned about. Now captured as
+   `0002-modstore-evalmod-nil-safety.patch` / `0003-calcoffence-ailment-buildup-nil-safety.patch`.
+3. **Reapplication is being automated.** Stories 3.5.3 (`scripts/setup_pob.py`,
+   idempotent apply of every patch in `external/patches/`) and 3.5.4 (autouse conftest
+   `pob_env.verify()`, data-driven per-patch check) replace this ADR's manual
+   apply/verify instructions and its hardcoded-marker CI snippet.
+4. **Open question for the Epic 4 spike** (pebo-master-plan §6 E4 item 1): whether the
+   real ModParser pipeline still needs these guards at all — if not, the patches are
+   dropped (one-file change each, by design).

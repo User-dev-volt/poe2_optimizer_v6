@@ -1,4 +1,8 @@
-# generated: 2025-11-29
+# generated: 2026-07-02
+# updated: 2026-07-02 via correct-course — see docs/sprint-change-proposal-2026-07-02.md
+# POST-EPIC-3 SCOPE IS GOVERNED BY docs/pebo-master-plan.md (adopted 2026-07-01, commit 0b8ca40).
+# docs/epics.md + docs/PRD.md remain the record of Epics 1-3 ONLY — do not draft new stories from them.
+# Epic 3 as-built record: docs/epic-3-thin-slice-plan.md
 # project: poe2_optimizer_v6
 # project_key: poe2_optimizer_v6
 # tracking_system: file-system
@@ -29,7 +33,7 @@
 # - SM typically drafts next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
 
-generated: 2025-11-29
+generated: 2026-07-02  # refreshed 2026-07-02 via sprint-planning — see docs/sprint-change-proposal-2026-07-02.md
 project: poe2_optimizer_v6
 project_key: poe2_optimizer_v6
 tracking_system: file-system
@@ -60,22 +64,45 @@ development_status:
   2-8-optimization-progress-tracking: done
   2-9-integrate-full-pob-calculation-engine: done  # COMPLETE 2025-11-26: Attack skills working (DPS=311.7 verified). Spell/DOT gap discovered 2025-11-27 → Story 2.9.x created
   2-9-x-calculation-gap-analysis: done  # COMPLETE 2025-11-29: Gap analysis finished, Alec approved Hybrid approach (10-16h). Story 2.9.1 to implement.
-  2-9-1-hybrid-calculation-approach: in-progress  # Context generated 2025-11-29. Phase 1: Load PoB data & fix weapons (2-4h), Phase 2: Subprocess fallback (8-12h). Total: 10-16 hours.
-  2-9-2-spell-dot-minimalcalc-enhancement: in-progress  # Context generated 2025-12-01: Phase 2 spell/DOT support for MinimalCalc.lua. Completes Epic 2 validation (100% build success). Est: 10-16 hours.
+  2-9-1-hybrid-calculation-approach: done  # COMPLETE: Phase 1 delivered - hybrid routing, skill detection, 4/15 weapon builds working. Handed off to Story 2.9.2 for spell/DOT support.
+  2-9-2-spell-dot-minimalcalc-enhancement: done  # CLOSED 2026-07-02 on M0 evidence (docs/validation/realistic-validation-results.json): 15/15 corpus builds calculate with 0 errors, spell/DOT baselines nonzero, corpus median improvement 46.03%. Residual accuracy limits (MinimalCalc ~4% of GUI DPS on geared builds; lich_storm_mage_90 0-DPS main skill) are superseded scope — pebo-master-plan Epic 4 Truth Engine retires MinimalCalc. See sprint-change-proposal-2026-07-02.md section 4.2.
   epic-2-retrospective: completed
 
   # Epic 3: User Experience & Local Reliability
-  epic-3: backlog
-  3-1-flask-web-server-setup: backlog
-  3-2-pob-code-input-and-validation-ui: backlog
-  3-3-budget-input-ui-dual-fields: backlog
-  3-4-metric-selection-dropdown: backlog
-  3-5-optimization-progress-display-real-time: backlog
-  3-6-results-display-before-after-comparison: backlog
-  3-7-export-optimized-pob-code: backlog
-  3-8-error-messages-structured-actionable: backlog
-  3-9-optimization-timeout-5-minute-hard-stop: backlog
-  3-10-resource-cleanup-prevent-memory-leaks: backlog
-  3-11-file-based-error-logging: backlog
-  3-12-performance-optimization-final-polish: backlog
-  epic-3-retrospective: optional
+  # AS-BUILT 2026-06-30..07-01: thin slice (3.1-3.7) shipped in commits 537d796 + bc4e8e6 (src/web/, Flask + vanilla JS).
+  # Epic context / as-built record: docs/epic-3-thin-slice-plan.md (no per-story files were drafted — accepted process deviation).
+  # KNOWN DEBT: zero automated tests import src.web (thin-slice step 10 unfulfilled) — Flask test-client smoke tests FOLDED INTO story 3.5-4 (AC-3.5.4.6) per the 2026-07-02 decision.
+  epic-3: contexted
+  3-1-flask-web-server-setup: done  # src/web/app.py + main.py (537d796)
+  3-2-pob-code-input-and-validation-ui: done  # client checks + server parse + unsupported-build gate (routes.py:67 detect_unsupported_build_type)
+  3-3-budget-input-ui-dual-fields: done  # dual budget fields (unallocated + respec), templates/index.html
+  3-4-metric-selection-dropdown: done  # metric select wired to OptimizationConfiguration
+  3-5-optimization-progress-display-real-time: done  # SSE queue-per-session (sse_manager.py) + 5-kwarg progress callback
+  3-6-results-display-before-after-comparison: done  # before/after stats table (static/js/main.js)
+  3-7-export-optimized-pob-code: done  # encode_pob_code round-trip; unit test tests/unit/test_encode_pob_code.py
+  3-8-error-messages-structured-actionable: backlog  # PARTIAL fold-in shipped: error_type/reason 400/500 mapping + terminal SSE error events (routes.py, optimization_runner._fail). Full FR-1.4 4-field format NOT built; remainder -> Epic 3.5 hardening window or Epic 5 error UX. Do not resume as Epic 3.
+  3-9-optimization-timeout-5-minute-hard-stop: done  # DONE BY DELEGATION to Epic 2: TIMEOUT_SECONDS=300 (src/web/config.py:15) -> OptimizationConfiguration.max_time_seconds; partial result via convergence_reason=timeout; no Flask watchdog by design
+  3-10-resource-cleanup-prevent-memory-leaks: backlog  # PARTIAL fold-in shipped: del result + gc.collect() in worker finally (optimization_runner.py:161). Remainder SUPERSEDED by pebo-master-plan Epic 4 respawnable worker-process pool — do not build in-process Lua cleanup.
+  3-11-file-based-error-logging: backlog  # PARTIAL fold-in shipped: logging.basicConfig(INFO) to stderr (app.py:46). RotatingFileHandler logs/optimizer.log NOT built; park in Epic 3.5 hardening or Epic 8 packaging.
+  3-12-performance-optimization-final-polish: backlog  # SUPERSEDED by pebo-master-plan Epic 4 optimizer rewire (EVAL_NEIGHBORS batching, modKey caching); 1000-calc/s NFR obsolete (conflicts with 2.9 routing; MinimalCalc retires). DO NOT BUILD.
+  epic-3-retrospective: optional  # recommended before Epic 3.5 kickoff — capture the thin-slice process deviation (no story files, no SM review)
+
+  # Epic 3.5: Substrate & Trust (lite) — inserted 2026-07-02 per docs/sprint-change-proposal-2026-07-02.md
+  # Source: docs/pebo-master-plan.md section 6, Epic 3.5 items 1-5 (item 6 defers ratchet/trust-tiers to Epic 4 — not a story).
+  # Envelope ~25-35h (+~2h folded smoke rider -> ~27-37h) -> v0.9 (internal). M0 gate disposition: CONDITIONAL PASS (median 46.03% PASS / success 66.67% MISS by one; proceed with riders — see proposal section 5).
+  # DECISIONS 2026-07-02 (proposal Decisions section): patches PROMOTED to external/patches/0001..0003 (0001 regenerated+verified vs v0.22.0; stale 0.12.2 patch retired); pin target = v0.22.0 (860f4268, jump from 0.15.0); smoke rider folded into 3.5-4.
+  epic-3.5: contexted  # context = pebo-master-plan section 6 + sprint-change-proposal-2026-07-02; story files drafted in docs/stories/
+  3.5-1-pob-engine-forensics: drafted  # story-3.5.1-pob-engine-forensics.md; kick-off diff run executing 2026-07-02 in parallel, report -> docs/forensics/pob-engine-forensics-2026-07-02.md
+  3.5-2-submodule-repair-and-pin: drafted  # story-3.5.2-submodule-repair-and-pin.md; blocked by 3.5-1 (risk #2 CRITICAL: diff-before-destroy); pin = v0.22.0 (860f4268) per 2026-07-02 decision; patch promotion already executed
+  3.5-3-setup-pob-script: drafted  # story-3.5.3-setup-pob-script.md; the ONE setup command in README
+  3.5-4-pob-env-verify-conftest-guard: drafted  # story-3.5.4-pob-env-verify-conftest-guard.md; FAIL (not skip) for parity/corpus tests; patch-marker check must be patch-set-driven; + Flask smoke tests folded in (AC-3.5.4.6, 6-8h)
+  3.5-5-gui-baseline-harvest: drafted  # story-3.5.5-gui-baseline-harvest.md; 6-8 geared Tier-A baselines (attack, spell-hit, DoT first)
+  epic-3.5-retrospective: optional
+
+  # Epics 4-8: governed by docs/pebo-master-plan.md section 6. Stories not yet drafted — BMAD epic/story
+  # definitions are authored at each epic's kickoff, carrying the plan's per-step acceptance criteria.
+  epic-4: backlog  # Truth Engine (~80-140h) -> v1 SHIPS HERE. Timeboxed driver.lua spike (go/no-go pre-committed); FullCalcEngine behind build_calculator.py + respawnable worker pool; tree 0_3->0_5 bump + version assert (v0.22.0 pin ships TreeData/0_5 — 2026-07-02 amendment); optimizer rewire (EVAL_NEIGHBORS batching) + cooperative cancel; MVP config; validation completion (mass baselines, parity v2 tiers, Epic 2 gate re-run, trust_tiers.json, release_gate.py); round-trip release gate; MinimalCalc retired. Entry checklist: triage the five 0.0%-improvement M0 builds (no_valid_neighbors at iteration 0) + pre-filed story to retire the FR-1.6 rejection gate (src/web/routes.py:47-104).
+  epic-5: backlog  # Visual Tree & Workspace Shell (~120-180h): 5A read-only tree diff canvas -> v1.1; 5B interactive tree editing + builds CRUD -> v1.2; 5C read-only gear/skills display; 5D icon atlas + polish. Vanilla UI stays default until the SPA is strictly better.
+  epic-6: backlog  # Advisor (~80-120h) -> v2: intent weights (de-hardcode metrics.py 0.6/0.4), tree suggestion engine, gear wishlist scan, trade-query links, flags engine.
+  epic-7: backlog  # Full editors (post-demand, ~120-180h): crafting bench/affix picker, uniques browser, runes, skills editing, full config tab, set CRUD.
+  epic-8: backlog  # Distribution & AI polish (stretch, ~60-100h): packaging REQUIRED before any public release; LLM narration (engine picks, LLM narrates {id, narration}); GGG import.

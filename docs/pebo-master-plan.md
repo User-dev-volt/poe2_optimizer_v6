@@ -172,6 +172,10 @@ epic is "fix the optimizer," and everything below waits.
    of what was hand-edited in that tree.)*
 2. Re-establish the real submodule, pin to the 0.15.0 release commit; `POB_VERSION.txt`
    becomes *generated* from the gitlink, never hand-edited.
+   *(Amended 2026-07-02: pin target = **v0.22.0** `860f4268`, latest upstream — Alec
+   decision, `sprint-change-proposal-2026-07-02.md` §Decisions. Forensics ran same day:
+   tree = clean 0.15.0 + exactly 3 nil-safety edits, promoted to `external/patches/0001..0003`;
+   0001 regenerated + verified against v0.22.0.)*
 3. `scripts/setup_pob.py` (idempotent): submodule init/update + auto-apply all patches
    (`git apply --check --reverse` skip-if-applied); the ONE setup command in README.
 4. Enforcement that cannot be forgotten: autouse conftest fixture `pob_env.verify()` —
@@ -186,7 +190,8 @@ epic is "fix the optimizer," and everything below waits.
 ### Epic 4 — Truth Engine (~80–140h) → **v1 ships here**
 1. **Timeboxed spike (2 weeks hard, go/no-go pre-committed):** `driver.lua` boots the full
    Launch→Main→Data chain under Lupa in a worker process; loads a real geared PoB code;
-   `output.TotalDPS` matches GUI 0.15.0 within ±0.1%. Boot crash → flip to the `luajit.exe`
+   `output.TotalDPS` matches the pinned GUI release within ±0.1% *(0.15.0 at writing;
+   v0.22.0 per the 2026-07-02 pin amendment)*. Boot crash → flip to the `luajit.exe`
    subprocess lane the same week (same driver file). Also answers: is the ADR-004 patch
    even needed under the real ModParser?
 2. `FullCalcEngine` behind the existing `build_calculator.py` interface; XML-direct build
@@ -194,6 +199,8 @@ epic is "fix the optimizer," and everything below waits.
    flag lands here** (same loop the batch-eval rewire touches).
 3. **Tree 0_3→0_4 bump** in `passive_tree.py` + startup assert artifact-version ==
    calc-version; imports routed through `PassiveSpec` `convert=true`.
+   *(2026-07-02: the v0.22.0 pin ships `TreeData/0_5/` — the bump and all E5 tree
+   artifacts target 0_5, not 0_4.)*
    **Acceptance criteria: weapon-set (allocMode) and dual-ascendancy nodes preserved and
    calc-correct on the corpus; optimizer treats them as frozen allocations in v1.**
 4. Optimizer rewire: one `EVAL_NEIGHBORS` batch per iteration via `getMiscCalculator` with

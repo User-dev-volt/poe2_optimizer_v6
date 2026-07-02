@@ -1,135 +1,74 @@
 # External Dependency Patches
 
-This directory contains patches for external dependencies (Git submodules) that require modifications for our project.
+Patches for `external/pob-engine` (Path of Building PoE2). The engine is consumed at a
+pinned upstream commit; every local modification MUST exist as a patch file here — edits
+made only in the working tree are silently lost on any update/re-vendor (this happened:
+patches 0002/0003 below existed solely as untracked hand-edits from Story 2.9.2 until the
+2026-07-02 forensics run recovered them — see
+`docs/forensics/pob-engine-forensics-2026-07-02.md`).
 
-## Why Patches?
+## Patch set (applies in filename order)
 
-External dependencies are managed as Git submodules, which point to upstream repositories. When we need to modify files in these submodules:
-- Changes are **lost** when the submodule is updated to a new commit
-- We cannot commit changes directly to the submodule (it's a read-only reference)
+**Pin target: upstream tag `v0.22.0` = `860f4268299739ce9df87c4f373abe35824101cf`**
+(decided 2026-07-02 — see `docs/sprint-change-proposal-2026-07-02.md`, Decisions; story
+3.5.2 executes the re-pin). The live vendored tree is still 0.15.0-era with all three
+edits baked in; this set becomes operative on the fresh v0.22.0 checkout.
 
-Patches provide a **reusable, documented way** to reapply necessary modifications after submodule updates.
+### `0001-global-lua-nil-safety.patch`
+- **Target**: `external/pob-engine/src/Data/Global.lua` — nil guards in `OR64`/`AND64`/`XOR64`/`NOT64`
+- **Why**: spell builds pass nil to the 64-bit bitwise ops during init → `attempt to perform arithmetic on a nil value`
+- **Provenance**: ADR-004 / Story 2.9.2. Regenerated 2026-07-02 against v0.22.0 (upstream
+  still lacks the guards; only the `#args < 2` early-return is nil-safe). v0.15.0-targeted
+  draft preserved at `docs/forensics/proposed-patches/0001-global-lua-nil-safety.patch`.
+- **Sentinel**: `grep -c "or 0  -- Handle nil arguments" external/pob-engine/src/Data/Global.lua` → `3`
 
-## Available Patches
+### `0002-modstore-evalmod-nil-safety.patch`
+- **Target**: `external/pob-engine/src/Classes/ModStore.lua` — `EvalMod` nil guard (value can be nil when `mod.value` is nil)
+- **Provenance**: Story 2.9.2 hand-edit, never captured until the 2026-07-02 forensics run. Applies clean on both v0.15.0 and v0.22.0 (verified).
+- **Sentinel**: `grep -c "Nil-safety patch (Story 2.9.2)" external/pob-engine/src/Classes/ModStore.lua` → `1`
 
-### `global-lua-nil-safety.patch`
+### `0003-calcoffence-ailment-buildup-nil-safety.patch`
+- **Target**: `external/pob-engine/src/Modules/CalcOffence.lua` — skip ailments missing from `data.buildupTypes` (`::continue_ailment::` goto)
+- **Provenance**: Story 2.9.2 hand-edit, never captured until the 2026-07-02 forensics run. Applies clean on both v0.15.0 and v0.22.0 (verified).
+- **Sentinel**: `grep -c "continue_ailment" external/pob-engine/src/Modules/CalcOffence.lua` → `2`
 
-**Purpose**: Adds nil-safety to 64-bit bitwise operations in PoB engine
+### Retired
+- `global-lua-nil-safety.patch` (0.12.2-era; sat at a hunk offset on 0.15.0+) — superseded by `0001-global-lua-nil-safety.patch`.
 
-**Target file**: `external/pob-engine/src/Data/Global.lua`
+## Applying
 
-**Functions patched**:
-- `OR64` - Handles nil arguments in OR operations
-- `AND64` - Handles nil arguments in AND operations
-- `XOR64` - Handles nil arguments in XOR operations
-- `NOT64` - Handles nil input
-
-**Why needed**: Spell builds pass nil values to bitwise functions during initialization, causing `Global.lua:118` errors
-
-**Documentation**: See [ADR-004](../../docs/decisions/ADR-004-pob-global-lua-nil-safety-patch.md)
-
-## Usage
-
-### Verify Patch Status
-
-Check if patch is applied:
-
-```bash
-# From project root
-grep -n "or 0  -- Handle nil arguments" external/pob-engine/src/Data/Global.lua
-```
-
-**Expected output (patch applied)**:
-```
-117:        local nextVal = args[i] or 0  -- Handle nil arguments
-146:        local nextVal = args[i] or 0  -- Handle nil arguments
-175:        local nextVal = args[i] or 0  -- Handle nil arguments
-```
-
-**No output = patch NOT applied** (needs reapplication)
-
-### Apply Patch
+All patches are repo-root-relative (`external/pob-engine/...` paths) and LF (`.gitattributes`
+here enforces `-text`). From the project root, onto an LF checkout
+(`git -c core.autocrlf=false -c core.eol=lf ...`):
 
 ```bash
-# From project root
-cd external/pob-engine
-git apply ../../external/patches/global-lua-nil-safety.patch
-cd ../..
+git -c core.autocrlf=false apply external/patches/0001-global-lua-nil-safety.patch
+git -c core.autocrlf=false apply external/patches/0002-modstore-evalmod-nil-safety.patch
+git -c core.autocrlf=false apply external/patches/0003-calcoffence-ailment-buildup-nil-safety.patch
 ```
 
-### Verify Application
+Skip-if-applied check (per patch): forward `git apply --check` fails AND
+`git apply --reverse --check` passes ⇒ already applied — skip. This logic (and the whole
+sequence) is automated by `scripts/setup_pob.py` once story 3.5.3 lands; the autouse
+conftest guard (story 3.5.4) verifies every patch in this directory data-driven — never
+hardcode patch names anywhere.
+
+## Regression gate
 
 ```bash
-# Run regression tests
-pytest tests/integration/test_story_2_9_2_spell_builds.py -v
+pytest -n 1 tests/integration/test_story_2_9_2_spell_builds.py -v
 ```
 
-All spell build tests should pass.
+## After a version bump (patch-day workstream)
 
-### Reapply After Submodule Update
-
-When you update the `external/pob-engine` submodule:
-
-1. Update submodule to new commit:
-   ```bash
-   cd external/pob-engine
-   git pull origin main  # or specific branch/tag
-   cd ../..
-   git add external/pob-engine
-   ```
-
-2. Reapply patches:
-   ```bash
-   cd external/pob-engine
-   git apply ../../external/patches/global-lua-nil-safety.patch
-   cd ../..
-   ```
-
-3. Verify tests still pass:
-   ```bash
-   pytest tests/integration/test_story_2_9_2_spell_builds.py -v
-   ```
-
-4. If patch fails to apply (upstream changed Global.lua):
-   - Review upstream changes in `src/Data/Global.lua`
-   - Manually merge our nil-safety fixes
-   - Regenerate patch file:
-     ```bash
-     cd external/pob-engine
-     git diff src/Data/Global.lua > ../../external/patches/global-lua-nil-safety.patch
-     cd ../..
-     ```
-   - Update ADR-004 with new patch details
-
-## Automated Verification (CI)
-
-Add to your CI pipeline (`.github/workflows/test.yml` or similar):
-
-```yaml
-- name: Verify PoB patches applied
-  run: |
-    if ! grep -q "or 0  -- Handle nil arguments" external/pob-engine/src/Data/Global.lua; then
-      echo "ERROR: Global.lua nil-safety patch not applied!"
-      echo "Run: cd external/pob-engine && git apply ../../external/patches/global-lua-nil-safety.patch"
-      exit 1
-    fi
-```
-
-## Future Improvements
-
-### Option 1: Upstream Contribution
-If PoB 2 appears in PathOfBuildingCommunity repository, propose these fixes upstream.
-
-### Option 2: Fork Submodule
-Create our own fork of `pob-engine` with patches permanently applied:
-- Simpler maintenance (no reapplication needed)
-- More work to keep fork synced with upstream
-
-### Option 3: Automated Patch Application
-Add Git hooks or build scripts to automatically apply patches on submodule checkout.
+1. Check whether upstream fixed each issue (inspect the target functions at the new tag).
+2. `git apply --check` each patch against the new tag's clean checkout (scratch clone).
+3. Regenerate any that fail on context drift (semantic edits are documented in each header
+   and in ADR-004); drop any that upstream fixed, and update this README + ADR-004.
 
 ## References
 
-- **ADR-004**: [PoB Global.lua Nil-Safety Patch](../../docs/decisions/ADR-004-pob-global-lua-nil-safety-patch.md)
-- **Story 2.9.2**: [Spell/DOT MinimalCalc Enhancement](../../docs/stories/2-9-2-spell-dot-minimalcalc-enhancement.md)
-- **Upstream**: [PathOfBuildingCommunity/PathOfBuilding](https://github.com/PathOfBuildingCommunity/PathOfBuilding)
+- **ADR-004**: `docs/decisions/ADR-004-pob-global-lua-nil-safety-patch.md` (incl. 2026-07-02 addendum)
+- **Forensics report**: `docs/forensics/pob-engine-forensics-2026-07-02.md`
+- **Change record**: `docs/sprint-change-proposal-2026-07-02.md`
+- **Upstream**: https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2

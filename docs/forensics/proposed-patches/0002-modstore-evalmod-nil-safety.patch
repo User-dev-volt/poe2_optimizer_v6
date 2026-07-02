@@ -1,0 +1,24 @@
+PEBO Epic 3.5 proposed patch 2/3 (DRAFT - not yet promoted to external/patches/)
+Subject: PoB ModStore.lua EvalMod nil-safety (value can be nil when mod.value is nil)
+Origin: Story 2.9.2 hand-edit found ONLY in the vendored working tree (self-labeled comment,
+  external/pob-engine/src/Classes/ModStore.lua:458); no patch file existed anywhere in the
+  repo before this draft - a submodule update/re-vendor would silently revert it.
+Generated: 2026-07-02 from the live vendored tree at superproject HEAD 0b8ca40, diffed
+  against clean upstream v0.15.0 (3e1b71c92dc5f7c295031700746a418558117b06).
+Apply from repo root onto an LF checkout of v0.15.0 at external/pob-engine:
+  git -c core.autocrlf=false apply docs/forensics/proposed-patches/0002-modstore-evalmod-nil-safety.patch
+Verify applied: grep -c "Nil-safety patch (Story 2.9.2)" external/pob-engine/src/Classes/ModStore.lua  # = 1
+diff --git a/external/pob-engine/src/Classes/ModStore.lua b/external/pob-engine/src/Classes/ModStore.lua
+index 6470f1b..7b01ec6 100644
+--- a/external/pob-engine/src/Classes/ModStore.lua
++++ b/external/pob-engine/src/Classes/ModStore.lua
+@@ -455,7 +455,8 @@ function ModStoreClass:EvalMod(mod, cfg, globalLimits)
+ 					end
+ 				end
+ 			else
+-				value = value * mult + (tag.base or 0)
++				-- Nil-safety patch (Story 2.9.2): value can be nil when mod.value is nil
++				value = (value or 0) * mult + (tag.base or 0)
+ 				if limitTotal then
+ 					value = m_min(value, limitTotal)
+ 				end
