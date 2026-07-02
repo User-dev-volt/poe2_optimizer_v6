@@ -19,6 +19,12 @@ from pathlib import Path
 from datetime import datetime
 from statistics import median, mean
 
+# Windows: when stdout is redirected to a file, Python defaults to cp1252 and
+# printing '→'/'✅' raises UnicodeEncodeError — which the per-build except block
+# would swallow, silently converting SUCCESSFUL results into errors.
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 
 CORPUS_DIR = Path("tests/fixtures/realistic_builds")
 RESULTS_DIR = Path("docs/validation")
@@ -94,6 +100,7 @@ if __name__ == "__main__":
     xml_path = Path(sys.argv[1])
     budget = int(sys.argv[2])
     max_time = int(sys.argv[3])
+    result_path = Path(sys.argv[4])
 
     result = {
         "build_name": xml_path.stem,
@@ -139,7 +146,11 @@ if __name__ == "__main__":
         result["status"] = "error"
         result["error"] = str(e)
 
-    print(json.dumps(result))
+    # Write to a file, NOT stdout: the embedded Lua engine prints to C-level
+    # stdout, which interleaves unpredictably with Python's buffered stream and
+    # corrupts any JSON printed here (observed: JSON spliced mid-line into a
+    # [MinimalCalc] DEBUG print).
+    result_path.write_text(json.dumps(result), encoding="utf-8")
 '''
 
 
@@ -151,11 +162,12 @@ def run_build_isolated(xml_path: Path) -> dict:
     # Write worker script to temp file
     worker_file = Path("_worker_epic2.py")
     worker_file.write_text(WORKER_SCRIPT)
+    result_file = Path(f"_worker_epic2_result_{xml_path.stem}.json")
 
     try:
         # Run in subprocess with timeout
         proc = subprocess.run(
-            [sys.executable, str(worker_file), str(xml_path), str(OPTIMIZATION_BUDGET), str(MAX_TIME_SECONDS)],
+            [sys.executable, str(worker_file), str(xml_path), str(OPTIMIZATION_BUDGET), str(MAX_TIME_SECONDS), str(result_file)],
             capture_output=True,
             text=True,
             timeout=MAX_TIME_SECONDS + 60  # Add buffer for overhead
@@ -170,15 +182,28 @@ def run_build_isolated(xml_path: Path) -> dict:
                 "error": f"Process exit code {proc.returncode}: {proc.stderr[:200]}"
             }
 
-        # Parse JSON result from stdout
-        result = json.loads(proc.stdout)
+        # Read JSON result from the handoff file (stdout is contaminated by
+        # interleaved Lua engine prints and must not be parsed).
+        if not result_file.exists():
+            print("  ERROR: Worker exited 0 but wrote no result file")
+            print(f"  stdout tail: {proc.stdout[-300:]}")
+            return {
+                "build_name": xml_path.stem,
+                "status": "error",
+                "error": "Worker exited 0 but wrote no result file"
+            }
+        result = json.loads(result_file.read_text(encoding="utf-8"))
 
-        if result["status"] == "success":
-            print(f"  DPS: {result['baseline_dps']:.1f} → {result['optimized_dps']:.1f} ({result['improvement_pct']:+.1f}%)")
-            print(f"  Life: {result['baseline_life']} → {result['optimized_life']} ({result['life_change']:+d})")
-            print(f"  Time: {result['time_seconds']:.1f}s, Iterations: {result['iterations']}")
-        else:
-            print(f"  ERROR: {result.get('error', 'Unknown error')}")
+        # Reporting must never be able to discard a loaded result.
+        try:
+            if result["status"] == "success":
+                print(f"  DPS: {result['baseline_dps']:.1f} -> {result['optimized_dps']:.1f} ({result['improvement_pct']:+.1f}%)")
+                print(f"  Life: {result['baseline_life']} -> {result['optimized_life']} ({result['life_change']:+d})")
+                print(f"  Time: {result['time_seconds']:.1f}s, Iterations: {result['iterations']}")
+            else:
+                print(f"  ERROR: {result.get('error', 'Unknown error')}")
+        except Exception as print_err:
+            print(f"  (report formatting error: {print_err!r})")
 
         return result
 
@@ -197,9 +222,11 @@ def run_build_isolated(xml_path: Path) -> dict:
             "error": str(e)
         }
     finally:
-        # Cleanup worker script
+        # Cleanup worker script + result handoff file
         if worker_file.exists():
             worker_file.unlink()
+        if result_file.exists():
+            result_file.unlink()
 
 
 def main():
