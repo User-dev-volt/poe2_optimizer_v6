@@ -4,7 +4,7 @@
 >
 > **⚠ FALLBACK EXECUTED (same day, later):** the v0.22.0 jump was attempted and **rolled back per AC-3.5.2.5's pre-committed fallback lane**. MinimalCalc cannot boot v0.22.0's `CalcSetup` (`:875 env.spec:CollectGrantedPassiveNodesFromItems` — a new granted-passive-nodes + weapon-slot-keystone API our `spec`/`itemsTab` doubles don't implement); canary 18/18 failed, full integration 119 failed / 125 passed. **The story landed at pin v0.15.0 `3e1b71c9`** — real submodule, same mechanics, all patches applied, tree content-identical to the pre-repair backup (EOL-controlled diff: 0 entries). The jump re-lands with Epic 4's Truth Engine (which deletes MinimalCalc); the v0.22.0 patch variant is parked at `docs/forensics/proposed-patches/0001-global-lua-nil-safety-v0220.patch`, and the submodule's git history already contains v0.22.0 (no re-clone needed). Read the ACs below through that lens: every mechanical AC holds at the v0.15.0 pin.
 
-Status: review
+Status: done  <!-- marked done 2026-07-02 after merge of feat/story-3.5.2-submodule-repair to main (e7f7edd) -->
 
 **Epic:** 3.5 — Substrate & Trust (lite) → v0.9 (internal)
 **Tracking key:** `3.5-2-submodule-repair-and-pin` (`docs/sprint-status.yaml:95`)
