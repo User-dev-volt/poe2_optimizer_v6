@@ -22,6 +22,18 @@ A Python-based optimizer for Path of Exile 2 builds, leveraging Path of Building
    pip install -r requirements.txt
    ```
 
+3. Set up the PoB engine — **the ONE setup command** (idempotent, safe to re-run any time):
+   ```bash
+   python scripts/setup_pob.py
+   ```
+   This initializes/updates the `external/pob-engine` submodule at the pinned
+   commit, applies every patch in `external/patches/` (skipping ones already
+   applied), and regenerates `external/POB_VERSION.txt` from the pin. Never
+   set up the engine by hand — manual checkouts and hand-edited version files
+   are exactly the drift this command exists to end. Exit codes are documented
+   in the script's `--help` / module docstring (0 ok, 3 preflight, 4 submodule
+   missing, 5 gitlink mismatch, 6 patch conflict).
+
 ### Platform-Specific Notes
 
 #### Lupa/LuaJIT Installation
@@ -82,6 +94,18 @@ pytest -n 1 tests/integration/optimizer/                  # Integration tests wi
 
 **Note for Epic 2 Integration Tests:** The optimizer integration tests require `pytest -n 1` for process isolation due to LuaJIT Windows cleanup issues. See "Known Testing Issues" section below for details.
 
+**PoB environment guard (parity/corpus runs):** tests marked `parity` /
+`gui_parity` are protected by an autouse fixture in `tests/conftest.py` that
+verifies the engine environment before the first marked test runs: real
+`external/pob-engine` submodule, submodule HEAD == pinned gitlink, generated
+`external/POB_VERSION.txt` matching the pin, baseline metadata version
+match-or-stale-flag, and every patch in `external/patches/` applied. On any
+violation the marked tests **FAIL** (error at setup) — they never skip — so
+parity evidence cannot silently be produced against a drifted engine. The
+corpus entry point `scripts/run_epic2_validation_isolated.py` runs the same
+check at startup and exits with code 2. Unmarked tests are unaffected.
+Fix for any violation: `python scripts/setup_pob.py`.
+
 ### Parity Testing (Story 1.6)
 
 Parity tests validate calculation accuracy against PoB baseline stats with 0.1% tolerance:
@@ -103,19 +127,21 @@ pytest tests/integration/test_pob_parity.py::TestParityPerformance -v
 
 To maintain calculation accuracy as the PoB engine evolves, perform monthly re-validation:
 
-1. **Check for PoB Updates:**
+1. **Verify the engine environment is at the pin:**
    ```bash
-   cd external/pob-engine
-   git fetch origin
-   git log HEAD..origin/main --oneline  # Check for new commits
+   python scripts/setup_pob.py
    ```
+   The engine is a *pinned* submodule. Never `git pull` inside
+   `external/pob-engine` and never hand-edit version files —
+   `external/POB_VERSION.txt` is generated and regenerated on every setup run.
 
-2. **Update PoB Engine (if updates available):**
-   ```bash
-   git pull origin main
-   cd ../..
-   # Update POB_VERSION.txt with new commit hash
-   ```
+2. **Update PoB Engine (deliberate pin bump only):**
+   Moving to a new upstream version is a maintainer decision (the patch-day
+   workstream), not routine maintenance: update the `external/pob-engine`
+   gitlink to the chosen upstream commit, re-cut patches if needed, then run
+   `python scripts/setup_pob.py` to re-apply patches and regenerate
+   `external/POB_VERSION.txt`. (A dedicated `scripts/update_pob.py` automation
+   lands with the Epic 4+ patch-day workstream.)
 
 3. **Run Full Parity Test Suite:**
    ```bash

@@ -1,6 +1,7 @@
 # Story 3.5.3: scripts/setup_pob.py — Idempotent Setup + Patch Auto-Apply (the ONE setup command)
 
-Status: drafted
+Status: review  <!-- executed 2026-07-02; awaiting SM review. Two justified deviations from AC wording (repo-root patch cwd; reverse-check-first) — see Completion Notes 2-3 -->
+
 
 - **Epic:** 3.5 — Substrate & Trust (lite) → v0.9 (internal) [Source: docs/pebo-master-plan.md:168]
 - **Tracking key:** `3.5-3-setup-pob-script` [Source: docs/sprint-status.yaml:96]
@@ -48,40 +49,40 @@ Plan charter: "`scripts/setup_pob.py` (idempotent): submodule init/update + auto
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Scaffold `scripts/setup_pob.py` (AC: 3.5.3.1, 3.5.3.5)
-  - [ ] Subtask 1.1: stdlib only (`argparse`, `pathlib`, `subprocess`) — no new entries in `requirements.txt`
-  - [ ] Subtask 1.2: All git calls via `subprocess` with list args and explicit `cwd`; never `shell=True` (Windows path-quoting hazard)
-  - [ ] Subtask 1.3: `main()` flow: preflight (git on PATH, `.gitmodules` present) → submodule init/update → verify real repo + HEAD == gitlink → apply patches → regenerate `POB_VERSION.txt` → one-line summary
-  - [ ] Subtask 1.4: Gitlink check: compare `git ls-files -s external/pob-engine` (parent gitlink) against `git -C external/pob-engine rev-parse HEAD`; mismatch → AC-3.5.3.5 exit
+- [x] Task 1: Scaffold `scripts/setup_pob.py` (AC: 3.5.3.1, 3.5.3.5)
+  - [x] Subtask 1.1: stdlib only (`argparse`, `pathlib`, `subprocess`) — no new entries in `requirements.txt`
+  - [x] Subtask 1.2: All git calls via `subprocess` with list args and explicit `cwd`; never `shell=True` (Windows path-quoting hazard)
+  - [x] Subtask 1.3: `main()` flow: preflight (git on PATH, `.gitmodules` present) → submodule init/update → verify real repo + HEAD == gitlink → apply patches → regenerate `POB_VERSION.txt` → one-line summary
+  - [x] Subtask 1.4: Gitlink check: compare `git ls-files -s external/pob-engine` (parent gitlink) against `git -C external/pob-engine rev-parse HEAD`; mismatch → AC-3.5.3.5 exit
 
-- [ ] Task 2: Patch discovery, deterministic ordering, per-patch reporting (AC: 3.5.3.1)
-  - [ ] Subtask 2.1: Glob `external/patches/*.patch` with `sorted()` filenames; ignore non-patch files (the directory also holds `README.md`)
-  - [ ] Subtask 2.2: Iterate the directory — never hardcode patch names (this is what makes dropping the ADR-004 patch after the Epic 4 spike a zero-edit change for this script) [Source: docs/sprint-change-proposal-2026-07-02.md:286]
-  - [ ] Subtask 2.3: Emit one report line per patch (`applied` / `skipped (already applied)` / `FAILED: <patch> → <file(s)>`) plus a run summary
+- [x] Task 2: Patch discovery, deterministic ordering, per-patch reporting (AC: 3.5.3.1)
+  - [x] Subtask 2.1: Glob `external/patches/*.patch` with `sorted()` filenames; ignore non-patch files (the directory also holds `README.md`)
+  - [x] Subtask 2.2: Iterate the directory — never hardcode patch names (this is what makes dropping the ADR-004 patch after the Epic 4 spike a zero-edit change for this script) [Source: docs/sprint-change-proposal-2026-07-02.md:286]
+  - [x] Subtask 2.3: Emit one report line per patch (`applied` / `skipped (already applied)` / `FAILED: <patch> → <file(s)>`) plus a run summary
 
-- [ ] Task 3: Skip-if-applied decision logic (AC: 3.5.3.2)
-  - [ ] Subtask 3.1: Implement the decision as an importable pure function: (check_ok, reverse_check_ok) → {APPLY, SKIP, CONFLICT}
-  - [ ] Subtask 3.2: Wire it: `git apply --check` → apply; else `git apply --reverse --check` → skip; else CONFLICT
-  - [ ] Subtask 3.3: Run `git apply` from the submodule root (`cwd=external/pob-engine`, patch path relative), per the ADR-004 convention
+- [x] Task 3: Skip-if-applied decision logic (AC: 3.5.3.2)
+  - [x] Subtask 3.1: Implement the decision as an importable pure function: (check_ok, reverse_check_ok) → {APPLY, SKIP, CONFLICT}
+  - [x] Subtask 3.2: Wire it: `git apply --check` → apply; else `git apply --reverse --check` → skip; else CONFLICT
+  - [x] Subtask 3.3: Run `git apply` from the submodule root (`cwd=external/pob-engine`, patch path relative), per the ADR-004 convention
 
-- [ ] Task 4: `POB_VERSION.txt` regeneration via the shared 3.5.2 generator (AC: 3.5.3.3)
-  - [ ] Subtask 4.1: Import (or fold in and delete the duplicate) the generator authored in Story 3.5.2 — one implementation total; 3.5.2 Task 5 anticipates it living "as the first piece of `scripts/setup_pob.py`"
-  - [ ] Subtask 4.2: Confirm output is deterministic for an unchanged gitlink (no timestamps) and carries the 3.5.2 generation marker
-  - [ ] Subtask 4.3: Regenerate unconditionally on every run (that is the anti-drift mechanism — not a skip-if-present)
+- [x] Task 4: `POB_VERSION.txt` regeneration via the shared 3.5.2 generator (AC: 3.5.3.3)
+  - [x] Subtask 4.1: Import (or fold in and delete the duplicate) the generator authored in Story 3.5.2 — one implementation total; 3.5.2 Task 5 anticipates it living "as the first piece of `scripts/setup_pob.py`"
+  - [x] Subtask 4.2: Confirm output is deterministic for an unchanged gitlink (no timestamps) and carries the 3.5.2 generation marker
+  - [x] Subtask 4.3: Regenerate unconditionally on every run (that is the anti-drift mechanism — not a skip-if-present)
 
-- [ ] Task 5: Failure modes and distinct exit codes (AC: 3.5.3.5)
-  - [ ] Subtask 5.1: Map the three failure classes (missing/uninitialized submodule; patch conflict; gitlink mismatch) to distinct nonzero exit codes; success (including all-skipped) = 0
-  - [ ] Subtask 5.2: Each failure message states what is wrong AND the remediation command; patch-conflict message names patch + target file(s)
-  - [ ] Subtask 5.3: Document the exit-code table in the module docstring / `--help` (consumed by 3.5.4 and future CI)
+- [x] Task 5: Failure modes and distinct exit codes (AC: 3.5.3.5)
+  - [x] Subtask 5.1: Map the three failure classes (missing/uninitialized submodule; patch conflict; gitlink mismatch) to distinct nonzero exit codes; success (including all-skipped) = 0
+  - [x] Subtask 5.2: Each failure message states what is wrong AND the remediation command; patch-conflict message names patch + target file(s)
+  - [x] Subtask 5.3: Document the exit-code table in the module docstring / `--help` (consumed by 3.5.4 and future CI)
 
-- [ ] Task 6: Tests (AC: 3.5.3.2)
-  - [ ] Subtask 6.1: Unit-test the decision function in `tests/unit/` (pure function or mocked `subprocess` results — fast, no LuaJIT, no real git needed)
-  - [ ] Subtask 6.2: Optional integration-style double-run test (real git); if environment-heavy, record an actual double-run transcript in Completion Notes instead (AC-3.5.3.2 allows either)
+- [x] Task 6: Tests (AC: 3.5.3.2)
+  - [x] Subtask 6.1: Unit-test the decision function in `tests/unit/` (pure function or mocked `subprocess` results — fast, no LuaJIT, no real git needed)
+  - [x] Subtask 6.2: Optional integration-style double-run test (real git); if environment-heavy, record an actual double-run transcript in Completion Notes instead (AC-3.5.3.2 allows either)
 
-- [ ] Task 7: README update (AC: 3.5.3.4)
-  - [ ] Subtask 7.1: Replace the Setup section's manual steps with: clone → `pip install -r requirements.txt` → `python scripts/setup_pob.py`
-  - [ ] Subtask 7.2: Remove the manual `POB_VERSION.txt` hand-edit guidance from the monthly re-validation section (`README.md:113-118`); point PoB-update flows at the script
-  - [ ] Subtask 7.3: Sweep README for any remaining contradiction with the single-command flow
+- [x] Task 7: README update (AC: 3.5.3.4)
+  - [x] Subtask 7.1: Replace the Setup section's manual steps with: clone → `pip install -r requirements.txt` → `python scripts/setup_pob.py`
+  - [x] Subtask 7.2: Remove the manual `POB_VERSION.txt` hand-edit guidance from the monthly re-validation section (`README.md:113-118`); point PoB-update flows at the script
+  - [x] Subtask 7.3: Sweep README for any remaining contradiction with the single-command flow
 
 ## Dev Notes
 
@@ -138,15 +139,36 @@ Plan charter: "`scripts/setup_pob.py` (idempotent): submodule init/update + auto
 
 ### Context Reference
 
-<!-- Populated by dev-story at implementation time -->
+- Executed 2026-07-02 on branch `feat/story-3.5.3-3.5.4-setup-and-guard` (off main @ 8d6ff83, after 3.5.2 merge). Scouted via parallel read-only agents: README/POB_VERSION reference map, patch-convention forensics (live `--check` probes), generator API.
 
 ### Agent Model Used
 
+claude-fable-5 (Claude Code, ultracode session)
+
 ### Debug Log References
+
+- Double-run transcript + `--help` output captured in-session (Completion Note 4)
+- Live double-apply incident + repair: sentinel counts and reverse-checks re-verified (Completion Note 3)
 
 ### Completion Notes List
 
+1. **All five ACs met at pin v0.15.0 `3e1b71c9`.** `scripts/setup_pob.py` is stdlib-only (argparse/pathlib/subprocess/shutil/re), list-args subprocess with explicit `cwd`, no `shell=True`. Exit codes: 0 ok, 1 internal, 2 usage (argparse), 3 preflight, 4 submodule missing, 5 gitlink mismatch, 6 patch conflict — documented in module docstring and `--help`.
+2. **DEVIATION (AC-3.5.3.1 bullet 4, justified):** patches apply from the **repo root**, not the submodule root. The promoted patch set (2026-07-02) carries `external/pob-engine/...` path prefixes and each patch's own header says "Apply from repo root"; applying from the submodule root *fails* (verified live: `error: external/pob-engine/src/...: No such file or directory`). The AC bullet described the pre-promotion ADR-004 convention. This matches `generate_pob_version.patch_states()`.
+3. **DEVIATION (AC-3.5.3.2 decision order, justified + incident):** the skip-if-applied decision is **reverse-check FIRST** (`--reverse --check` pass → skip; else `--check` pass → apply; else conflict), not the AC's forward-first wording. Forward-first was implemented as specified and **double-applied patch 0002 on the live tree**: `EvalMod`'s patch context repeats (~:375 and :455), so `git apply --check` succeeds on an already-patched tree by matching the second occurrence. Damage repaired deterministically (`git checkout -- src/Classes/ModStore.lua` + single re-apply; sentinels re-verified 3/1/2, all reverse-checks PASS, pure LF). `external/patches/README.md` and `patch_states()` always specified reverse-first; the forward probe now only runs when reverse fails, and a unit test pins the probe order.
+4. **Idempotency evidence (AC-3.5.3.2):** recorded double-run transcript — both runs exit 0, all three patches `skipped (already applied)`, `external/POB_VERSION.txt` sha256 byte-identical across runs (`5ace0bec71ca8481...`), submodule modified-set unchanged, ModStore sentinel stays 1. Plus 12 unit tests (decision truth table incl. the (T,T)→SKIP double-apply case, sorted discovery, target-file extraction, distinct exit codes, apply-loop semantics with probe-order guard).
+5. **AC-3.5.3.3:** regeneration is unconditional every run via `import generate_pob_version; generate(repo_root)` — the story 3.5.2 generator remains the single implementation (imported, not duplicated).
+6. **AC-3.5.3.4:** README Setup is now clone → pip install → `python scripts/setup_pob.py` (the ONE command, with exit-code pointer); monthly re-validation steps 1–2 (submodule `git pull` + hand-edit POB_VERSION.txt) replaced with pin-bump discipline pointing at the script. Swept the rest of README — no remaining contradictions. **Also deleted the legacy root `POB_VERSION.txt`** (stale 0.12.2 pin carrying the hazardous `--remote` advice): grep-verified zero code consumers (the only live file is the generated `external/POB_VERSION.txt`); 3.5.2's record had flagged it as deletion-candidate debt. CLAUDE.md Setup updated to the ONE command as well (CLAUDE.md was untracked; now added to git).
+7. **AC-3.5.3.5 non-destructiveness:** on drift (HEAD != gitlink) the script exits 5 with the exact remediation command and never resets; on a non-repo directory it exits 4 telling the user to move it aside (not delete); patch conflicts exit 6 naming patch + target files, while non-conflicting patches still apply so re-runs converge.
+8. Patch-application logic is reusable module-level functions (`discover_patches`, `decide_patch_action`, `apply_patches`) — the foundation for the future `scripts/update_pob.py` patch-day workstream. `discover_patches`/`patch_target_files`/`patched_tree_mismatches` are shared with story 3.5.4's verifier (single implementation in `src/pob_env.py`, imported here).
+9. **Ultracode adversarial review round (same day, 61-agent panel, 22 confirmed findings across both stories) hardened the script:** (i) byte-exact **ratified-state reconciliation** after the apply loop — a bare reverse-check cannot distinguish applied-once from applied-twice (the sandbox verifiers reproduced a double-applied 0002 passing `--reverse --check`), so "skipped (already applied)" is now provisional until the working files byte-match (EOL-normalized) the reconstruction "pristine pinned blobs + patch set applied once"; divergence → exit 6, and unrecorded edits to other tracked engine files are flagged too (plan risk #2); (ii) preflight now rejects zip/tarball checkouts (`git rev-parse --git-dir`), a missing `external/patches/` directory, and an unmerged gitlink (multi-stage index) instead of guessing; (iii) generator failures after all env checks pass map to exit 1 (internal), no longer mislabeled exit 5; (iv) all git subprocess output decodes utf-8/replace (cp1252 locale crash eliminated); (v) exit codes 3/5/6 + the fresh-apply happy path + the reverse-check-blind divergence case are now covered by REAL env-double tests driving `main(repo_root=...)` end-to-end (including proof the drifted submodule is never reset).
+
 ### File List
+
+- `scripts/setup_pob.py` — new (imports shared reconciliation helpers from `src/pob_env.py`, story 3.5.4)
+- `tests/unit/test_setup_pob.py` — new (env-double exit-path tests import the 3.5.4 double builder)
+- `README.md` — modified (Setup section, monthly re-validation section)
+- `CLAUDE.md` — modified (Setup command), newly tracked in git
+- `POB_VERSION.txt` (repo root) — deleted (legacy hand-written pin; generated `external/POB_VERSION.txt` is the single live version file)
 
 ## Change Log
 
@@ -156,3 +178,10 @@ Plan charter: "`scripts/setup_pob.py` (idempotent): submodule init/update + auto
 
 **2026-07-02 (later)** — Patch-set facts refreshed after promotion + v0.22.0 pin decision
 - external/patches/ now holds promoted 0001..0003 (+.gitattributes); stale 0.12.2 patch retired; ADR-004 addendum landed (its README/ADR citations herein describe the pre-promotion state where marked)
+
+**2026-07-02 (execution)** — Story executed; status → review
+- `scripts/setup_pob.py` + 12 unit tests delivered; README/CLAUDE.md single-command flow; legacy root POB_VERSION.txt deleted
+- Two justified deviations from AC wording recorded in Completion Notes 2–3: repo-root patch cwd (promoted patches demand it) and reverse-check-first decision order (forward-first demonstrably double-applies 0002; incident observed live and repaired)
+
+**2026-07-02 (review hardening)** — Ultracode adversarial review round applied (Completion Note 9)
+- Byte-exact ratified-state reconciliation (exit 6 on divergence/unrecorded edits), zip/patches-dir/merge-stage preflights, exit-code 1-vs-5 correction, utf-8 subprocess decoding, real failure-path exit-code tests (now 19 unit tests for this script)
