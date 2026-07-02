@@ -1,6 +1,6 @@
 # Story 3.5.4: pob_env.verify() — Autouse Conftest Enforcement (FAIL, not skip)
 
-Status: review  <!-- executed 2026-07-02; awaiting SM review. Guard verifies GREEN on today's repo; red-not-skip proven end-to-end against the real conftest -->
+Status: done  <!-- executed 2026-07-02; marked done same day after merge to main (4487271). Guard verifies GREEN on today's repo; red-not-skip proven end-to-end against the real conftest -->
 
 
 Epic: 3.5 — Substrate & Trust (lite) (`docs/pebo-master-plan.md:168`)

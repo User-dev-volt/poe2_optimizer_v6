@@ -1,6 +1,6 @@
 # Story 3.5.3: scripts/setup_pob.py — Idempotent Setup + Patch Auto-Apply (the ONE setup command)
 
-Status: review  <!-- executed 2026-07-02; awaiting SM review. Two justified deviations from AC wording (repo-root patch cwd; reverse-check-first) — see Completion Notes 2-3 -->
+Status: done  <!-- executed 2026-07-02; marked done same day after merge to main (4487271). Two justified deviations from AC wording (repo-root patch cwd; reverse-check-first) — see Completion Notes 2-3 -->
 
 
 - **Epic:** 3.5 — Substrate & Trust (lite) → v0.9 (internal) [Source: docs/pebo-master-plan.md:168]
