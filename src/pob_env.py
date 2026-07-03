@@ -64,6 +64,7 @@ BASELINE_METADATA_FILES = (
     "tests/fixtures/gui_baselines/deadeye_lightning_arrow_76.baseline.json",
     "tests/fixtures/gui_baselines/ritualist_lightning_spear_96.baseline.json",
     "tests/fixtures/gui_baselines/titan_falling_thunder_99.baseline.json",
+    "tests/fixtures/gui_baselines/warrior_earthquake_89.baseline.json",
     "tests/fixtures/gui_baselines/witch_essence_drain_86.baseline.json",
 )
 

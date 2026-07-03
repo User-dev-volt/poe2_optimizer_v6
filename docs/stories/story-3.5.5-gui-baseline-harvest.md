@@ -1,6 +1,6 @@
 # Story 3.5.5: GUI Baseline Harvester + 6–8 Geared Tier-A Baselines (attack, spell-hit, DoT first)
 
-Status: in-progress
+Status: done
 
 **Epic:** 3.5 — Substrate & Trust (lite) → milestone v0.9 (internal) [Source: docs/pebo-master-plan.md:168-184]
 **Tracking key:** `3.5-5-gui-baseline-harvest` (docs/sprint-status.yaml:98)
@@ -56,11 +56,11 @@ so that **Epic 4's parity work starts against real geared-build truth instead of
   - [x] Subtask 3.1: Unit test `tests/unit/test_harvest_gui_baselines.py`: harvest `deadeye_lightning_arrow_76.xml`; assert `TotalDPS == 18097.067904221`, spot-check `Life`/`CritChance`/`AverageDamage`, assert 102 stats total
   - [x] Subtask 3.2: Negative cases: XML without `<PlayerStat>` (clear error), duplicate stat name (rejected/flagged), overwrite without `--force` (refused)
   - [x] Subtask 3.3: Pure-Python test — no LuaJIT, runs under plain `pytest tests/unit/`
-- [ ] Task 4: Capture, harvest, and commit 6–8 geared baselines (AC: 3.5.5.3, 3.5.5.4)
-  - [ ] Subtask 4.1: Source candidate geared builds — own builds and/or community codes (e.g. via `scripts/fetch_pobb_in_builds.py`) covering attack, spell-hit, DoT first
-  - [ ] Subtask 4.2: Import each into PoB GUI **at the pinned release (v0.15.0 today — read `POB_VERSION.txt`, don't assume)**, let it recalculate, and SAVE the build XML from that GUI — the save is what stamps `<PlayerStat>` values at the pinned version (a pobb.in XML alone carries the *uploader's* unknown-version stats; see Dev Notes)
-  - [ ] Subtask 4.3: Run the harvester over the saved XMLs with `--archetype`; commit source XML + fixture JSON pairs
-  - [ ] Subtask 4.4: Write the deferral note (minion/totem/trap → Epic 4 mass capture) in the fixtures README
+- [x] Task 4: Capture, harvest, and commit 6–8 geared baselines (AC: 3.5.5.3, 3.5.5.4)
+  - [x] Subtask 4.1: Source candidate geared builds — own builds and/or community codes (e.g. via `scripts/fetch_pobb_in_builds.py`) covering attack, spell-hit, DoT first
+  - [x] Subtask 4.2: Import each into PoB GUI **at the pinned release (v0.15.0 today — read `POB_VERSION.txt`, don't assume)**, let it recalculate, and SAVE the build XML from that GUI — the save is what stamps `<PlayerStat>` values at the pinned version (a pobb.in XML alone carries the *uploader's* unknown-version stats; see Dev Notes)
+  - [x] Subtask 4.3: Run the harvester over the saved XMLs with `--archetype`; commit source XML + fixture JSON pairs
+  - [x] Subtask 4.4: Write the deferral note (minion/totem/trap → Epic 4 mass capture) in the fixtures README
 - [x] Task 5: Wire metadata into the stale-flag convention from 3.5.2/3.5.4 (AC: 3.5.5.5)
   - [x] Subtask 5.1: Confirm 3.5.4's `pob_env.verify()` can evaluate version-match/stale from the fixture files alone (no harvester import needed); adjust field names if 3.5.4 landed first
   - [x] Subtask 5.2: Test: a fixture whose metadata version ≠ current pin and lacking `"stale": true` is detectably invalid (the check itself may live in 3.5.4's suite — coordinate, don't duplicate)
@@ -140,6 +140,9 @@ claude-fable-5
 - Task 5 contract tests run the REAL `pob_env.verify()` against an env double with a freshly harvested fixture at the `BASELINE_METADATA_FILES[0]` path: fresh fixture GREEN, version-mismatch-without-stale RED on (d), stale-flagged mismatch GREEN, and a `--force` unversioned fixture shown to be un-committable (fails (d) even when stale). `BASELINE_METADATA_FILES` itself is NOT extended yet — that happens in Task 4 when real fixtures are committed (extending it to not-yet-existing files would turn the guard red repo-wide).
 - Suite: `python -m pytest tests/unit/ -q` → 334 passed (303 pre-existing + 31 new).
 - **Post-review fix batch (same day):** adversarial review (3 verifier agents, 0 blocker/major) surfaced 5 distinct minors; 4 applied — same-stem input collision now refused up front (`EXIT_INPUT`, was silent clobber under `--force`), non-finite stat values (nan/inf) rejected + `json.dumps(..., allow_nan=False)` belt (RFC 8259 strictness), `is_file()` filter so a directory named `*.xml` can't crash the reader, and a **ratchet test** (`test_every_committed_baseline_fixture_is_guarded`) that fails the suite if a committed `*.baseline.json` is missing from `pob_env.BASELINE_METADATA_FILES` — converting the Task-4 allowlist extension from a documented convention into an enforced one. Fifth minor (check (d) globbing the fixture dir itself) deferred as an Epic 4 hardening option.
+- **Task 4 capture (2026-07-02 evening, by Alec):** official `PathOfBuildingCommunity-PoE2-Portable.zip` v0.15.0 (manifest `<Version number="0.15.0">`, GitHub release asset) installed to `D:\Tools\PoB2-0.15.0-official\` after two false starts (a straight file-move that bypassed the GUI — corpus files restored from git; and a 3 MB runtime-only extract that couldn't boot). Six corpus builds re-saved in that GUI (fresh `<PlayerStat>` stamps verified: every save differs from its pobb.in-provenance original) and harvested: deadeye_lightning_arrow_76 (attack, TotalDPS 23003.19), ritualist_lightning_spear_96 (attack, 407381.40), titan_falling_thunder_99 (attack, 13817.27 — first save had no main skill selected, re-saved), warrior_earthquake_89 (attack, 49262.05), bloodmage_remnants_95 (spell-hit, 6906.47 — first save had all-zero DPS, re-saved with main skill selected), witch_essence_drain_86 (dot, TotalDot 23752.22, TotalDPS 0 as expected for a DoT build). AC-3.5.5.3 count: 6 of 6–8, all three v1-gated archetypes covered. A 7th candidate (friend's Sorceress Chronomancer ignite import code) was skipped — built on a newer PoB, declined for 0.15.0 capture.
+- **Archetype depth caveat for Epic 4:** spell-hit and dot are single-sample (bloodmage 6.9k DPS is a shallow spell-hit anchor). Epic 4 item 6 mass capture (20–24 builds) should deepen both before Tier-A hard-gating leans on them.
+- `pob_env.BASELINE_METADATA_FILES` extended to all 7 baseline files; env doubles (test_pob_env.make_env_double) now stub non-subject allowlist entries stale-flagged — the only (d)-neutral state in manifest-less doubles — so future allowlist growth cannot break the doubles. Suite 334 green; live `verify()` GREEN across all seven.
 
 ### File List
 
@@ -149,6 +152,12 @@ claude-fable-5
 - `docs/stories/story-3.5.5-gui-baseline-harvest.md` (this file: status, task ticks, Dev Agent Record, Change Log)
 
 ## Change Log
+
+**2026-07-02 (late)** — Task 4 complete: 6 Tier-A baselines captured at v0.15.0; story DONE
+- Alec captured 6 geared builds in the official v0.15.0 portable GUI (attack ×4, spell-hit ×1, dot ×1); fixtures harvested, committed with source XMLs, and allowlisted in `pob_env.BASELINE_METADATA_FILES` (7 files total under check (d))
+- Two captures required a second save (bloodmage: zero-DPS first save; titan_falling_thunder: no main skill selected) — final fixtures carry real DPS numbers
+- Env doubles updated to stub non-subject allowlist entries (stale-flagged); suite 334 green, live verify() GREEN
+- Status: in-progress -> done
 
 **2026-07-02** — Tasks 1, 2, 3, 5 implemented (harvester + schema + golden/contract tests); Task 4 awaiting GUI capture
 - `scripts/harvest_gui_baselines.py`: stdlib-only CLI harvesting every `<PlayerStat>` verbatim into one `<name>.baseline.json` per build; version attestation from the generated `POB_VERSION.txt` (refuses hand-written/missing without `--force`); dual-meaning `--force`; `--stale-reason` for corpus-provenance harvests; setup_pob-style exit codes

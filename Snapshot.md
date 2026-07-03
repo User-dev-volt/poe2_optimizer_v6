@@ -28,7 +28,7 @@ Story 2.9.2: Spell/DOT MinimalCalc Enhancement
 ---
 
 ## Next Action
-Story 3.5.5 Task 4 — Alec captures 6-8 geared builds in PoB PoE2 GUI **v0.15.0** (must equal the `external/POB_VERSION.txt` pin `3e1b71c9` — NOT a newer auto-updated install), saves the XMLs, drops them in `tests/fixtures/gui_baselines/xml/`. Then: run `scripts/harvest_gui_baselines.py` per archetype, extend `pob_env.BASELINE_METADATA_FILES` (ratchet test enforces this), commit XML+JSON pairs → 3.5.5 done → Epic 3.5 retro → Epic 4 kickoff. (Done 2026-07-02 this session: 3.5-1 closed via ratification addendum; 3.5.5 Tasks 1-3+5 landed — harvester + golden tests + README, unit suite 334 green, uncommitted.)
+**EPIC 3.5 COMPLETE (2026-07-02).** All five stories done; 6 Tier-A GUI baselines captured at v0.15.0 and committed. Next: Epic 3.5 retrospective (optional — capture the Epic 3 thin-slice process deviation too), then **Epic 4 Truth Engine kickoff**: timeboxed driver.lua spike (go/no-go pre-committed), triage the five 0.0%-improvement M0 builds, execute the deferred v0.22.0 engine jump, retire MinimalCalc. Keep `D:\Tools\PoB2-0.15.0-official\` installed — it's the pinned capture GUI for any Tier-B re-captures (never let it auto-update). Epic 4 mass capture should deepen spell-hit/dot coverage (single-sample today).
 
 ---
 
