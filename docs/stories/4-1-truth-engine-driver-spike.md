@@ -1,6 +1,6 @@
 # Story 4.1: Truth Engine Spike — Headless driver.lua Boot and Go/No-Go Lane Decision
 
-Status: review
+Status: done
 
 **Epic:** 4 — Truth Engine → **v1 ships here** [Source: docs/pebo-master-plan.md:192-224]
 **Tracking key:** `4-1-truth-engine-driver-spike` (add under the epic-4 block in docs/sprint-status.yaml:104) [Source: docs/sprint-status.yaml:104]
@@ -291,3 +291,10 @@ claude-opus-4-8 (Claude Code, BMAD dev-story workflow)
 - **AC-4.1.5 PARTIAL:** luajit.exe fallback lane code-ready + protocol-proven, but the binary was not staged (no compiler in this env; off critical path since the embedded lane has no boot crash).
 - New: src/calculator/driver.lua, src/calculator/driver_worker.py, tests/integration/test_driver_parity.py, scripts/triage_m0_builds.py, ADR-005..008. Modified: ADR-004 (status), docs/sprint-status.yaml.
 - Regression: unit 334/334 pass; driver parity 8/8 pass; setup_pob.py exit 0. (test_gui_parity.py's 14 fails are the pre-existing stale-0.12.2 MinimalCalc gap, not a regression.)
+
+**2026-07-03** — Code review + close-out → **Status: done**
+- Reviewed via max-effort workflow code review (31 agents / 6 finder angles / 22 verifiers) over `git diff 1317ac5..HEAD`; 15 findings. The happy-path GO verdict is UNAFFECTED — all spike evidence was gathered on the embedded happy path, which works.
+- Applied 5 high-priority fixes (committed 0c2b355): (1) `driver_worker.py` — replaced the two unbounded blocking `readline()` reads with a bounded, kill-on-timeout `_readline_with_timeout()` (boot + per-command; new `cmd_timeout`, default 60s) so a silent boot stall or a non-terminating calc fails as a `WorkerCrash` instead of hanging the `-n 1` suite forever; (2) `driver.lua` — `Driver.load_build` now validates `promptMsg`/`mainOutput` post-load and clears `promptMsg`, so a failed/incompatible load returns `{ok=false}` instead of reporting success with stale stats; (3) `test_driver_parity.py` — `_discover()` captures per-baseline parse errors, plus `EXPECTED_BUILDS` + two integrity guards, so a missing/malformed baseline is a RED test, not a silently-skipped green.
+- Verified: `setup_pob.py` exit 0; driver parity **10/10** (8 + 2 new guards); unit **334/334**.
+- DEFERRED to Epic 4 item 2 (where `driver_worker.py` graduates from spike script to a production pool): the crash-survival hardening cluster (`_send` unguarded `json.loads`, leaked pipes on `WorkerCrash`, empty `stderr_tail`, `get_stats` error-envelope leak), the `EVAL_NEIGHBORS`/`APPLY_MOVE` `cmd`-override, the `CombinedDPS`/`FullDPS` stat fallback, the triage per-build `try/except`, and automated crash-survival + `luajit.exe`-lane test coverage.
+- Infra: the `[AutoSave]` Stop-hook had committed the dirty ADR-004 patches INSIDE `external/pob-engine` (submodule HEAD → `97f50b1a`, off the pin → `setup_pob.py` exit 5). Restored (`checkout --detach 3e1b71c9` + `setup_pob.py`) and guarded `auto_commit.py` to refuse the `--autosave` path inside any submodule.
