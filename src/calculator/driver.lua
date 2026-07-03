@@ -336,6 +336,19 @@ function Driver.load_build(xmlText, name)
 	-- Build:Init runs the first calc; pump a second frame to guarantee settle
 	-- (Build.lua:666-667 first calc; 1144-1152 recalc gate).
 	runCallback("OnFrame")
+	-- POST-LOAD VALIDATION (mirrors full_pob_engine.py:220-233 `if not build` /
+	-- `if not main_output`): a bad/incompatible XML fails NON-throwing -- PoB
+	-- sets mainObject.promptMsg instead of raising -- so without this a failed
+	-- load returned {ok=true} and the next GET_STATS reported the PREVIOUS
+	-- build's stale mainOutput as if it were this build's real stats.
+	if mainObject.promptMsg then
+		local msg = tostring(mainObject.promptMsg)
+		mainObject.promptMsg = nil  -- clear, else it poisons the next load
+		error("LOAD_BUILD failed: load prompt: " .. msg)
+	end
+	if not build or not build.calcsTab or not build.calcsTab.mainOutput then
+		error("LOAD_BUILD failed: build/mainOutput unavailable after load")
+	end
 	return true
 end
 

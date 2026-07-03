@@ -28,7 +28,7 @@ Story 2.9.2: Spell/DOT MinimalCalc Enhancement
 ---
 
 ## Next Action
-**EPIC 3.5 COMPLETE (2026-07-02).** All five stories done; 6 Tier-A GUI baselines captured at v0.15.0 and committed. Next: Epic 3.5 retrospective (optional — capture the Epic 3 thin-slice process deviation too), then **Epic 4 Truth Engine kickoff**: timeboxed driver.lua spike (go/no-go pre-committed), triage the five 0.0%-improvement M0 builds, execute the deferred v0.22.0 engine jump, retire MinimalCalc. Keep `D:\Tools\PoB2-0.15.0-official\` installed — it's the pinned capture GUI for any Tier-B re-captures (never let it auto-update). Epic 4 mass capture should deepen spell-hit/dot coverage (single-sample today).
+- Await task notification from `wf_6302dab2-5d5`; present verified findings ranked most-severe-first when they arrive
 
 ---
 

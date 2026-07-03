@@ -36,23 +36,67 @@ TOLERANCE_PERCENT = 0.1
 DEADEYE_ANCHOR = 23003.185361227
 
 
+# The 6 Tier-A GUI baselines this spike MUST parity-check (story Task 5). Named
+# explicitly so a missing/renamed/unsynced fixture is a RED test -- an empty
+# parametrize list otherwise makes pytest report the parity test as passed with
+# zero cases, silently validating nothing.
+EXPECTED_BUILDS = {
+    "deadeye_lightning_arrow_76",
+    "ritualist_lightning_spear_96",
+    "titan_falling_thunder_99",
+    "warrior_earthquake_89",
+    "bloodmage_remnants_95",
+    "witch_essence_drain_86",
+}
+
+
 def _discover():
-    """[(name, archetype, stat_key, target)] for every baseline json/xml pair."""
-    cases = []
+    """([(name, archetype, stat_key, target)], [(name, error)]).
+
+    Per-pair parse errors are CAPTURED, not raised, so ONE malformed baseline
+    can't abort collection of the whole module (the unguarded dict indexing at
+    import used to error out every test here). Bad baselines surface via
+    test_no_malformed_baselines instead.
+    """
+    cases, problems = [], []
     for jpath in sorted(BASELINE_DIR.glob("*.baseline.json")):
         name = jpath.name.replace(".baseline.json", "")
         if not (XML_DIR / f"{name}.xml").exists():
             continue
-        bj = json.loads(jpath.read_text(encoding="utf-8"))
-        archetype = bj["_metadata"]["archetype"]
-        # DoT builds report TotalDPS=0 with real damage in TotalDot -- a naive
-        # TotalDPS assertion passes 0~=0 vacuously, so branch on archetype.
-        stat_key = "TotalDot" if archetype == "dot" else "TotalDPS"
-        cases.append((name, archetype, stat_key, float(bj["stats"][stat_key])))
-    return cases
+        try:
+            bj = json.loads(jpath.read_text(encoding="utf-8"))
+            archetype = bj["_metadata"]["archetype"]
+            # DoT builds report TotalDPS=0 with real damage in TotalDot -- a naive
+            # TotalDPS assertion passes 0~=0 vacuously, so branch on archetype.
+            stat_key = "TotalDot" if archetype == "dot" else "TotalDPS"
+            cases.append((name, archetype, stat_key, float(bj["stats"][stat_key])))
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
+            problems.append((name, repr(e)))
+    return cases, problems
 
 
-CASES = _discover()
+CASES, _DISCOVERY_PROBLEMS = _discover()
+
+
+def test_all_tier_a_baselines_discovered():
+    """Integrity guard (not parity): every Tier-A build must be discovered, else
+    the parametrized parity test collects zero cases and reports GREEN while
+    checking nothing. A missing build fails HERE, loudly."""
+    found = {c[0] for c in CASES}
+    missing = EXPECTED_BUILDS - found
+    assert not missing, (
+        f"parity discovery is missing {len(missing)} Tier-A baseline(s): "
+        f"{sorted(missing)} (found {sorted(found)}) -- fixtures unsynced?"
+    )
+
+
+def test_no_malformed_baselines():
+    """Integrity guard: a baseline that fails to parse must be a RED test, not a
+    swallowed error that silently drops the build from the parity gate."""
+    assert not _DISCOVERY_PROBLEMS, (
+        f"malformed baseline json (bad JSON or missing _metadata/archetype/"
+        f"stats key): {_DISCOVERY_PROBLEMS}"
+    )
 
 
 @pytest.fixture(scope="module")

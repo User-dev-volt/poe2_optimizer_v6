@@ -33,6 +33,7 @@ import json
 import os
 import subprocess
 import sys
+import threading
 import time
 from typing import Any, Optional
 
@@ -134,6 +135,7 @@ class DriverWorker:
         pob_src: str = POB_SRC_DIR,
         stderr_path: Optional[str] = None,
         boot_timeout: float = 60.0,
+        cmd_timeout: float = 60.0,
     ):
         if lane not in ("embedded", "luajit"):
             raise ValueError(f"lane must be 'embedded' or 'luajit', got {lane!r}")
@@ -144,6 +146,7 @@ class DriverWorker:
         self.pob_src = pob_src
         self.stderr_path = stderr_path
         self.boot_timeout = boot_timeout
+        self.cmd_timeout = cmd_timeout
         self.proc: Optional[subprocess.Popen] = None
         self._stderr_fh: Optional[io.TextIOBase] = None
         self.boot_info: dict = {}
@@ -187,11 +190,63 @@ class DriverWorker:
         self.boot_info = ready
         return ready
 
+    def _readline_with_timeout(self, timeout: float, phase: str = "read") -> str:
+        """Blocking stdout.readline() bounded by `timeout` seconds.
+
+        Windows pipes support neither select() nor non-blocking reads, so the
+        read runs on a throwaway daemon thread and we bound it with Thread.join.
+        On timeout the wedged child is KILLED (so the reader unblocks on EOF) and
+        a WorkerCrash is raised -- turning an unbounded hang (a silent boot stall,
+        or a non-terminating PoB calc reached via LOAD_BUILD/GET_STATS) into a
+        bounded, catchable failure. full_pob_engine's `timeout_seconds` only
+        measured elapsed time AFTER the calc returned; it never interrupted one.
+        Returns the line ("" on EOF).
+        """
+        assert self.proc and self.proc.stdout
+        stdout = self.proc.stdout
+        box: dict = {}
+
+        def _reader() -> None:
+            try:
+                box["line"] = stdout.readline()
+            except Exception as e:  # pipe torn down under us, etc.
+                box["exc"] = e
+
+        t = threading.Thread(target=_reader, daemon=True)
+        t.start()
+        t.join(timeout)
+        if t.is_alive():
+            try:
+                self.proc.kill()  # unblock the reader (EOF) and bound the hang
+            except Exception:
+                pass
+            t.join(5)
+            raise WorkerCrash(
+                f"worker unresponsive during {phase}: no line within "
+                f"{timeout:.0f}s (killed)",
+                returncode=self._returncode(),
+                stderr_tail=self._stderr_tail(),
+            )
+        if "exc" in box:
+            raise WorkerCrash(
+                f"worker read failed during {phase}: {box['exc']}",
+                returncode=self._returncode(),
+                stderr_tail=self._stderr_tail(),
+            )
+        return box.get("line", "")
+
     def _read_until_ready(self) -> dict:
         assert self.proc and self.proc.stdout
         deadline = time.perf_counter() + self.boot_timeout
         while True:
-            line = self.proc.stdout.readline()
+            remaining = deadline - time.perf_counter()
+            if remaining <= 0:
+                self.stop()
+                raise WorkerCrash(f"worker boot timed out after {self.boot_timeout:.0f}s")
+            # Bounded read: a child that hangs during boot without printing a line
+            # or exiting no longer blocks here forever -- the original untimed
+            # readline() made boot_timeout unreachable on a silent stall.
+            line = self._readline_with_timeout(remaining, phase="boot")
             if line == "":  # EOF -> process exited during boot (e.g. SEH)
                 rc = self.proc.wait()
                 raise WorkerCrash(
@@ -211,9 +266,6 @@ class DriverWorker:
             if obj.get("ok") is False:
                 raise WorkerCrash(f"worker boot error: {obj.get('error')}",
                                   stderr_tail=self._stderr_tail())
-            if time.perf_counter() > deadline:
-                self.stop()
-                raise WorkerCrash("worker boot timed out")
 
     # ----- protocol ------------------------------------------------------ #
     def _send(self, obj: dict) -> dict:
@@ -226,7 +278,7 @@ class DriverWorker:
         except (BrokenPipeError, OSError) as e:
             raise WorkerCrash(f"write failed: {e}", returncode=self._returncode(),
                               stderr_tail=self._stderr_tail())
-        line = self.proc.stdout.readline()
+        line = self._readline_with_timeout(self.cmd_timeout, phase="command")
         if line == "":
             rc = self.proc.wait()
             raise WorkerCrash(f"worker died mid-command (rc={rc}) -- possible SEH",
