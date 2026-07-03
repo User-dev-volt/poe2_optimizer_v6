@@ -1,7 +1,21 @@
 # ADR-004: PoB Global.lua Nil-Safety Patch
 
 ## Status
-Accepted
+Accepted — under re-evaluation; supersession trigger = Epic 4 spike outcome (fixed date).
+
+> **2026-07-03 (Story 4.1 spike outcome):** The three nil-safety patches
+> (0001 Global.lua, 0002 ModStore.lua, 0003 CalcOffence.lua) were reverse-applied
+> and the REAL PoB ModParser was booted (the FIRST time it runs — these nils
+> originally arose only because MinimalCalc's *stubbed* ModParser fed empty mod
+> lists). Result: **all 6 Tier-A GUI baselines (attack / spell-hit / DoT) compute
+> at ±0.000% with ALL THREE PATCHES REVERTED** — including the ADR-004-named
+> crash build `ritualist_lightning_spear_96` and a DoT build. No "arithmetic on a
+> nil value" reproduced at any of the three guarded sites. **Per-patch verdict:
+> all three are drop-candidates (MinimalCalc-only artifacts).** Actual removal is
+> DEFERRED to Epic 4 item 8 (MinimalCalc retirement) so the guards remain while
+> MinimalCalc is still the active engine; re-confirm against the full corpus +
+> the Story 2.9.2 regression gate at removal. Env restored (`setup_pob.py` exit 0).
+> See docs/stories/4-1-truth-engine-driver-spike.md (Task 8) + `scripts/triage_m0_builds.py`.
 
 ## Context
 

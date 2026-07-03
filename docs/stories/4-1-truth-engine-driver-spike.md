@@ -1,6 +1,6 @@
 # Story 4.1: Truth Engine Spike — Headless driver.lua Boot and Go/No-Go Lane Decision
 
-Status: ready-for-dev
+Status: review
 
 **Epic:** 4 — Truth Engine → **v1 ships here** [Source: docs/pebo-master-plan.md:192-224]
 **Tracking key:** `4-1-truth-engine-driver-spike` (add under the epic-4 block in docs/sprint-status.yaml:104) [Source: docs/sprint-status.yaml:104]
@@ -56,57 +56,58 @@ so that **Epic 4 can commit to a lane and an architecture for the Truth Engine o
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Establish the prior-art boot baseline before writing anything** (AC: 4.1.1)
-  - [ ] Run `pytest -n 1 tests/integration/test_full_pob_engine.py -v`. `src/calculator/full_pob_engine.py` is an ORPHANED Story-2.9 attempt that already boots `HeadlessWrapper.lua` in-process with a `package.loaded` stub set + `working_directory(pob_src)` cwd fix + `mainOutput` extraction. If it boots, risk #1 is largely retired — BUT booting proves boot-SURVIVABILITY, NOT stat correctness: `full_pob_engine.py` itself carries the MinimalCalc anti-pattern (identity `base64`/`sha1` stubs at :153-160), so it can boot AND return coverage-gap DPS. Do NOT harvest its `package.loaded` block wholesale — audit it against the inverse-of-MinimalCalc rule (Task 2) first: KEEP `arg={}` (:139), `lua-utf8` incl. `len` (:142-148), `lcurl.safe` (:151); DROP `base64` (:153-157) + `sha1` (:159-160). [Source: src/calculator/full_pob_engine.py:137-161,257-306]
-  - [ ] Record pass/fail as the first spike evidence artifact.
+- [x] **Task 1: Establish the prior-art boot baseline before writing anything** (AC: 4.1.1)
+  - [x] Run `pytest -n 1 tests/integration/test_full_pob_engine.py -v`. `src/calculator/full_pob_engine.py` is an ORPHANED Story-2.9 attempt that already boots `HeadlessWrapper.lua` in-process with a `package.loaded` stub set + `working_directory(pob_src)` cwd fix + `mainOutput` extraction. If it boots, risk #1 is largely retired — BUT booting proves boot-SURVIVABILITY, NOT stat correctness: `full_pob_engine.py` itself carries the MinimalCalc anti-pattern (identity `base64`/`sha1` stubs at :153-160), so it can boot AND return coverage-gap DPS. Do NOT harvest its `package.loaded` block wholesale — audit it against the inverse-of-MinimalCalc rule (Task 2) first: KEEP `arg={}` (:139), `lua-utf8` incl. `len` (:142-148), `lcurl.safe` (:151); DROP `base64` (:153-157) + `sha1` (:159-160). [Source: src/calculator/full_pob_engine.py:137-161,257-306]
+  - [x] Record pass/fail as the first spike evidence artifact.
 
-- [ ] **Task 2: Author `driver.lua`** (AC: 4.1.1, 4.1.9)
-  - [ ] Create `src/calculator/driver.lua` (OUTSIDE the submodule — a file added inside `external/pob-engine/` trips `pob_env.verify()` invariant (e) "unrecorded engine edit" and FAILS every parity test). [Source: src/pob_env.py:264-287]
-  - [ ] Copy `HeadlessWrapper.lua`'s pure-Lua GUI/render/image stub surface (lines 6-171) as the foundation; do NOT reinvent. [Source: external/pob-engine/src/HeadlessWrapper.lua:6-171]
-  - [ ] Seed BEFORE `dofile("Launch.lua")` by copying the PROVEN block verbatim (`full_pob_engine.py:137-161` **minus** base64/sha1): the global `arg = {}` (Main.lua:58 expects it — REQUIRED, not optional), `package.loaded["lua-utf8"] = utf8 or {reverse=..., gsub=string.gsub, find=string.find, sub=string.sub, len=function(s) return #s end}` (include `len` — the proven block has it; omitting it SEH-crashes if boot touches `utf8.len`), and `package.loaded["lcurl.safe"] = {}`. Use `package.loaded`, NOT `package.preload` (preload still dlopens → SEH). Do NOT stub `xml`/`base64`/`sha1`/`sha2`/`dkjson` — they are pure-Lua in `runtime/lua/` and must load REAL. [Source: src/calculator/full_pob_engine.py:137-161; src/calculator/MinimalCalc.lua:120,137-142; docs/stories/story-1.4.md:965-967]
-  - [ ] Determine the minimal native pre-stub set empirically (this is the spike's central engineering question) and record it.
-  - [ ] Expose `build = mainObject.main.modes["BUILD"]` and a `loadBuildFromXML(xmlText,name)` path (`main:SetMode("BUILD",false,name,xmlText)` + one `OnFrame` pump). [Source: external/pob-engine/src/HeadlessWrapper.lua:208-211; external/pob-engine/src/Modules/Main.lua:354-365,507-510]
+- [x] **Task 2: Author `driver.lua`** (AC: 4.1.1, 4.1.9)
+  - [x] Create `src/calculator/driver.lua` (OUTSIDE the submodule — a file added inside `external/pob-engine/` trips `pob_env.verify()` invariant (e) "unrecorded engine edit" and FAILS every parity test). [Source: src/pob_env.py:264-287]
+  - [x] Copy `HeadlessWrapper.lua`'s pure-Lua GUI/render/image stub surface (lines 6-171) as the foundation; do NOT reinvent. [Source: external/pob-engine/src/HeadlessWrapper.lua:6-171]
+  - [x] Seed BEFORE `dofile("Launch.lua")` by copying the PROVEN block verbatim (`full_pob_engine.py:137-161` **minus** base64/sha1): the global `arg = {}` (Main.lua:58 expects it — REQUIRED, not optional), `package.loaded["lua-utf8"] = utf8 or {reverse=..., gsub=string.gsub, find=string.find, sub=string.sub, len=function(s) return #s end}` (include `len` — the proven block has it; omitting it SEH-crashes if boot touches `utf8.len`), and `package.loaded["lcurl.safe"] = {}`. Use `package.loaded`, NOT `package.preload` (preload still dlopens → SEH). Do NOT stub `xml`/`base64`/`sha1`/`sha2`/`dkjson` — they are pure-Lua in `runtime/lua/` and must load REAL. [Source: src/calculator/full_pob_engine.py:137-161; src/calculator/MinimalCalc.lua:120,137-142; docs/stories/story-1.4.md:965-967]
+  - [x] Determine the minimal native pre-stub set empirically (this is the spike's central engineering question) and record it.
+  - [x] Expose `build = mainObject.main.modes["BUILD"]` and a `loadBuildFromXML(xmlText,name)` path (`main:SetMode("BUILD",false,name,xmlText)` + one `OnFrame` pump). [Source: external/pob-engine/src/HeadlessWrapper.lua:208-211; external/pob-engine/src/Modules/Main.lua:354-365,507-510]
 
-- [ ] **Task 3: Reuse the proven GUI-stat accessor** (AC: 4.1.2, 4.1.3)
-  - [ ] REUSE the already-proven read path (do NOT re-derive it): `build.calcsTab.mainOutput[stat]` (== `mainEnv.player.output[stat]`), exactly as `full_pob_engine.py:231,349` + `_extract_stats` already do. `CalcsTab:BuildOutput()` sets `mainOutput = mainEnv.player.output`, and `<PlayerStat>` is written verbatim from `calcsTab.mainOutput[stat]`, so identity with the baseline JSON holds by construction. Do NOT assume a global `output`. [Source: src/calculator/full_pob_engine.py:231,349; external/pob-engine/src/Classes/CalcsTab.lua:484-485; external/pob-engine/src/Modules/Build.lua:666-667,1020,1028-1030]
-  - [ ] Confirm one `OnFrame` after `loadBuildFromXML` is sufficient to populate `TotalDPS` (Build:Init runs first calc at Build.lua:666-667); pump a second `OnFrame` to guarantee settle. [Source: external/pob-engine/src/Modules/Build.lua:666-667,1144-1152]
+- [x] **Task 3: Reuse the proven GUI-stat accessor** (AC: 4.1.2, 4.1.3)
+  - [x] REUSE the already-proven read path (do NOT re-derive it): `build.calcsTab.mainOutput[stat]` (== `mainEnv.player.output[stat]`), exactly as `full_pob_engine.py:231,349` + `_extract_stats` already do. `CalcsTab:BuildOutput()` sets `mainOutput = mainEnv.player.output`, and `<PlayerStat>` is written verbatim from `calcsTab.mainOutput[stat]`, so identity with the baseline JSON holds by construction. Do NOT assume a global `output`. [Source: src/calculator/full_pob_engine.py:231,349; external/pob-engine/src/Classes/CalcsTab.lua:484-485; external/pob-engine/src/Modules/Build.lua:666-667,1020,1028-1030]
+  - [x] Confirm one `OnFrame` after `loadBuildFromXML` is sufficient to populate `TotalDPS` (Build:Init runs first calc at Build.lua:666-667); pump a second `OnFrame` to guarantee settle. [Source: external/pob-engine/src/Modules/Build.lua:666-667,1144-1152]
 
-- [ ] **Task 4: Minimal respawnable worker-process host** (AC: 4.1.1, 4.1.4)
-  - [ ] Build a Python parent ↔ Lua child host that sets cwd = `external/pob-engine/src` (Launch.lua:46 loads `manifest.xml` via `../manifest.xml` relative to cwd; upstream CI does `cd src`), boots `driver.lua` by ABSOLUTE path under `lupa.luajit21`, and survives/reports an SEH crash instead of dying with the parent. Reuse the `package.path` recipe from `pob_engine.py:564-579` verbatim (already includes `runtime/lua/?.lua`). [Source: src/calculator/pob_engine.py:564-579; external/pob-engine/src/Launch.lua:45-46]
-  - [ ] Implement a stdin/stdout command protocol with at least `LOAD_BUILD` and `GET_STATS`. Stub/prove-loadable `EVAL_NEIGHBORS`/`APPLY_MOVE` but do NOT build the full optimizer rewire (Epic 4 item 2/4). Worker = PROCESS not thread (LuaJIT is not thread-safe; process isolation contains the native-fault SEH). [Source: docs/pebo-master-plan.md:200-202; CLAUDE.md]
-  - [ ] `collectgarbage` between builds; measure per-process memory (200-400MB per full-Data.lua worker, risk #9). [Source: docs/pebo-master-plan.md:331]
+- [x] **Task 4: Minimal respawnable worker-process host** (AC: 4.1.1, 4.1.4)
+  - [x] Build a Python parent ↔ Lua child host that sets cwd = `external/pob-engine/src` (Launch.lua:46 loads `manifest.xml` via `../manifest.xml` relative to cwd; upstream CI does `cd src`), boots `driver.lua` by ABSOLUTE path under `lupa.luajit21`, and survives/reports an SEH crash instead of dying with the parent. Reuse the `package.path` recipe from `pob_engine.py:564-579` verbatim (already includes `runtime/lua/?.lua`). [Source: src/calculator/pob_engine.py:564-579; external/pob-engine/src/Launch.lua:45-46]
+  - [x] Implement a stdin/stdout command protocol with at least `LOAD_BUILD` and `GET_STATS`. Stub/prove-loadable `EVAL_NEIGHBORS`/`APPLY_MOVE` but do NOT build the full optimizer rewire (Epic 4 item 2/4). Worker = PROCESS not thread (LuaJIT is not thread-safe; process isolation contains the native-fault SEH). [Source: docs/pebo-master-plan.md:200-202; CLAUDE.md]
+  - [x] `collectgarbage` between builds; measure per-process memory (200-400MB per full-Data.lua worker, risk #9). [Source: docs/pebo-master-plan.md:331]
 
-- [ ] **Task 5: v0.15.0 parity harness** (AC: 4.1.2, 4.1.3, 4.1.11)
-  - [ ] Add an integration/parity test marked `@pytest.mark.gui_parity`, run under `pytest -n 1`, that feeds each of the 6 `tests/fixtures/gui_baselines/xml/*.xml` builds via `LOAD_BUILD`, reads the archetype-correct stat from `_metadata.archetype` (attack/spell-hit → TotalDPS; dot → TotalDot), and asserts ±0.1% relative (±1 absolute for zero) against the paired `*.baseline.json`. [Source: tests/fixtures/gui_baselines/]
-  - [ ] Primary proof build = `deadeye_lightning_arrow_76` (23003.185361227). Siblings: `ritualist_lightning_spear_96` (407381.39953906), `titan_falling_thunder_99` (13817.274690059), `warrior_earthquake_89` (49262.048339828) (attack); `bloodmage_remnants_95` (6906.4652250384, spell-hit); `witch_essence_drain_86` (TotalDot 23752.222654477, dot).
-  - [ ] Tolerate the teardown SEH after "N passed"; do not count it as a failure.
+- [x] **Task 5: v0.15.0 parity harness** (AC: 4.1.2, 4.1.3, 4.1.11)
+  - [x] Add an integration/parity test marked `@pytest.mark.gui_parity`, run under `pytest -n 1`, that feeds each of the 6 `tests/fixtures/gui_baselines/xml/*.xml` builds via `LOAD_BUILD`, reads the archetype-correct stat from `_metadata.archetype` (attack/spell-hit → TotalDPS; dot → TotalDot), and asserts ±0.1% relative (±1 absolute for zero) against the paired `*.baseline.json`. [Source: tests/fixtures/gui_baselines/]
+  - [x] Primary proof build = `deadeye_lightning_arrow_76` (23003.185361227). Siblings: `ritualist_lightning_spear_96` (407381.39953906), `titan_falling_thunder_99` (13817.274690059), `warrior_earthquake_89` (49262.048339828) (attack); `bloodmage_remnants_95` (6906.4652250384, spell-hit); `witch_essence_drain_86` (TotalDot 23752.222654477, dot).
+  - [x] Tolerate the teardown SEH after "N passed"; do not count it as a failure.
 
-- [ ] **Task 6: Stage LuaJIT 2.1 + the subprocess fallback lane** (AC: 4.1.5)
-  - [ ] **Front-load this in week 1 — it is a timebox risk.** Obtain/build a LuaJIT 2.1 `luajit.exe` matching lupa's embedded 2.1 (NONE is vendored — `runtime/` has the GUI exe + `Update.exe` + `lua51.dll` only; lupa embeds LuaJIT as a C-extension). Sourcing/building a byte-matching LuaJIT 2.1 Windows binary is unbounded-effort work that can consume the whole 2-week timebox before the fallback lane is even testable — stage it in week 1 so a boot-crash flip is genuinely same-week, not a re-scope. [Source: external/pob-engine/runtime/; requirements.txt:10]
-  - [ ] Run the SAME `driver.lua` as a true subprocess under `luajit.exe` with real stdin/stdout framing (CI proves the boot half: `cd src; luajit HeadlessWrapper.lua`) and prove `LOAD_BUILD`+`GET_STATS` parity through it. [Source: external/pob-engine/.github/workflows/test.yml:32]
+- [~] **Task 6: Stage LuaJIT 2.1 + the subprocess fallback lane** (AC: 4.1.5) — **PARTIAL (honest): lane CODE-READY + protocol proven; binary NOT staged (no compiler in this env; embedded lane works → off critical path). See Completion Notes Task 6.**
+  - [ ] **Front-load this in week 1 — it is a timebox risk.** Obtain/build a LuaJIT 2.1 `luajit.exe` matching lupa's embedded 2.1 (NONE is vendored — `runtime/` has the GUI exe + `Update.exe` + `lua51.dll` only; lupa embeds LuaJIT as a C-extension). Sourcing/building a byte-matching LuaJIT 2.1 Windows binary is unbounded-effort work that can consume the whole 2-week timebox before the fallback lane is even testable — stage it in week 1 so a boot-crash flip is genuinely same-week, not a re-scope. [Source: external/pob-engine/runtime/; requirements.txt:10] — **BLOCKED: no luajit.exe vendored; no gcc/cc/cl/make in this environment to build a byte-matching binary; declined to download an arbitrary unvetted binary.**
+  - [ ] Run the SAME `driver.lua` as a true subprocess under `luajit.exe` with real stdin/stdout framing (CI proves the boot half: `cd src; luajit HeadlessWrapper.lua`) and prove `LOAD_BUILD`+`GET_STATS` parity through it. [Source: external/pob-engine/.github/workflows/test.yml:32] — **DEFERRED: `driver.lua` `Driver.serve()` + `driver_worker.DriverWorker(lane="luajit")` are implemented and ready; the shared `handle_command` protocol is proven by the embedded lane; only the external binary spawn is unrun.**
 
-- [ ] **Task 7: Go/no-go decision + measurements** (AC: 4.1.4)
-  - [ ] Measure worker memory (full Data.lua footprint) and per-build boot + per-`GET_STATS` latency on the corpus worst case (feeds Epic 4 pool-size + `useFullDPS`-search decisions). [Source: docs/pebo-master-plan.md:323,331]
-  - [ ] At the fixed date, record the lane verdict (embedded-Lupa vs luajit.exe) with boot/parity/latency/memory evidence in the Dev Agent Record.
+- [x] **Task 7: Go/no-go decision + measurements** (AC: 4.1.4)
+  - [x] Measure worker memory (full Data.lua footprint) and per-build boot + per-`GET_STATS` latency on the corpus worst case (feeds Epic 4 pool-size + `useFullDPS`-search decisions). [Source: docs/pebo-master-plan.md:323,331]
+  - [x] At the fixed date, record the lane verdict (embedded-Lupa vs luajit.exe) with boot/parity/latency/memory evidence in the Dev Agent Record.
 
-- [ ] **Task 8: ADR-004 patch-necessity experiment** (AC: 4.1.6, 4.1.11)
-  - [ ] In a scratch/detached state (or an UNMARKED standalone script), reverse-apply the guards: `git -c core.autocrlf=false apply --reverse external/patches/0001..0003` from repo ROOT, OR `git -C external/pob-engine checkout -- src/Data/Global.lua src/Classes/ModStore.lua src/Modules/CalcOffence.lua`. Do NOT mark this test `parity`/`gui_parity` (autouse guard FAILS it on the deliberately-drifted tree). [Source: external/patches/README.md:44-60; tests/conftest.py:40-67]
-  - [ ] Boot the real-ModParser driver on `ritualist_lightning_spear_96` (spell) + `witch_essence_drain_86` (DoT); instrument the three sites (`Global.lua:108-196`, `ModStore.lua:~455`, `CalcOffence.lua:~5003`) via pcall+traceback to capture WHETHER/WHERE nil arrives. [Source: external/pob-engine/src/Data/Global.lua:108-196; external/pob-engine/src/Classes/ModStore.lua:458; external/pob-engine/src/Modules/CalcOffence.lua:5007]
-  - [ ] Record per-patch keep/drop. If dropping: `git rm` the `.patch` + `git checkout` the one engine file to pristine (else invariant (e) byte-exact reconciliation fails) + re-run `setup_pob.py` (POB_VERSION.txt auto-regenerates without that entry) + update `external/patches/README.md` + ADR-004. Each patch = exactly one file: 0001=Global.lua, 0002=ModStore.lua, 0003=CalcOffence.lua. [Source: src/pob_env.py:182-287,382-388]
-  - [ ] Restore: `python scripts/setup_pob.py` MUST exit 0 before proceeding.
+- [x] **Task 8: ADR-004 patch-necessity experiment** (AC: 4.1.6, 4.1.11)
+  - [x] In a scratch/detached state (or an UNMARKED standalone script), reverse-apply the guards: `git -c core.autocrlf=false apply --reverse external/patches/0001..0003` from repo ROOT, OR `git -C external/pob-engine checkout -- src/Data/Global.lua src/Classes/ModStore.lua src/Modules/CalcOffence.lua`. Do NOT mark this test `parity`/`gui_parity` (autouse guard FAILS it on the deliberately-drifted tree). [Source: external/patches/README.md:44-60; tests/conftest.py:40-67]
+  - [x] Boot the real-ModParser driver on `ritualist_lightning_spear_96` (spell) + `witch_essence_drain_86` (DoT); instrument the three sites (`Global.lua:108-196`, `ModStore.lua:~455`, `CalcOffence.lua:~5003`) via pcall+traceback to capture WHETHER/WHERE nil arrives. [Source: external/pob-engine/src/Data/Global.lua:108-196; external/pob-engine/src/Classes/ModStore.lua:458; external/pob-engine/src/Modules/CalcOffence.lua:5007]
+  - [x] Record per-patch keep/drop. If dropping: `git rm` the `.patch` + `git checkout` the one engine file to pristine (else invariant (e) byte-exact reconciliation fails) + re-run `setup_pob.py` (POB_VERSION.txt auto-regenerates without that entry) + update `external/patches/README.md` + ADR-004. Each patch = exactly one file: 0001=Global.lua, 0002=ModStore.lua, 0003=CalcOffence.lua. [Source: src/pob_env.py:182-287,382-388]
+  - [x] Restore: `python scripts/setup_pob.py` MUST exit 0 before proceeding.
 
-- [ ] **Task 9: v0.22.0 jump attempt** (AC: 4.1.7, 4.1.11)
-  - [ ] ONLY after Task 5 passes. In a scratch/worktree (active pin stays v0.15.0), `git checkout 860f4268` in the submodule, swap in `docs/forensics/proposed-patches/0001-global-lua-nil-safety-v0220.patch` for 0001 (0002/0003 apply clean on both tags), boot `driver.lua`. [Source: docs/forensics/proposed-patches/0001-global-lua-nil-safety-v0220.patch]
-  - [ ] Record whether the real `CalcSetup` satisfies `CollectGrantedPassiveNodesFromItems` natively and `TreeData/0_5` loads. Do NOT assert ±0.1% here (cross-version) and do NOT re-pin the repo. Run OFF the `pob_env`-gated parity suite (the jump changes gitlink/manifest → invariants b/c/d go red). Restore to v0.15.0 + `setup_pob.py` exit 0. [Source: docs/sprint-change-proposal-2026-07-02.md:386-392]
+- [x] **Task 9: v0.22.0 jump attempt** (AC: 4.1.7, 4.1.11)
+  - [x] ONLY after Task 5 passes. In a scratch/worktree (active pin stays v0.15.0), `git checkout 860f4268` in the submodule, swap in `docs/forensics/proposed-patches/0001-global-lua-nil-safety-v0220.patch` for 0001 (0002/0003 apply clean on both tags), boot `driver.lua`. [Source: docs/forensics/proposed-patches/0001-global-lua-nil-safety-v0220.patch]
+  - [x] Record whether the real `CalcSetup` satisfies `CollectGrantedPassiveNodesFromItems` natively and `TreeData/0_5` loads. Do NOT assert ±0.1% here (cross-version) and do NOT re-pin the repo. Run OFF the `pob_env`-gated parity suite (the jump changes gitlink/manifest → invariants b/c/d go red). Restore to v0.15.0 + `setup_pob.py` exit 0. [Source: docs/sprint-change-proposal-2026-07-02.md:386-392]
 
-- [ ] **Task 10: M0 five-build triage** (AC: 4.1.8)
-  - [ ] Pure-Python read-only graph check first (no engine). **HARD CONSTRAINT — evidence-integrity:** parse allocated node IDs via the `activeSpec`-aware pattern (pob_parser.py:232-244), **NOT** the buggy `_extract_passive_nodes` (pob_parser.py:391-393), which ignores `activeSpec` and returns an EMPTY set for list-typed `<Spec>` — using it self-contaminates the triage (it would falsely "prove" zero nodes / tree mismatch on exactly these five multi-Spec builds). For each of the five (`gemling_frost_mage_100`, `lich_storm_mage_90`, `titan_infernal_cry_72`, `warrior_ballista_93`, `witch_frost_mage_91`) set-diff the correctly-parsed nodes against `load_passive_tree("0_3").nodes` vs `0_4`(/`0_5`), plus BFS connectivity from class start. Report per-build missing-node counts + connectivity + confirm multi-`<Spec>` status — not a guessed cause. [Source: src/parsers/pob_parser.py:232-244,391-393; src/calculator/passive_tree.py:242,246-247,267]
-  - [ ] Confirm `lich_storm_mage_90` calcs nonzero DPS under the real driver (its 0.0 is a separate MinimalCalc coverage gap). Keep the two probes separate. [Source: docs/validation/calculation-gap-REVISED-ANALYSIS-2025-11-29.md:80-102]
+- [x] **Task 10: M0 five-build triage** (AC: 4.1.8)
+  - [x] Pure-Python read-only graph check first (no engine). **HARD CONSTRAINT — evidence-integrity:** parse allocated node IDs via the `activeSpec`-aware pattern (pob_parser.py:232-244), **NOT** the buggy `_extract_passive_nodes` (pob_parser.py:391-393), which ignores `activeSpec` and returns an EMPTY set for list-typed `<Spec>` — using it self-contaminates the triage (it would falsely "prove" zero nodes / tree mismatch on exactly these five multi-Spec builds). For each of the five (`gemling_frost_mage_100`, `lich_storm_mage_90`, `titan_infernal_cry_72`, `warrior_ballista_93`, `witch_frost_mage_91`) set-diff the correctly-parsed nodes against `load_passive_tree("0_3").nodes` vs `0_4`(/`0_5`), plus BFS connectivity from class start. Report per-build missing-node counts + connectivity + confirm multi-`<Spec>` status — not a guessed cause. [Source: src/parsers/pob_parser.py:232-244,391-393; src/calculator/passive_tree.py:242,246-247,267]
+  - [x] Confirm `lich_storm_mage_90` calcs nonzero DPS under the real driver (its 0.0 is a separate MinimalCalc coverage gap). Keep the two probes separate. [Source: docs/validation/calculation-gap-REVISED-ANALYSIS-2025-11-29.md:80-102]
+  - **DONE:** corpus scan → exactly the five are the only multi-`<Spec>` builds; buggy parse = 0 nodes for all five (root cause of no_valid_neighbors@iter0 = activeSpec parse gap); tree-version REFUTED (miss@0_3==miss@0_4 every build); real driver loads all five with correct node counts; `lich_storm_mage_90` = **188,475 FullDPS** (nonzero). See `scripts/triage_m0_builds.py`.
 
-- [ ] **Task 11: Record decision artifacts + draft ADR stubs** (AC: 4.1.4, 4.1.6, 4.1.7, 4.1.8, 4.1.10)
-  - [ ] Capture lane verdict, per-patch keep/drop, v0.22.0 boot result, triage table, memory/latency numbers in the Dev Agent Record.
-  - [ ] Apply the ADR-004 status edit to "Accepted — under re-evaluation; supersession trigger = Epic 4 spike outcome (fixed date)". [Source: docs/sprint-change-proposal-2026-07-02.md:286]
-  - [ ] Draft stubs: ADR-005 (Truth Engine / driver.lua), ADR-006 (worker-pool process isolation + 4-command protocol), ADR-007 (XML-direct via PassiveSpec convert=true), ADR-008 (tree 0_4/0_5 bump + version assert). Do NOT build the item-2 integration. [Source: docs/sprint-change-proposal-2026-07-02.md:284]
+- [x] **Task 11: Record decision artifacts + draft ADR stubs** (AC: 4.1.4, 4.1.6, 4.1.7, 4.1.8, 4.1.10)
+  - [x] Capture lane verdict, per-patch keep/drop, v0.22.0 boot result, triage table, memory/latency numbers in the Dev Agent Record.
+  - [x] Apply the ADR-004 status edit to "Accepted — under re-evaluation; supersession trigger = Epic 4 spike outcome (fixed date)". [Source: docs/sprint-change-proposal-2026-07-02.md:286]
+  - [x] Draft stubs: ADR-005 (Truth Engine / driver.lua), ADR-006 (worker-pool process isolation + 4-command protocol), ADR-007 (XML-direct via PassiveSpec convert=true), ADR-008 (tree 0_4/0_5 bump + version assert). Do NOT build the item-2 integration. [Source: docs/sprint-change-proposal-2026-07-02.md:284]
 
 ## Dev Notes
 
@@ -203,13 +204,79 @@ so that **Epic 4 can commit to a lane and an architecture for the Truth Engine o
 
 ### Context Reference
 
+- Executed via BMAD `dev-story` workflow, 2026-07-03. Spike run under `venv/Scripts/python.exe` (Python 3.14.3, lupa → LuaJIT 2.1.1760617492), PoB pinned v0.15.0 `3e1b71c9`, patches 0001/0002/0003 applied.
+- CLAUDE.md project constraints (thread-safety, `pytest -n 1`, ADR-003 teardown-SEH-benign).
+
 ### Agent Model Used
+
+claude-opus-4-8 (Claude Code, BMAD dev-story workflow)
 
 ### Debug Log References
 
+- Task 1 boot baseline: `pytest -n 1 tests/integration/test_full_pob_engine.py -v` → **15 passed in 32.72s**, no boot-time SEH.
+- Prior-art parity pre-check (scratch `probe_parity.py`): 6/6 GUI baselines at **±0.000%** in-process.
+- Worker-boundary parity + latency + memory + respawn (scratch `worker_parity.py`): 6/6 ±0.000% across the process boundary.
+- Task 5 harness: `pytest -n 1 tests/integration/test_driver_parity.py -v` → **8 passed in 4.66s** (guard inherited, teardown SEH benign).
+- Task 10 triage: `python scripts/triage_m0_builds.py` (read-only) + real-driver nonzero probe.
+- Regression: `pytest tests/unit/` → **334 passed**. `pytest -n 1 tests/integration/test_driver_parity.py` → **8 passed**. Env: `setup_pob.py` exit 0 (verified after Tasks 8 & 9).
+- **NOT a regression:** `test_gui_parity.py` shows 14 pre-existing failures — the OLD MinimalCalc path (`calculate_build_stats`) vs `tests/fixtures/parity_builds/gui_baseline_stats.json` which is explicitly `"stale": true, "pob_version": "0.12.2"` (flagged by story 3.5.2). My spike touches none of that code path (git status: only new untracked files under src/). This is the exact MinimalCalc coverage gap the Truth Engine closes — my `test_driver_parity.py` passes the SAME archetypes at ±0.000% against the current 0.15.0 baselines.
+
 ### Completion Notes List
 
+**Task 1 — prior-art boot baseline ✅.** `test_full_pob_engine.py` 15/15 pass in 32.7s. `full_pob_engine.py` boots PoB's REAL `Launch→OnInit→OnFrame→build` chain in-process under Lupa with **no boot-time SEH** → **risk #1 (SEH boot crash) is largely retired** before writing driver.lua. Booting proves survivability; the base64/sha1 identity stubs (:153-160) are the MinimalCalc anti-pattern and were NOT carried into driver.lua.
+
+**Task 2 — driver.lua authored ✅.** `src/calculator/driver.lua` (OUTSIDE the submodule). Copies HeadlessWrapper's stub surface (6-180) verbatim; inserts the native pre-stub block BEFORE `dofile("Launch.lua")`. **Minimal native `package.loaded` pre-stub set determined empirically = `{arg={}, lua-utf8 (with len), lcurl.safe}`** — base64/sha1/xml/sha2/dkjson are NOT stubbed (pure-Lua in runtime/lua/, load REAL). Parity holds at ±0.000% WITHOUT the base64/sha1 stubs → **inverse-of-MinimalCalc rule confirmed** (AC-4.1.1). Deviations (documented in-file): `print`→stderr for a clean stdout JSON protocol; POB_SRC_DIR-driven package.path for the luajit.exe lane. XML-direct load via PoB's own PassiveSpec, no parse_pob_code (AC-4.1.9).
+
+**Task 3 — GUI-stat accessor reused ✅.** `Driver.get_stats` reads `build.calcsTab.mainOutput[stat]` (== `mainEnv.player.output[stat]`), exactly the proven full_pob_engine path. One extra OnFrame pump after load to guarantee settle. Identity with baseline JSON holds by construction (AC-4.1.2/3).
+
+**Task 4 — respawnable worker-process host ✅.** `src/calculator/driver_worker.py`: Python parent ↔ Lua child, PROCESS isolation (not thread — LuaJIT unsafe), cwd=POB_SRC, boots driver.lua by absolute path, survives child SEH (parent sees EOF → `WorkerCrash`, does not die). `LOAD_BUILD`/`GET_STATS`/`PING`/`GC`/`SHUTDOWN` live; `EVAL_NEIGHBORS`/`APPLY_MOVE` are reachable STUBS (Epic 4 item 2/4, not built). Respawn proven (`restart()` → new pid, PING ok). **Measurements:** boot ≈0.7s; worker RSS ≈**293MB** (tree summed — venv python.exe on E: is a redirector stub, real footprint is the grandchild), Lua heap `collectgarbage("count")` ≈128-171MB → within risk-#9's 200-400MB envelope.
+
+**Task 5 — v0.15.0 parity harness ✅.** `tests/integration/test_driver_parity.py` (`@pytest.mark.gui_parity`, `-n 1`): **8 passed**. 6/6 baselines archetype-correct at **±0.000%** ACROSS THE WORKER PROCESS BOUNDARY (attack/spell-hit→TotalDPS, dot→TotalDot), + explicit deadeye anchor (23003.185361227) + non-vacuous DoT-branch test. Inherits the pob_env drift guard. Latency: cold first-build load ≈0.9s, warm loads 0.24-0.53s, `GET_STATS` sub-millisecond (~0.15ms). **AC-4.1.2 and AC-4.1.3 PASS.**
+
+**Task 10 — M0 five-build triage ✅.** `scripts/triage_m0_builds.py` (read-only, no engine). Corpus scan: **exactly the five (`gemling_frost_mage_100`, `lich_storm_mage_90`, `titan_infernal_cry_72`, `warrior_ballista_93`, `witch_frost_mage_91`) are the ONLY multi-`<Spec>` builds.** LEADING hypothesis CONFIRMED: buggy `_extract_passive_nodes` (pob_parser.py:391-393) returns **0 nodes** for all five (list-typed `<Spec>` → empty set) → `no_valid_neighbors` at iteration 0; the activeSpec-aware parse recovers 109-133 nodes. **Tree-version REFUTED**: `miss@0_3 == miss@0_4` for every build (residual 0-5 nodes are class-start/ascendancy nodes absent from the Python loader's graph, identical across versions; a 0_3→0_4 bump recovers none). Under the REAL driver all five load with correct node counts and the damage-dealers calc nonzero via `FullDPS` — **`lich_storm_mage_90` = 188,475 FullDPS** (its MinimalCalc 0.0 is a separate coverage gap, now closed).
+
+**Task 6 — luajit.exe subprocess fallback lane ⚠️ PARTIAL (honest).** Lane is CODE-READY: `driver.lua` `Driver.serve()` (io.lines JSON loop) + `driver_worker.DriverWorker(lane="luajit")` spawn the SAME driver.lua as a true subprocess; the shared protocol code (`Driver.handle_command`) is already proven by the embedded lane. BUT the **binary was not staged**: no `luajit.exe` is vendored (`runtime/` has `lua51.dll` = LuaJIT DLL + no frontend), and this environment has **no C compiler** (no gcc/cc/cl/make) to build a byte-matching LuaJIT 2.1 from lupa's source — exactly the "unbounded-effort" staging risk AC-4.1.5 flags. Downloading an arbitrary third-party binary was declined (wouldn't byte-match lupa's embedded 2.1; security-sensitive). **De-risked:** the embedded lane boots with NO boot-time SEH, so the fallback is off the go/no-go critical path — a boot crash is not the failure mode we must guard against. Epic 4 stages the binary only if ever needed (bounded: MSVC + LuaJIT at lupa's revision).
+
+**Task 7 — go/no-go verdict + measurements ✅.**
+
+> ### 🟢 GO/NO-GO VERDICT (Story 4.1) — **GO, embedded-Lupa lane**
+> The "architecturally impossible" verdict is **disproven**. The embedded-Lupa lane
+> is selected on evidence:
+> - **Boot:** REAL `Launch→OnInit→OnFrame→build` chain boots under `lupa.luajit21`
+>   in a respawnable worker PROCESS with **no boot-time SEH** (risk #1 retired).
+>   Minimal native pre-stub set = `{arg, lua-utf8(+len), lcurl.safe}`; base64/sha1/
+>   xml load REAL (inverse-of-MinimalCalc confirmed).
+> - **Parity:** 6/6 Tier-A GUI baselines at **±0.000%** across attack/spell-hit/DoT,
+>   across the worker process boundary (deadeye 23003.185361227 exact).
+> - **Latency:** boot ≈0.7s; cold first-build load ≈0.9s; warm loads 0.24–0.53s;
+>   `GET_STATS` ~0.15ms → ample headroom for EVAL_NEIGHBORS batching.
+> - **Memory:** worker RSS ≈**293MB** (Lua heap ≈128–171MB) — within risk-#9's
+>   200–400MB envelope; pool of ~2 is affordable.
+> - **Fallback:** `luajit.exe` lane is code-ready but binary-unstaged (Task 6);
+>   not required since the embedded lane has no boot crash.
+> Recommend Epic 4 proceeds: FullCalcEngine behind build_calculator.py + ~2-worker
+> respawnable pool (ADR-006), XML-direct via PassiveSpec (ADR-007), tree 0_4→0_5
+> bump + assert (ADR-008), drop the 3 nil-safety patches at MinimalCalc retirement
+> (ADR-004 outcome).
+
+**Task 8 — ADR-004 patch-necessity ✅.** Reverse-applied all 3 patches (git checkout to unpatched), booted the real-ModParser driver: **all 6 Tier-A baselines ±0.000% with ZERO patches** (incl. the ADR-004-named `ritualist_lightning_spear_96` + a DoT build); no "arithmetic on nil" at any guarded site. Verdict = **drop-candidate ×3** (MinimalCalc-only artifacts); removal DEFERRED to Epic 4 item 8. Experiment UNMARKED; env restored (`setup_pob.py` exit 0). ADR-004 status edited.
+
+**Task 9 — v0.22.0 jump ✅.** Disposable git worktree at `860f4268` (v0.22.0, active pin stayed v0.15.0 throughout), v0220 variant of patch 0001 + 0002/0003 applied cleanly. **driver.lua BOOTS v0.22.0** — real `CalcSetup` satisfies `CollectGrantedPassiveNodesFromItems` (the exact 2026-07-02 MinimalCalc blocker, canary 18/18 F), **`TreeData/0_5` loads**. Cross-version DPS differs (deadeye 27607.88 vs 23003.19) → NOT asserted; v0.22.0 parity needs fresh GUI re-capture. Worktree removed; pin intact; `setup_pob.py` exit 0.
+
+**Task 11 — decision artifacts + ADR stubs ✅.** ADR-004 status → "under re-evaluation" + spike-outcome addendum. Drafted stubs ADR-005 (Truth Engine/driver.lua), ADR-006 (worker process isolation + JSON protocol + lane choice), ADR-007 (XML-direct via PassiveSpec convert=true), ADR-008 (tree 0_4/0_5 bump + version assert). Item-2 integration NOT built (spike scope, AC-4.1.10).
+
 ### File List
+
+- `src/calculator/driver.lua` (NEW) — headless Truth-Engine driver, both lanes.
+- `src/calculator/driver_worker.py` (NEW) — respawnable worker-process host + JSON protocol.
+- `tests/integration/test_driver_parity.py` (NEW) — gui_parity harness (8 tests).
+- `scripts/triage_m0_builds.py` (NEW) — M0 no_valid_neighbors read-only triage.
+- `docs/decisions/ADR-005-truth-engine-driver-lua.md` (NEW) — stub.
+- `docs/decisions/ADR-006-worker-pool-process-isolation.md` (NEW) — stub.
+- `docs/decisions/ADR-007-xml-direct-passivespec-convert.md` (NEW) — stub.
+- `docs/decisions/ADR-008-tree-version-bump-and-assert.md` (NEW) — stub.
+- `docs/decisions/ADR-004-pob-global-lua-nil-safety-patch.md` (MODIFIED) — status → under re-evaluation + spike-outcome addendum.
+- `docs/sprint-status.yaml` (MODIFIED) — 4-1 status ready-for-dev → in-progress → review.
 
 ## Change Log
 
@@ -217,3 +284,10 @@ so that **Epic 4 can commit to a lane and an architecture for the Truth Engine o
 - Drafted from docs/pebo-master-plan.md §3 + §6 Epic 4 item 1 + §8; scope per docs/sprint-change-proposal-2026-07-02.md §5 (M0 riders) + §8.4 (v0.22.0 decision)
 - SPIKE with pre-committed go/no-go: ACs are decision evidence with objective pass/measure conditions, not shipped features
 - Status: ready-for-dev
+
+**2026-07-03** — Spike executed via BMAD dev-story workflow → **Status: review**
+- **VERDICT: 🟢 GO, embedded-Lupa lane.** driver.lua boots PoB's real chain in a respawnable worker process with no boot-time SEH; 6/6 Tier-A GUI baselines parity at ±0.000% across the process boundary (attack/spell-hit/DoT); boot ~0.7s, warm load 0.24-0.53s, GET_STATS ~0.15ms, worker RSS ~293MB.
+- AC-4.1.1/2/3 PASS; AC-4.1.4 verdict recorded; AC-4.1.6 patches = drop-candidate ×3 (zero nil repro under real ModParser), env restored; AC-4.1.7 v0.22.0 boots (CalcSetup satisfies CollectGrantedPassiveNodesFromItems, TreeData/0_5 loads); AC-4.1.8 M0 = activeSpec parse gap confirmed, tree-version refuted; AC-4.1.9/10/11 honored.
+- **AC-4.1.5 PARTIAL:** luajit.exe fallback lane code-ready + protocol-proven, but the binary was not staged (no compiler in this env; off critical path since the embedded lane has no boot crash).
+- New: src/calculator/driver.lua, src/calculator/driver_worker.py, tests/integration/test_driver_parity.py, scripts/triage_m0_builds.py, ADR-005..008. Modified: ADR-004 (status), docs/sprint-status.yaml.
+- Regression: unit 334/334 pass; driver parity 8/8 pass; setup_pob.py exit 0. (test_gui_parity.py's 14 fails are the pre-existing stale-0.12.2 MinimalCalc gap, not a regression.)
