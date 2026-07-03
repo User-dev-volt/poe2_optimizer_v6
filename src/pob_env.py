@@ -55,8 +55,17 @@ VERSION_FILE = "external/POB_VERSION.txt"
 
 # Baseline files whose _metadata.pob_version is checked by invariant (d).
 # Story 3.5.5's harvested fixtures adopt the same metadata contract and
-# extend this tuple.
-BASELINE_METADATA_FILES = ("tests/fixtures/parity_builds/gui_baseline_stats.json",)
+# extend this tuple. A unit test (test_every_committed_baseline_fixture_is_
+# guarded) goes red if a committed *.baseline.json is missing from it.
+BASELINE_METADATA_FILES = (
+    "tests/fixtures/parity_builds/gui_baseline_stats.json",
+    # Story 3.5.5 Tier-A captures — PoB PoE2 GUI v0.15.0 (3e1b71c9), 2026-07-02
+    "tests/fixtures/gui_baselines/bloodmage_remnants_95.baseline.json",
+    "tests/fixtures/gui_baselines/deadeye_lightning_arrow_76.baseline.json",
+    "tests/fixtures/gui_baselines/ritualist_lightning_spear_96.baseline.json",
+    "tests/fixtures/gui_baselines/titan_falling_thunder_99.baseline.json",
+    "tests/fixtures/gui_baselines/witch_essence_drain_86.baseline.json",
+)
 
 # Must equal scripts/generate_pob_version.py GENERATED_MARKER — pinned by a
 # unit test (src must not import from scripts/, hence the mirrored literal).

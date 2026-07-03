@@ -173,6 +173,29 @@ def make_env_double(
                 newline="\n",
             )
 
+    # Story 3.5.5 extended the check-(d) allowlist. The defect flags above
+    # target only the FIRST (subject) entry; every other allowlisted
+    # baseline gets a stale-flagged stub, derived from the live tuple.
+    # Stale-flagged is the only (d)-neutral state in EVERY double (a
+    # versioned non-stale stub would trip "cannot determine pinned version"
+    # in manifest-less doubles like no_git) — so a double stays red only
+    # for the defect a test asked for, and future allowlist extensions
+    # cannot silently break the doubles again.
+    for rel in pob_env.BASELINE_METADATA_FILES[1:]:
+        extra = root / rel
+        extra.parent.mkdir(parents=True, exist_ok=True)
+        extra.write_text(
+            json.dumps({
+                "_metadata": {
+                    "pob_version": "0.15.0",
+                    "stale": True,
+                    "stale_reason": "env-double background stub",
+                },
+                "stats": {},
+            }),
+            newline="\n",
+        )
+
     return root
 
 
