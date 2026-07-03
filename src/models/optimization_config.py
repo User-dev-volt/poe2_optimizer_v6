@@ -64,6 +64,14 @@ class OptimizationConfiguration:
     # Progress reporting
     progress_callback: Optional[Callable[[int, float, str], None]] = None
 
+    # Story 4.2: cooperative cancel token. A Callable (NOT a bare bool) because
+    # the daemon optimizer thread cannot be force-killed -- cooperative is the
+    # only safe cancel -- and it is test-friendly. The web layer binds this to a
+    # per-session threading.Event.is_set. Checked at the top of the main loop
+    # (beside the timeout check) and per-neighbor inside _evaluate_neighbors.
+    # Intentionally NOT validated in __post_init__ (a plain callable/None).
+    cancel_check: Optional[Callable[[], bool]] = None
+
     def __post_init__(self):
         """
         Validate configuration parameters after initialization.

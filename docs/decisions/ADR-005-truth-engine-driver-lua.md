@@ -1,7 +1,12 @@
 # ADR-005: Truth Engine — headless `driver.lua` over PoB's real calc chain
 
 ## Status
-Proposed (Epic 4) — STUB drafted from the Story 4.1 spike. Ratify at Epic 4 item 2.
+Accepted (Epic 4 item 2, Story 4.2, 2026-07-03). The spike-grade `driver.lua`
+graduated into production behind `FullCalcEngine` / `build_calculator.calculate_build_stats(engine="full")`;
+the deadeye anchor `23003.185361227` is pinned ±0.1% THROUGH the FullCalcEngine
+seam (`tests/integration/test_full_calc_engine.py`). `driver.lua` stays FROZEN
+(the `EVAL_NEIGHBORS`/`APPLY_MOVE` stubs remain stubs; their batch consumer is
+item 4).
 
 ## Context
 

@@ -1,6 +1,6 @@
 # Story 4.2: FullCalcEngine Behind build_calculator.py — Respawnable 2-Worker Pool + Cooperative Cancel
 
-Status: ready-for-dev
+Status: review
 
 **Epic:** 4 — Truth Engine → **v1 ships here** [Source: docs/pebo-master-plan.md:192-224]
 **Tracking key:** `4-2-fullcalcengine-worker-pool-cooperative-cancel` — the entry already exists at docs/sprint-status.yaml:108 (added at authoring as `ready-for-dev`); flip it to `in-progress` at dev start (T9). [Source: docs/sprint-status.yaml:108]
@@ -51,47 +51,47 @@ so that **the two numbers a user actually reads (baseline + optimized DPS/EHP) b
 
 ## Tasks / Subtasks
 
-- [ ] **T1: `FullCalcEngine` + the `engine=` selector** (AC: 4.2.1, 4.2.2)
-  - [ ] Create `src/calculator/full_calc_engine.py`: `FullCalcEngine` class + module-singleton `get_full_calc_engine()`; `calculate(build)` serializes via `patch_passive_nodes_to_xml` (T4) → `with pool.acquire() as w:` → `w.load_build(xml)` + `w.get_stats()` → maps to `BuildStats` via a `_stats_from_mainoutput()` ported from `full_pob_engine.py:257-306` with the first-nonzero DPS fallback. Read the JSON dict via dict-safe `.get(key, default)` (GET_STATS omits absent keys) and KEEP the `int(...)` casts so `BuildStats.__post_init__` doesn't reject the row.
-  - [ ] Add the keyword-only `engine="auto"|"full"` selector to `calculate_build_stats` (`build_calculator.py:98`), routing `"full"` to `FullCalcEngine` when `build.source_xml` is present; leave the `"auto"` path (`:154-221`) byte-identical. `resolve_main_socket_group` stays on the default engine (it drives the MinimalCalc search). [Source: src/calculator/build_calculator.py:98,240-303]
+- [x] **T1: `FullCalcEngine` + the `engine=` selector** (AC: 4.2.1, 4.2.2)
+  - [x] Create `src/calculator/full_calc_engine.py`: `FullCalcEngine` class + module-singleton `get_full_calc_engine()`; `calculate(build)` serializes via `patch_passive_nodes_to_xml` (T4) → `with pool.acquire() as w:` → `w.load_build(xml)` + `w.get_stats()` → maps to `BuildStats` via a `_stats_from_mainoutput()` ported from `full_pob_engine.py:257-306` with the first-nonzero DPS fallback. Read the JSON dict via dict-safe `.get(key, default)` (GET_STATS omits absent keys) and KEEP the `int(...)` casts so `BuildStats.__post_init__` doesn't reject the row.
+  - [x] Add the keyword-only `engine="auto"|"full"` selector to `calculate_build_stats` (`build_calculator.py:98`), routing `"full"` to `FullCalcEngine` when `build.source_xml` is present; leave the `"auto"` path (`:154-221`) byte-identical. `resolve_main_socket_group` stays on the default engine (it drives the MinimalCalc search). [Source: src/calculator/build_calculator.py:98,240-303]
 
-- [ ] **T2: `WorkerPool` over `DriverWorker`** (AC: 4.2.3, 4.2.4, 4.2.5)
-  - [ ] Create `src/calculator/worker_pool.py`: `WorkerPool(size=2)`, lazy spawn, bounded-`queue.Queue` `acquire()`/`release()` context manager, pool-owned health-check (`is_alive` + `PING`) + respawn-before-handout, bounded `_respawn_budget` failing with `stderr_tail`, benign-teardown-SEH exclusion (`_shutting_down`), `cancel_inflight()`, memory-cap recycle via `memory_mb()`.
-  - [ ] One-retry-then-`CalculationError` on a mid-calc crash; NEVER a sentinel `BuildStats`. [Source: src/calculator/driver_worker.py:316,322-344,355-384]
+- [x] **T2: `WorkerPool` over `DriverWorker`** (AC: 4.2.3, 4.2.4, 4.2.5)
+  - [x] Create `src/calculator/worker_pool.py`: `WorkerPool(size=2)`, lazy spawn, bounded-`queue.Queue` `acquire()`/`release()` context manager, pool-owned health-check (`is_alive` + `PING`) + respawn-before-handout, bounded `_respawn_budget` failing with `stderr_tail`, benign-teardown-SEH exclusion (`_shutting_down`), `cancel_inflight()`, memory-cap recycle via `memory_mb()`.
+  - [x] One-retry-then-`CalculationError` on a mid-calc crash; NEVER a sentinel `BuildStats`. [Source: src/calculator/driver_worker.py:316,322-344,355-384]
 
-- [ ] **T3: Close the 4.1 hardening cluster in `driver_worker.py`** (AC: 4.2.6)
-  - [ ] (a) guard `json.loads` at `:286`; (b) add `_die()` and route all `WorkerCrash` raises (`:279-285`) through it to close pipes; (c) default per-worker `stderr` capture (`:136,:168-172,:346-353`); (d) raise in `get_stats` on `{ok:false}` (`:294-296`); (e) `cmd`-last payload merge in `eval_neighbors`/`apply_move` (`:298-302`).
-  - [ ] (g) harden `scripts/triage_m0_builds.py` with a per-build `try/except`.
+- [x] **T3: Close the 4.1 hardening cluster in `driver_worker.py`** (AC: 4.2.6)
+  - [x] (a) guard `json.loads` at `:286`; (b) add `_die()` and route all `WorkerCrash` raises (`:279-285`) through it to close pipes; (c) default per-worker `stderr` capture (`:136,:168-172,:346-353`); (d) raise in `get_stats` on `{ok:false}` (`:294-296`); (e) `cmd`-last payload merge in `eval_neighbors`/`apply_move` (`:298-302`).
+  - [x] (g) harden `scripts/triage_m0_builds.py` with a per-build `try/except`.
 
-- [ ] **T4: `patch_passive_nodes_to_xml` + `source_xml` on `BuildData`** (AC: 4.2.7, 4.2.8)
-  - [ ] Extract `patch_passive_nodes_to_xml(source_xml, nodes, main_socket_group)` from `encode_pob_code` (`pob_parser.py:156-260`), returning `patched_xml` (`:252`) before compress/base64 (`:259`); ADD `Build @mainSocketGroup` patching (**G2**); refactor `encode_pob_code` to call the primitive.
-  - [ ] Add `source_xml: Optional[str] = None` to `src/models/build_data.py` (`:44-66`) and populate it in `parse_pob_code` from `xml_str` (`:74`).
-  - [ ] FENCE FullCalc reporting to single-`<Spec>` builds AND detect multi-`<Spec>` explicitly (parser stamps a `BuildData.is_multi_spec` flag, or the engine checks for a list-typed `Tree>Spec`). G3: for a multi-`<Spec>` build `_extract_passive_nodes` returns an EMPTY set (`:391-393`), so the patch would write `@nodes=""` and FullCalc would report an UNALLOCATED tree — garbage presented as authoritative; the fence is MANDATORY, not optional. The read-side `activeSpec` fix is item 3. [Source: src/parsers/pob_parser.py:234-236,378,391-393]
+- [x] **T4: `patch_passive_nodes_to_xml` + `source_xml` on `BuildData`** (AC: 4.2.7, 4.2.8)
+  - [x] Extract `patch_passive_nodes_to_xml(source_xml, nodes, main_socket_group)` from `encode_pob_code` (`pob_parser.py:156-260`), returning `patched_xml` (`:252`) before compress/base64 (`:259`); ADD `Build @mainSocketGroup` patching (**G2**); refactor `encode_pob_code` to call the primitive.
+  - [x] Add `source_xml: Optional[str] = None` to `src/models/build_data.py` (`:44-66`) and populate it in `parse_pob_code` from `xml_str` (`:74`).
+  - [x] FENCE FullCalc reporting to single-`<Spec>` builds AND detect multi-`<Spec>` explicitly (parser stamps a `BuildData.is_multi_spec` flag, or the engine checks for a list-typed `Tree>Spec`). G3: for a multi-`<Spec>` build `_extract_passive_nodes` returns an EMPTY set (`:391-393`), so the patch would write `@nodes=""` and FullCalc would report an UNALLOCATED tree — garbage presented as authoritative; the fence is MANDATORY, not optional. The read-side `activeSpec` fix is item 3. [Source: src/parsers/pob_parser.py:234-236,378,391-393]
 
-- [ ] **T5: Cooperative cancel in the optimizer** (AC: 4.2.9)
-  - [ ] Add `cancel_check` to `src/models/optimization_config.py` (`:65`, beside `progress_callback`, no validation).
-  - [ ] In `hill_climbing.py`: add the cancel check at `:167-173`; thread `cancel_check` into `_evaluate_neighbors` (call at `:209`) with a per-neighbor check at `:411`; add `convergence_reason="cancelled"` returning best-so-far (respect the `else: max_iterations` terminal at `:296-299`).
+- [x] **T5: Cooperative cancel in the optimizer** (AC: 4.2.9)
+  - [x] Add `cancel_check` to `src/models/optimization_config.py` (`:65`, beside `progress_callback`, no validation).
+  - [x] In `hill_climbing.py`: add the cancel check at `:167-173`; thread `cancel_check` into `_evaluate_neighbors` (call at `:209`) with a per-neighbor check at `:411`; add `convergence_reason="cancelled"` returning best-so-far (respect the `else: max_iterations` terminal at `:296-299`).
 
-- [ ] **T6: Web cancel wiring** (AC: 4.2.10)
-  - [ ] `src/web/session_manager.py`: add a `cancel_event` field to `OptimizationSession` (`:42-49`) and a `"cancelling"`/`"cancelled"` status (`update()` enforces real fields — `:106-108`).
-  - [ ] `src/web/optimization_runner.py`: bind `config.cancel_check = event.is_set` at `:109-111`; emit a terminal `"cancelled"` SSE (distinct from `error`).
-  - [ ] `src/web/routes.py`: add `POST /cancel/<session_id>` (near the other `app.route` defs, `:262`); on the web request path `build.source_xml` is populated for free because `parse_pob_code` (`:186`) sets it. [Source: src/web/routes.py:184-260]
+- [x] **T6: Web cancel wiring** (AC: 4.2.10)
+  - [x] `src/web/session_manager.py`: add a `cancel_event` field to `OptimizationSession` (`:42-49`) and a `"cancelling"`/`"cancelled"` status (`update()` enforces real fields — `:106-108`).
+  - [x] `src/web/optimization_runner.py`: bind `config.cancel_check = event.is_set` at `:109-111`; emit a terminal `"cancelled"` SSE (distinct from `error`).
+  - [x] `src/web/routes.py`: add `POST /cancel/<session_id>` (near the other `app.route` defs, `:262`); on the web request path `build.source_xml` is populated for free because `parse_pob_code` (`:186`) sets it. [Source: src/web/routes.py:184-260]
 
-- [ ] **T7: Wire the two-track reporting** (AC: 4.2.11)
-  - [ ] Keep the SEARCH loop on `calculate_build_stats(engine="auto")` (`hill_climbing.py:413`, unchanged); do NOT reassign the search's `baseline_stats`/`best_stats` LOCALS (they feed convergence at `:160`).
-  - [ ] After the loop, inside ONE `try/except`, compute `baseline_report = calculate_build_stats(config.build, engine="full")` and `optimized_report = calculate_build_stats(best_build, engine="full")`; write all THREE result fields TOGETHER — `OptimizationResult.baseline_stats`, `optimized_stats`, and `improvement_pct` (`:319,:328-329`) — from these two numbers. On ANY exception, downgrade BOTH to MinimalCalc reporting together (never a mixed-scale pair). [Source: src/optimizer/hill_climbing.py:114-122,160,318-339]
+- [x] **T7: Wire the two-track reporting** (AC: 4.2.11)
+  - [x] Keep the SEARCH loop on `calculate_build_stats(engine="auto")` (`hill_climbing.py:413`, unchanged); do NOT reassign the search's `baseline_stats`/`best_stats` LOCALS (they feed convergence at `:160`).
+  - [x] After the loop, inside ONE `try/except`, compute `baseline_report = calculate_build_stats(config.build, engine="full")` and `optimized_report = calculate_build_stats(best_build, engine="full")`; write all THREE result fields TOGETHER — `OptimizationResult.baseline_stats`, `optimized_stats`, and `improvement_pct` (`:319,:328-329`) — from these two numbers. On ANY exception, downgrade BOTH to MinimalCalc reporting together (never a mixed-scale pair). [Source: src/optimizer/hill_climbing.py:114-122,160,318-339]
 
-- [ ] **T8: Tests** (AC: 4.2.13)
-  - [ ] Fast/unmarked: `tests/unit/calculator/test_worker_pool_mechanics.py`, `tests/unit/optimizer/test_cooperative_cancel.py` (fake worker / monkeypatched calc).
-  - [ ] `gui_parity`+`slow`, `-n 1`: `tests/integration/test_driver_worker_crash_survival.py`, `test_driver_worker_pool.py`, `test_full_calc_engine.py` (deadeye `23003.185361227` ±0.1% through the seam).
-  - [ ] `tests/integration/test_driver_luajit_lane.py` — module-level skip-gated on `POB_LUAJIT_EXE`.
+- [x] **T8: Tests** (AC: 4.2.13)
+  - [x] Fast/unmarked: `tests/unit/calculator/test_worker_pool_mechanics.py`, `tests/unit/optimizer/test_cooperative_cancel.py` (fake worker / monkeypatched calc).
+  - [x] `gui_parity`+`slow`, `-n 1`: `tests/integration/test_driver_worker_crash_survival.py`, `test_driver_worker_pool.py`, `test_full_calc_engine.py` (deadeye `23003.185361227` ±0.1% through the seam).
+  - [x] `tests/integration/test_driver_luajit_lane.py` — module-level skip-gated on `POB_LUAJIT_EXE`.
 
-- [ ] **T9: ADRs + sprint-status** (AC: 4.2.14)
-  - [ ] Ratify ADR-005/006/007 `Proposed → Accepted`; fold cooperative-cancel into ADR-006; add the mutated-`BuildData` → patched-XML consequence to ADR-007; leave ADR-008 `Proposed`.
-  - [ ] Set `4-2-fullcalcengine-worker-pool-cooperative-cancel: in-progress` under the epic-4 block in `docs/sprint-status.yaml:106-107` at dev start.
+- [x] **T9: ADRs + sprint-status** (AC: 4.2.14)
+  - [x] Ratify ADR-005/006/007 `Proposed → Accepted`; fold cooperative-cancel into ADR-006; add the mutated-`BuildData` → patched-XML consequence to ADR-007; leave ADR-008 `Proposed`.
+  - [x] Set `4-2-fullcalcengine-worker-pool-cooperative-cancel: in-progress` under the epic-4 block in `docs/sprint-status.yaml:106-107` at dev start.
 
-- [ ] **T10: Close-out discipline** (AC: 4.2.12, 4.2.13)
-  - [ ] Confirm `driver.lua` untouched (stubs at `:392-397` intact); `python scripts/setup_pob.py` exits 0; unit + `-n 1` integration green.
+- [x] **T10: Close-out discipline** (AC: 4.2.12, 4.2.13)
+  - [x] Confirm `driver.lua` untouched (stubs at `:392-397` intact); `python scripts/setup_pob.py` exits 0; unit + `-n 1` integration green.
 
 ## Dev Notes
 
@@ -171,11 +171,64 @@ claude-opus-4-8 (Claude Code, BMAD create-story workflow)
 
 ### Debug Log References
 
+- `python scripts/setup_pob.py` → exit 0 (submodule at pinned gitlink `3e1b71c9`; patches 3/3 skipped-already-applied; ratified-state reconciliation clean) — run at dev start AND close.
+- Fast suite: `pytest tests/unit/` → **375 passed** (includes 41 new Story-4.2 fast tests; zero regressions).
+- New gui_parity+slow suite (`pytest -n 1`): `test_full_calc_engine.py` + `test_driver_worker_pool.py` + `test_driver_worker_crash_survival.py` + `test_driver_luajit_lane.py` → **7 passed, 1 skipped** (luajit lane skip-gated on `POB_LUAJIT_EXE`, binary unstaged per 4.1) in 14.1s.
+- Regression guard (`pytest -n 1`): `test_driver_parity.py` (4.1) + `test_web_smoke.py` → **12 passed** — the 4.1 anchor still holds through the hardened `driver_worker`; the web happy-path now runs the full two-track flow end-to-end.
+- T7 fallback confirmed (`pytest -n 1`): `test_optimizer_finds_improvement.py` + `test_optimization_pipeline.py` → **15 passed** — manual-built (`source_xml=None`) optimizer runs auto-downgrade FullCalc reporting to MinimalCalc with no behaviour change.
+- Seam parity evidence: deadeye `TotalDPS = 23003.185361227` reproduced ±0.1% THROUGH `FullCalcEngine` (patch → pool → driver → map), proving `patch_passive_nodes_to_xml`'s xmltodict re-serialization is calc-faithful.
+- Broad integration sweep (`pytest -n 1 tests/integration/ --ignore=test_epic2_validation.py`): **234 passed, 14 failed, 1 skipped, 2 xfailed**. The 14 failures are ALL `test_gui_parity.py::TestGUIParityBasic` (the OLD MinimalCalc-vs-GUI parity test) — **confirmed PRE-EXISTING** by `git stash`-ing all 4.2 changes and re-running `build_01_witch_90` on the clean tree (still `1 failed`). They are the known MinimalCalc ~4%-of-GUI coverage gap (`[MinimalCalc] TotalDPS: 1.47`) that Epic 4's Truth Engine exists to close and that item 8 retires — NOT a Story-4.2 regression, and orthogonal to this story's scope. Story 4.2's new `test_full_calc_engine.py` demonstrates the gap is closed on the FullCalc lane (deadeye exact).
+
 ### Completion Notes List
+
+- **T1 FullCalcEngine + selector** — `src/calculator/full_calc_engine.py` (class + `get_full_calc_engine()` singleton; dict-safe `_stats_from_mainoutput` with Python-side first-nonzero DPS + kept int casts; source_xml/multi-spec fences). Keyword-only `calculate_build_stats(build, *, engine="auto"|"full")` added ABOVE the hybrid so the `auto` path is byte-identical.
+- **T2 WorkerPool** — `src/calculator/worker_pool.py` (module singleton, lazy spawn, `acquire()` health-check+respawn-before-handout, bounded respawn budget w/ `stderr_tail`, `_shutting_down` teardown-SEH exclusion, one-retry-then-`CalculationError` never-a-sentinel, `cancel_inflight()`, memory recycle, `PEBO_WORKER_POOL_SIZE`).
+- **T3 4.1 hardening** — `driver_worker.py`: (a) `_send` json guard→`WorkerCrash`; (b) `_die()` closes pipes before every crash raise; (c) default per-worker temp-file stderr capture; (d) `get_stats` raises new `ProtocolError` on `{ok:false}`; (e) cmd-last merge; + `kill()`. (g) `scripts/triage_m0_builds.py` per-build try/except.
+- **T4 patch primitive + source_xml** — extracted `patch_passive_nodes_to_xml(source_xml, nodes, main_socket_group=None)` from `encode_pob_code` (G2 writes `Build @mainSocketGroup` when given; `encode_pob_code` passes `None` → export byte-behaviour identical). `BuildData` gained `source_xml` + `is_multi_spec`, both stamped in `parse_pob_code`; neighbors inherit via `dataclasses.replace`.
+- **T5 cooperative cancel** — `OptimizationConfiguration.cancel_check` (no validation); top-of-loop + per-neighbor checks; `convergence_reason="cancelled"` returns best-so-far.
+- **T6 web cancel** — `OptimizationSession.cancel_event` (live-from-creation, non-Optional); runner binds `config.cancel_check`; `POST /cancel/<id>` sets the Event + `pool.cancel_inflight()`; terminal `cancelled` status/SSE (added to `sse_manager` terminal set + `routes` SSE generator).
+- **T7 two-track** — search unchanged on MinimalCalc; both reported numbers recomputed via `engine="full"` in ONE `try/except` (atomic downgrade); sign-divergence reported honestly. FullCalc reporting activates ONLY when `source_xml` is present (real/web path), so all manual-build tests fall back automatically.
+- **T9 ADRs** — ADR-005/006/007 `Proposed → Accepted` (item 2); cooperative cancel + pool shape folded into ADR-006; mutated-`BuildData`→patched-XML seam + multi-spec fence added to ADR-007; ADR-008 left `Proposed` (item 3).
+- **Scope fence (AC-4.2.12)** — `driver.lua` FROZEN (0-line diff; `EVAL_NEIGHBORS`/`APPLY_MOVE` stubs at :392-397 intact); `external/pob-engine` untouched; no tree bump / batch rewire / MVP config / parity-v2 / MinimalCalc retirement.
 
 ### File List
 
+New:
+- `src/calculator/full_calc_engine.py`
+- `src/calculator/worker_pool.py`
+- `tests/unit/calculator/__init__.py`
+- `tests/unit/calculator/test_worker_pool_mechanics.py`
+- `tests/unit/calculator/test_full_calc_engine_unit.py`
+- `tests/unit/calculator/test_driver_worker_hardening.py`
+- `tests/unit/optimizer/test_cooperative_cancel.py`
+- `tests/unit/test_patch_passive_nodes_to_xml.py`
+- `tests/integration/test_full_calc_engine.py`
+- `tests/integration/test_driver_worker_pool.py`
+- `tests/integration/test_driver_worker_crash_survival.py`
+- `tests/integration/test_driver_luajit_lane.py`
+
+Modified:
+- `src/calculator/build_calculator.py` (engine= selector)
+- `src/calculator/driver_worker.py` (hardening a–e, `_die`, default stderr capture, `ProtocolError`, `kill`)
+- `src/parsers/pob_parser.py` (`patch_passive_nodes_to_xml` + G2; `encode_pob_code` refactor; stamp `source_xml`/`is_multi_spec`)
+- `src/models/build_data.py` (`source_xml`, `is_multi_spec`)
+- `src/models/optimization_config.py` (`cancel_check`)
+- `src/optimizer/hill_climbing.py` (cooperative cancel + two-track reporting)
+- `src/web/session_manager.py` (`cancel_event` field + status docs)
+- `src/web/optimization_runner.py` (bind `cancel_check`; terminal `cancelled` SSE)
+- `src/web/routes.py` (`POST /cancel/<id>`; SSE generator terminates on `cancelled`)
+- `src/web/sse_manager.py` (`cancelled` in terminal-events set)
+- `scripts/triage_m0_builds.py` (per-build try/except)
+- `docs/decisions/ADR-005-truth-engine-driver-lua.md` (Accepted)
+- `docs/decisions/ADR-006-worker-pool-process-isolation.md` (Accepted; pool shape + cancel folded in)
+- `docs/decisions/ADR-007-xml-direct-passivespec-convert.md` (Accepted; mutated-BuildData→patched-XML seam)
+- `docs/sprint-status.yaml` (4-2 → in-progress → review)
+
 ## Change Log
+
+**2026-07-03** — Story IMPLEMENTED via BMAD dev-story (ultracode). Status ready-for-dev → in-progress → review.
+- All 10 tasks (T1–T10) / 14 ACs delivered against the three confirmed authoring decisions ([D1] two-track, [D2] pre-file 4-9 blocked, [D3] ratify ADR-005/006/007 now).
+- Evidence: unit 375 passed (41 new); gui_parity seam+pool+crash-survival 7 passed / 1 skipped (`-n 1`); 4.1 parity + web smoke 12 passed; optimizer fallback 15 passed. Deadeye `23003.185361227` pinned ±0.1% through the `FullCalcEngine` seam. `setup_pob.py` exit 0; `driver.lua` frozen (0 diff); submodule at pin `3e1b71c9`.
 
 **2026-07-03** — Story created via BMAD create-story (ultimate context engine + ultracode design panel)
 - Drafted from docs/pebo-master-plan.md §6 Epic 4 item 2; scope-fenced against items 3-8; pulls 4.1 dev record + deferred hardening cluster (4-1-...:299).

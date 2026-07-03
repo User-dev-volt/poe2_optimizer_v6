@@ -108,6 +108,10 @@ def run_optimization(session_id: str) -> None:
 
     # Attach the SSE progress callback to the live config dataclass.
     config.progress_callback = make_progress_callback(session_id)
+    # Story 4.2: bind the cooperative-cancel token. The Flask request thread sets
+    # session.cancel_event via POST /cancel; the optimizer reads it as a Callable
+    # (a daemon thread cannot be force-killed, so cancel is cooperative-only).
+    config.cancel_check = session.cancel_event.is_set
     session_manager.update(session_id, status="running")
 
     # Serialize optimize runs: only one LuaJIT optimization at a time.
@@ -132,16 +136,21 @@ def run_optimization(session_id: str) -> None:
 
         payload = result.to_dict()
         optimized_nodes = sorted(result.optimized_build.passive_nodes)
+        # Story 4.2: a cancelled run returns best-so-far under a DISTINCT terminal
+        # status + SSE event (NOT "error"): the result is valid, just stopped early.
+        cancelled = result.convergence_reason == "cancelled"
+        terminal_status = "cancelled" if cancelled else "complete"
         session_manager.update(
             session_id,
-            status="complete",
+            status=terminal_status,
             result=payload,
             optimized_nodes=optimized_nodes,
         )
-        sse_manager.send(session_id, "complete", payload)
+        sse_manager.send(session_id, terminal_status, payload)
         logger.info(
-            "run_optimization: session %s complete (%.2f%% improvement)",
+            "run_optimization: session %s %s (%.2f%% improvement)",
             session_id,
+            terminal_status,
             payload.get("improvement_pct", 0.0),
         )
 

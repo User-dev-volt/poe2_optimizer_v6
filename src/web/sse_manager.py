@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 _MAX_QUEUE_SIZE = 100
 
 # Event types that must never be silently dropped.
-_TERMINAL_EVENTS = ("complete", "error")
+_TERMINAL_EVENTS = ("complete", "error", "cancelled")
 
 
 class SSEManager:

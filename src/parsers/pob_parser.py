@@ -131,6 +131,17 @@ def parse_pob_code(code: str) -> BuildData:
         build_name = build_section.get("@buildName")
         notes = pob_root.get("Notes")
 
+        # Story 4.2: detect a list-typed <Tree><Spec> (multi-Spec build). The
+        # activeSpec READ fix is item 3; until then FullCalc reporting must FENCE
+        # these off (G3) -- _extract_passive_nodes returns an EMPTY set for a
+        # list-typed Spec, so patching would write @nodes="" and FullCalc would
+        # report an unallocated tree.
+        tree_section_raw = pob_root.get("Tree")
+        is_multi_spec = (
+            isinstance(tree_section_raw, dict)
+            and isinstance(tree_section_raw.get("Spec"), list)
+        )
+
         # Step 7: Construct BuildData object
         return BuildData(
             character_class=character_class,
@@ -143,7 +154,9 @@ def parse_pob_code(code: str) -> BuildData:
             build_name=build_name,
             notes=notes,
             config=config,
-            main_socket_group=main_socket_group  # Story 2.9.2: Pass main skill selection
+            main_socket_group=main_socket_group,  # Story 2.9.2: Pass main skill selection
+            source_xml=xml_str,  # Story 4.2: carry decoded XML for FullCalcEngine
+            is_multi_spec=is_multi_spec,  # Story 4.2: FullCalc multi-Spec fence
         )
 
     except (InvalidFormatError, UnsupportedVersionError):
@@ -203,14 +216,64 @@ def encode_pob_code(original_code: str, optimized_nodes: Iterable[int]) -> str:
             f"incomplete or damaged. Cause: {e}"
         ) from e
 
+    # Step 2: Patch the active tree's @nodes via the shared primitive. Pass
+    # main_socket_group=None so the file's original @mainSocketGroup is PRESERVED
+    # -- the export round-trip must differ from the original ONLY in the allocated
+    # passive nodes (Story 4.2 keeps encode_pob_code byte-behaviour-identical).
+    patched_xml = patch_passive_nodes_to_xml(xml_str, optimized_nodes)
+
+    # Step 3: Compress (level 9) + STANDARD Base64 encode (inverse of decode).
+    compressed_out = zlib.compress(patched_xml.encode('utf-8'), 9)
+    return base64.b64encode(compressed_out).decode('ascii')
+
+
+def patch_passive_nodes_to_xml(
+    source_xml: str,
+    nodes: Iterable[int],
+    main_socket_group: Optional[int] = None,
+) -> str:
+    """Patch a PoB XML string's active tree allocation and return the raw XML.
+
+    The single primitive shared by :func:`encode_pob_code` (Story 3.7 export
+    round-trip) and ``FullCalcEngine`` (Story 4.2 Truth-Engine reporting). Given
+    the ORIGINAL decoded PoB XML (NOT a base64 code), it:
+
+    1. Replaces the active tree ``Spec @nodes`` with the numerically-sorted,
+       comma-joined ``nodes`` (the active spec is selected via the ``Tree
+       @activeSpec`` index for list-typed ``Spec``).
+    2. **G2 (Story 4.2 AC-4.2.8):** when ``main_socket_group`` is provided, ALSO
+       writes ``Build @mainSocketGroup``. ``@mainSocketGroup`` is READ back at
+       ``_extract_...``/parse time (``pob_parser.py`` main-skill parse), and
+       ``resolve_main_socket_group`` mutates ``build.main_socket_group`` in
+       Python -- so without writing it the worker would calc the file's ORIGINAL
+       main skill and the reported numbers would diverge from the Python search.
+       ``encode_pob_code`` passes ``None`` (preserve the original, byte-behaviour
+       identical export); ``FullCalcEngine`` passes the resolved index.
+
+    Returns the patched XML string BEFORE any ``zlib``/``base64`` -- i.e. exactly
+    the ``build_xml(data)`` intermediate. The caller compresses/encodes (export)
+    or feeds it straight to the worker (FullCalc).
+
+    Args:
+        source_xml: The decoded PoB build XML to patch.
+        nodes: Iterable of allocated passive node IDs to write into the active
+            tree spec. Order does not matter; IDs are sorted numerically.
+        main_socket_group: When not ``None``, the 1-indexed main socket group to
+            stamp into ``Build @mainSocketGroup``; when ``None``, the original
+            attribute is left untouched.
+
+    Raises:
+        InvalidFormatError: If ``source_xml`` cannot be parsed, is missing the
+            passive tree structure, or re-serialization fails.
+    """
     try:
-        data = parse_xml(xml_str)
+        data = parse_xml(source_xml)
     except InvalidFormatError:
         raise
     except Exception as e:
         raise InvalidFormatError(f"Unable to parse XML structure: {e}") from e
 
-    # Step 2: Locate the PathOfBuilding(2) root and its Tree section.
+    # Locate the PathOfBuilding(2) root and its Tree section.
     pob_root = data.get("PathOfBuilding2") or data.get("PathOfBuilding")
     if not pob_root:
         raise InvalidFormatError(
@@ -226,9 +289,9 @@ def encode_pob_code(original_code: str, optimized_nodes: Iterable[int]) -> str:
         raise InvalidFormatError("Missing Tree>Spec element in PoB XML")
 
     # Build the patched nodes string: numerically sorted, comma-joined.
-    nodes_str = ",".join(str(n) for n in sorted(int(node) for node in optimized_nodes))
+    nodes_str = ",".join(str(n) for n in sorted(int(node) for node in nodes))
 
-    # Step 3: Patch ONLY the active Spec's @nodes attribute.
+    # Patch ONLY the active Spec's @nodes attribute.
     if isinstance(spec, list):
         # Tree>Spec is a list of specs; the active one is selected by the
         # Tree @activeSpec index (1-indexed, default 1).
@@ -247,17 +310,20 @@ def encode_pob_code(original_code: str, optimized_nodes: Iterable[int]) -> str:
     else:
         raise InvalidFormatError("Unexpected Tree>Spec structure in PoB XML")
 
-    # Step 4: Re-serialize the patched dict back to XML.
+    # G2: also write Build @mainSocketGroup when the caller supplies one.
+    if main_socket_group is not None:
+        build_section = pob_root.get("Build")
+        if not isinstance(build_section, dict):
+            raise InvalidFormatError("Missing or malformed Build section in PoB XML")
+        build_section["@mainSocketGroup"] = str(int(main_socket_group))
+
+    # Re-serialize the patched dict back to XML.
     try:
-        patched_xml = build_xml(data)
+        return build_xml(data)
     except InvalidFormatError:
         raise
     except Exception as e:
         raise InvalidFormatError(f"Unable to build XML from patched data: {e}") from e
-
-    # Step 5: Compress (level 9) + STANDARD Base64 encode (inverse of decode).
-    compressed_out = zlib.compress(patched_xml.encode('utf-8'), 9)
-    return base64.b64encode(compressed_out).decode('ascii')
 
 
 def _extract_tree_version(pob_root: dict) -> str:

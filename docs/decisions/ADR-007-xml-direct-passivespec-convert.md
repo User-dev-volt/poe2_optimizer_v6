@@ -1,7 +1,10 @@
 # ADR-007: XML-direct build loading via PoB's own PassiveSpec (`convert=true`)
 
 ## Status
-Proposed (Epic 4) — STUB drafted from the Story 4.1 spike. Ratify at Epic 4 item 2.
+Accepted (Epic 4 item 2, Story 4.2, 2026-07-03). `FullCalcEngine` loads builds
+XML-direct into PoB's own PassiveSpec via the mutated-`BuildData` → patched-XML
+seam below; the deadeye seam parity holds ±0.1%. (Multi-`<Spec>` reporting stays
+FENCED off until the item-3 `activeSpec` READ fix — see Consequences.)
 
 ## Context
 
@@ -35,6 +38,23 @@ needs a node set (use the `activeSpec`-aware pattern at `pob_parser.py:232-244`)
 - Eliminates the multi-`<Spec>` `no_valid_neighbors@iter0` class of failures.
 - The Python `BuildData` model is no longer on the calc-load path (kept for UI /
   encode round-trip only).
+- **Mutated-`BuildData` → patched-XML seam (added at item 2, Story 4.2).** The
+  optimizer mutates only `BuildData.passive_nodes` (via `dataclasses.replace`), so
+  the Truth Engine serializes each reported build back to XML with a single shared
+  primitive `patch_passive_nodes_to_xml(source_xml, nodes, main_socket_group)`
+  (extracted from `encode_pob_code`): it rewrites the active `Spec @nodes` AND —
+  G2 — the `Build @mainSocketGroup` (which `resolve_main_socket_group` mutates in
+  Python but `encode_pob_code` never wrote), then feeds the patched XML XML-direct
+  to the worker. `BuildData` carries the original `source_xml` (stamped by
+  `parse_pob_code`); neighbors inherit it for free. An IN-WORKER node-delta
+  (`APPLY_MOVE`, avoiding a full `LOAD_BUILD` per neighbor) is DEFERRED to item 4 —
+  item 2 only reports the two loop-boundary numbers, so a full patched-XML load per
+  reported build is O(1) and acceptable.
+- **Multi-`<Spec>` fence (G3).** Until the item-3 `activeSpec` READ fix lands,
+  `_extract_passive_nodes` returns an EMPTY set for a list-typed `<Spec>`, so
+  `BuildData.is_multi_spec` gates FullCalc OFF for those builds (else the patch
+  would write `@nodes=""` and report an unallocated tree); reporting falls back to
+  MinimalCalc. MANDATORY, not a nicety.
 
 [Source: docs/stories/4-1-truth-engine-driver-spike.md (Tasks 9/10);
  src/parsers/pob_parser.py:232-244,391-393; docs/pebo-master-plan.md:112-116]

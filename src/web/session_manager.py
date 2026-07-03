@@ -27,7 +27,8 @@ class OptimizationSession:
     Fields:
         session_id: Unique id (uuid4 hex) assigned at creation.
         status: Lifecycle state, one of ``pending`` / ``running`` /
-            ``complete`` / ``error``. Starts as ``pending``.
+            ``complete`` / ``error`` / ``cancelling`` / ``cancelled``. Starts as
+            ``pending``.
         config: The :class:`OptimizationConfiguration` driving the run. Held as
             the live dataclass instance (never a dict).
         original_code: The raw PoB import code the user submitted.
@@ -37,6 +38,12 @@ class OptimizationSession:
         optimized_nodes: Final allocated passive node ids (``Set[int]``) once
             available, else ``None``.
         progress: Latest progress snapshot dict (iteration, best_metric, etc.).
+        cancel_event: Story 4.2 cooperative-cancel token. LIVE from creation
+            (NON-Optional, ``default_factory=threading.Event``) -- a defaulted
+            ``None`` would ``AttributeError`` on ``.set()`` the moment ``POST
+            /cancel`` fires, AND ``update()`` rejects unknown fields so it MUST be
+            a declared field, not an ad-hoc attribute. The optimizer worker binds
+            ``config.cancel_check = session.cancel_event.is_set``.
     """
 
     session_id: str = ""
@@ -47,6 +54,7 @@ class OptimizationSession:
     error: Optional[str] = None
     optimized_nodes: Optional[Set[int]] = None
     progress: dict = field(default_factory=dict)
+    cancel_event: threading.Event = field(default_factory=threading.Event)
 
 
 class SessionManager:

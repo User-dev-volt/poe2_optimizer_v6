@@ -288,7 +288,7 @@ def register_routes(app) -> None:
                 yield f"data: {json.dumps(payload)}\n"
                 yield "\n"
 
-                if event_name in ("complete", "error"):
+                if event_name in ("complete", "error", "cancelled"):
                     break
 
         headers = {
@@ -348,3 +348,42 @@ def register_routes(app) -> None:
             return jsonify({"error_type": "export_failed", "reason": str(exc)}), 400
 
         return jsonify({"pob_code": pob_code, "status": "ok"}), 200
+
+    @app.route("/cancel/<session_id>", methods=["POST"])
+    def cancel(session_id):
+        session = session_manager.get(session_id)
+        if session is None:
+            return (
+                jsonify(
+                    {
+                        "error_type": "unknown_session",
+                        "reason": "Unknown session id.",
+                    }
+                ),
+                404,
+            )
+
+        # Already terminal -> nothing to cancel (idempotent, don't overwrite state).
+        if session.status in ("complete", "error", "cancelled"):
+            return jsonify({"status": session.status, "session_id": session_id}), 200
+
+        # Cooperative cancel: SET the live per-session Event (the optimizer's
+        # cancel_check reads it between neighbors) and mark the session cancelling.
+        session.cancel_event.set()
+        session_manager.update(session_id, status="cancelling")
+
+        # Hard-stop any FullCalc worker checked out for THIS run. During the
+        # MinimalCalc search no worker is in flight (the cooperative check serves
+        # cancel within ~10ms); a worker is only in flight during the ~1s FullCalc
+        # reporting windows, so this unblocks a wedged reporting call.
+        # get_worker_pool() returns the singleton WITHOUT spawning workers, so on a
+        # MinimalCalc-only run cancel_inflight() is a no-op. Deferred import keeps
+        # LuaJIT off the request-thread import path.
+        try:
+            from src.calculator.worker_pool import get_worker_pool
+
+            get_worker_pool().cancel_inflight()
+        except Exception:  # cancel must never 500 on pool bookkeeping
+            logger.exception("cancel: pool.cancel_inflight failed for %s", session_id)
+
+        return jsonify({"status": "cancelling", "session_id": session_id}), 200

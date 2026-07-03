@@ -127,27 +127,33 @@ def main() -> int:
             print(f"{name:<26}  MISSING XML")
             rc = 1
             continue
-        root = _pob_root(xmlf.read_text(encoding="utf-8"))
-        is_multi, n_specs, active = _spec_info(root)
-        buggy = _extract_passive_nodes(root)          # returns set() for multi-Spec
-        correct = _correct_nodes(root)
-        cls = _class_name(root)
-
-        miss = {}
-        for v, t in trees.items():
-            present = set(t.nodes.keys())
-            miss[v] = len(correct - present)
-
-        conn = "?"
+        # (AC-4.2.6g) per-build guard: one malformed/unreadable build must not
+        # abort the whole evidence table.
         try:
-            if cls and "0_4" in trees:
-                ok = trees["0_4"].validate_tree_connectivity(correct, cls)
-                conn = "Y" if ok else "N"
-        except Exception:
-            conn = "err"
+            root = _pob_root(xmlf.read_text(encoding="utf-8"))
+            is_multi, n_specs, active = _spec_info(root)
+            buggy = _extract_passive_nodes(root)          # returns set() for multi-Spec
+            correct = _correct_nodes(root)
+            cls = _class_name(root)
 
-        print(f"{name:<26}{('Y('+str(n_specs)+')'):>10}{active:>7}{len(buggy):>7}"
-              f"{len(correct):>8}{miss.get('0_3','-'):>9}{miss.get('0_4','-'):>9}{conn:>6}")
+            miss = {}
+            for v, t in trees.items():
+                present = set(t.nodes.keys())
+                miss[v] = len(correct - present)
+
+            conn = "?"
+            try:
+                if cls and "0_4" in trees:
+                    ok = trees["0_4"].validate_tree_connectivity(correct, cls)
+                    conn = "Y" if ok else "N"
+            except Exception:
+                conn = "err"
+
+            print(f"{name:<26}{('Y('+str(n_specs)+')'):>10}{active:>7}{len(buggy):>7}"
+                  f"{len(correct):>8}{miss.get('0_3','-'):>9}{miss.get('0_4','-'):>9}{conn:>6}")
+        except Exception as e:
+            print(f"{name:<26}  ERROR: {e}", file=sys.stderr)
+            rc = 1
 
     print("\nInterpretation:")
     print("  buggy==0 on multi-Spec  -> root cause of no_valid_neighbors@iter0 (activeSpec parse gap).")

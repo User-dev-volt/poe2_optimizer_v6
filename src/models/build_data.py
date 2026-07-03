@@ -65,6 +65,21 @@ class BuildData:
     # Story 2.9.2: Main skill selection
     main_socket_group: int = 1  # Which socket group to calculate DPS for (1-indexed)
 
+    # Story 4.2: Truth Engine (FullCalcEngine) support.
+    # The ORIGINAL decoded PoB XML, carried on the BuildData so the free function
+    # calculate_build_stats(build, engine="full") can feed the real PoB engine
+    # XML-direct (ADR-007) without an OptimizationConfiguration. Populated by
+    # parse_pob_code from the already-decoded xml_str; None when the build was
+    # constructed programmatically (then engine="full" is unavailable and reporting
+    # falls back to MinimalCalc). Neighbors inherit it FOR FREE via
+    # dataclasses.replace (the optimizer only mutates passive_nodes).
+    source_xml: Optional[str] = None
+    # True when the source XML has a list-typed <Tree><Spec> (multi-Spec build).
+    # FullCalc reporting is FENCED off for these until the item-3 activeSpec READ
+    # fix lands: _extract_passive_nodes returns an EMPTY set for list-typed Spec,
+    # so patching would write @nodes="" and report an unallocated tree (G3).
+    is_multi_spec: bool = False
+
     # Calculated properties
     @property
     def allocated_point_count(self) -> int:

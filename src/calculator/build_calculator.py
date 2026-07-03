@@ -95,7 +95,7 @@ def get_subprocess_calculator() -> SubprocessCalculator:
     return _thread_local.subprocess_calculator
 
 
-def calculate_build_stats(build: BuildData) -> BuildStats:
+def calculate_build_stats(build: BuildData, *, engine: str = "auto") -> BuildStats:
     """
     Calculate character statistics using hybrid routing.
 
@@ -137,7 +137,24 @@ def calculate_build_stats(build: BuildData) -> BuildStats:
     References:
         - Story 2.9.1 AC-2.9.1.7: Hybrid routing logic
         - Story 2.9.1 AC-2.9.1.10: Performance validation
+
+    Story 4.2 -- engine selector (keyword-only):
+        - engine="auto" (default): the existing is_attack_skill MinimalCalc /
+          Subprocess hybrid AND its fallback, byte-identical to pre-4.2 behaviour.
+        - engine="full": routes to the Truth Engine (FullCalcEngine over the REAL
+          PoB chain via the worker pool) when build.source_xml is present; raises
+          CalculationError otherwise. Two-track: the hot neighbor SEARCH stays on
+          "auto"; "full" computes ONLY the two reported baseline+optimized numbers
+          at the optimizer loop boundaries (item 4 moves SEARCH onto FullCalc).
     """
+    # Story 4.2: engine selector. Kept ABOVE the hybrid so the "auto" path is
+    # byte-identical to the pre-4.2 implementation.
+    if engine == "full":
+        from .full_calc_engine import get_full_calc_engine
+        return get_full_calc_engine().calculate(build)
+    if engine != "auto":
+        raise ValueError(f"engine must be 'auto' or 'full', got {engine!r}")
+
     logger.debug(
         "Calculating stats for build: %s level %d, %d passive nodes",
         build.character_class.value,

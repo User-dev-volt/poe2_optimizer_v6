@@ -33,6 +33,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from typing import Any, Optional
@@ -53,6 +54,16 @@ class WorkerCrash(RuntimeError):
         super().__init__(message)
         self.returncode = returncode
         self.stderr_tail = stderr_tail
+
+
+class ProtocolError(RuntimeError):
+    """Raised when a LIVE worker returns a well-formed ``{ok: false}`` error
+    envelope -- a deterministic logical failure (bad build XML, calc failed),
+    as opposed to a process death (:class:`WorkerCrash`).
+
+    The pool maps this to ``CalculationError`` WITHOUT a retry/respawn: the
+    worker is healthy, so re-running the same input would fail identically.
+    """
 
 
 # =========================================================================== #
@@ -144,6 +155,14 @@ class DriverWorker:
         self.lane = lane
         self.luajit_exe = luajit_exe
         self.pob_src = pob_src
+        # (AC-4.2.6c) DEFAULT per-worker stderr capture so _stderr_tail() is never
+        # blank when a crash occurs. With no explicit stderr_path we own a private
+        # temp file (removed on stop()); a file sink -- unlike a PIPE -- cannot
+        # pipe-fill-deadlock on boot noise, so capturing by default is safe.
+        self._owns_stderr = stderr_path is None
+        if stderr_path is None:
+            fd, stderr_path = tempfile.mkstemp(prefix="pebo_worker_", suffix=".stderr")
+            os.close(fd)
         self.stderr_path = stderr_path
         self.boot_timeout = boot_timeout
         self.cmd_timeout = cmd_timeout
@@ -221,6 +240,7 @@ class DriverWorker:
             except Exception:
                 pass
             t.join(5)
+            self._die()
             raise WorkerCrash(
                 f"worker unresponsive during {phase}: no line within "
                 f"{timeout:.0f}s (killed)",
@@ -228,6 +248,7 @@ class DriverWorker:
                 stderr_tail=self._stderr_tail(),
             )
         if "exc" in box:
+            self._die()
             raise WorkerCrash(
                 f"worker read failed during {phase}: {box['exc']}",
                 returncode=self._returncode(),
@@ -249,6 +270,7 @@ class DriverWorker:
             line = self._readline_with_timeout(remaining, phase="boot")
             if line == "":  # EOF -> process exited during boot (e.g. SEH)
                 rc = self.proc.wait()
+                self._die()
                 raise WorkerCrash(
                     f"worker exited during boot (rc={rc}) -- possible boot-time SEH",
                     returncode=rc,
@@ -264,26 +286,41 @@ class DriverWorker:
             if obj.get("ready"):
                 return obj
             if obj.get("ok") is False:
+                self._die()
                 raise WorkerCrash(f"worker boot error: {obj.get('error')}",
                                   stderr_tail=self._stderr_tail())
 
     # ----- protocol ------------------------------------------------------ #
     def _send(self, obj: dict) -> dict:
         if not self.is_alive():
+            self._die()
             raise WorkerCrash("worker is not alive", returncode=self._returncode())
         assert self.proc and self.proc.stdin and self.proc.stdout
         try:
             self.proc.stdin.write(json.dumps(obj) + "\n")
             self.proc.stdin.flush()
         except (BrokenPipeError, OSError) as e:
+            self._die()
             raise WorkerCrash(f"write failed: {e}", returncode=self._returncode(),
                               stderr_tail=self._stderr_tail())
         line = self._readline_with_timeout(self.cmd_timeout, phase="command")
         if line == "":
             rc = self.proc.wait()
+            self._die()
             raise WorkerCrash(f"worker died mid-command (rc={rc}) -- possible SEH",
                               returncode=rc, stderr_tail=self._stderr_tail())
-        return json.loads(line.strip())
+        # (AC-4.2.6a) A malformed protocol line is a worker CRASH, not a bare
+        # JSONDecodeError leaking to the caller (which had no returncode/stderr).
+        try:
+            return json.loads(line.strip())
+        except json.JSONDecodeError as e:
+            self._die()
+            raise WorkerCrash(
+                f"malformed protocol line from worker: {e} "
+                f"(line={line.strip()[:200]!r})",
+                returncode=self._returncode(),
+                stderr_tail=self._stderr_tail(),
+            )
 
     def ping(self) -> dict:
         return self._send({"cmd": "PING"})
@@ -293,13 +330,24 @@ class DriverWorker:
 
     def get_stats(self, stats: Optional[list[str]] = None) -> dict:
         resp = self._send({"cmd": "GET_STATS", "stats": stats})
-        return resp.get("stats", {}) if resp.get("ok") else resp
+        # (AC-4.2.6d) RAISE on an {ok:false} envelope instead of returning the raw
+        # error dict as if it were stats (which the caller would then map to a
+        # bogus all-zero BuildStats).
+        if not resp.get("ok"):
+            raise ProtocolError(f"GET_STATS failed: {resp.get('error', resp)}")
+        return resp.get("stats", {})
 
     def eval_neighbors(self, payload: Optional[dict] = None) -> dict:
-        return self._send({"cmd": "EVAL_NEIGHBORS", **(payload or {})})
+        # (AC-4.2.6e) set cmd LAST so a payload key cannot clobber it (pre-hardens
+        # the item-4 batch protocol; driver.lua handlers are frozen stubs here).
+        msg = dict(payload or {})
+        msg["cmd"] = "EVAL_NEIGHBORS"
+        return self._send(msg)
 
     def apply_move(self, payload: Optional[dict] = None) -> dict:
-        return self._send({"cmd": "APPLY_MOVE", **(payload or {})})
+        msg = dict(payload or {})
+        msg["cmd"] = "APPLY_MOVE"
+        return self._send(msg)
 
     def gc(self) -> dict:
         return self._send({"cmd": "GC"})
@@ -318,6 +366,35 @@ class DriverWorker:
 
     def _returncode(self) -> Optional[int]:
         return self.proc.poll() if self.proc else None
+
+    def _die(self) -> None:
+        """Close the child pipes before raising WorkerCrash (AC-4.2.6b).
+
+        Every WorkerCrash raise routes through here so a mid-protocol crash never
+        leaks the stdin/stdout pipe fds (previously only stop() closed them).
+        Idempotent -- stop() closes them again harmlessly. Does NOT touch the
+        stderr file: _stderr_tail() must still read it for the crash report.
+        """
+        if self.proc is not None:
+            for stream in (self.proc.stdin, self.proc.stdout):
+                try:
+                    if stream:
+                        stream.close()
+                except Exception:
+                    pass
+
+    def kill(self) -> None:
+        """Forcibly kill the worker process -- the cross-thread hard-stop for
+        cooperative cancel (WorkerPool.cancel_inflight). Any in-flight reader
+        unblocks on EOF and raises WorkerCrash; pipe close is left to that crash
+        path's _die(). Safe to call from another thread (Popen.kill only signals).
+        """
+        p = self.proc
+        if p is not None:
+            try:
+                p.kill()
+            except Exception:
+                pass
 
     def memory_mb(self) -> Optional[float]:
         """Resident set size of the worker process TREE in MB (risk #9).
@@ -382,6 +459,12 @@ class DriverWorker:
             except Exception:
                 pass
             self._stderr_fh = None
+        # Remove the private temp file we own (recreated by start() on restart).
+        if self._owns_stderr and self.stderr_path:
+            try:
+                os.remove(self.stderr_path)
+            except OSError:
+                pass  # child may still hold the fd on Windows; harmless leak
 
     # ----- context manager ------------------------------------------------ #
     def __enter__(self) -> "DriverWorker":

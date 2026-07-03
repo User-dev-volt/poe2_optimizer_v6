@@ -24,7 +24,7 @@ References:
 
 import logging
 import time
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Callable
 from dataclasses import replace
 
 from src.models.build_data import BuildData
@@ -172,6 +172,15 @@ def optimize_build(config: OptimizationConfiguration) -> OptimizationResult:
             convergence_reason = "timeout"
             break
 
+        # Story 4.2 (AC-4.2.9): cooperative cancel, co-located with the timeout
+        # check. The Flask request thread SETS a threading.Event; this daemon
+        # optimizer thread (which cannot be force-killed) READS it here and
+        # returns best-so-far under a NEW terminal convergence_reason.
+        if config.cancel_check is not None and config.cancel_check():
+            logger.info("Cancellation requested at iteration %d", iterations_run)
+            convergence_reason = "cancelled"
+            break
+
         # ========================================
         # Task 2.2: Generate neighbors
         # ========================================
@@ -209,7 +218,8 @@ def optimize_build(config: OptimizationConfiguration) -> OptimizationResult:
         neighbor_evaluations = _evaluate_neighbors(
             neighbors,
             config.metric,
-            current_stats
+            current_stats,
+            cancel_check=config.cancel_check,
         )
 
         # ========================================
@@ -315,18 +325,60 @@ def optimize_build(config: OptimizationConfiguration) -> OptimizationResult:
     # ========================================
     elapsed_time = time.time() - start_time
 
-    # Task 3.1 & 3.2: Calculate final stats and improvement
+    # ========================================
+    # Story 4.2 (AC-4.2.11): TWO-TRACK reporting.
+    # ========================================
+    # The hot SEARCH above ranked neighbors on MinimalCalc (engine="auto", ~10ms,
+    # within the 300s budget) -- baseline_stats/best_stats are its LOCALS and are
+    # NOT reassigned here (they fed convergence + progress). The two numbers the
+    # user actually READS are now recomputed on the Truth Engine (engine="full")
+    # so they are GUI-accurate, closing the ~4%-of-GUI MinimalCalc reporting gap
+    # (+2 FullCalc calls/run, O(1), zero budget risk). Moving the SEARCH onto
+    # FullCalc is item 4.
+    #
+    # ATOMIC FALLBACK: BOTH FullCalc calls live in ONE try/except; on ANY failure
+    # BOTH downgrade to MinimalCalc together -- never a FullCalc baseline against a
+    # MinimalCalc optimized (that mixed-scale pair, ~23003 vs ~900, yields a bogus
+    # ~-96% headline).
+    # SIGN DIVERGENCE (report truth, don't fabricate): the MinimalCalc-chosen
+    # best_build is NOT guaranteed to improve the FullCalc metric, so
+    # improvement_pct can legitimately be <= 0. Report the TRUE FullCalc numbers
+    # regardless (a Truth Engine must not invent a gain); a non-positive FullCalc
+    # improvement is the expected signal that MinimalCalc search diverged (item 4
+    # closes it by moving search onto FullCalc).
+    baseline_report = baseline_stats
+    optimized_report = best_stats
     improvement_pct = _calculate_improvement_percentage(
-        baseline_stats,
-        best_stats,
-        config.metric
+        baseline_stats, best_stats, config.metric
     )
+    try:
+        full_baseline = calculate_build_stats(config.build, engine="full")
+        full_optimized = calculate_build_stats(best_build, engine="full")
+        # Assign all THREE reported fields TOGETHER, only after both succeed.
+        baseline_report = full_baseline
+        optimized_report = full_optimized
+        improvement_pct = _calculate_improvement_percentage(
+            full_baseline, full_optimized, config.metric
+        )
+        logger.info(
+            "Two-track reporting on FullCalc: baseline_metric=%.1f -> "
+            "optimized_metric=%.1f (improvement=%.2f%%)",
+            _get_metric_value(full_baseline, config.metric),
+            _get_metric_value(full_optimized, config.metric),
+            improvement_pct,
+        )
+    except Exception as exc:
+        # Atomic downgrade: both reported numbers stay MinimalCalc (already set).
+        logger.warning(
+            "FullCalc reporting unavailable; baseline AND optimized both reported "
+            "on MinimalCalc (atomic downgrade): %s", exc,
+        )
 
-    # Task 3.3 & 3.4: Package result
+    # Task 3.3 & 3.4: Package result (reported stats are FullCalc when available)
     result = OptimizationResult(
         optimized_build=best_build,
-        baseline_stats=baseline_stats,
-        optimized_stats=best_stats,
+        baseline_stats=baseline_report,
+        optimized_stats=optimized_report,
         improvement_pct=improvement_pct,
         unallocated_used=config.unallocated_points - int(unallocated_remaining),
         respec_used=config.respec_points - int(respec_remaining) if config.respec_points is not None else 0,
@@ -386,7 +438,8 @@ def _generate_neighbors_placeholder(
 def _evaluate_neighbors(
     neighbors: List[BuildData],
     metric: str,
-    baseline_stats: BuildStats
+    baseline_stats: BuildStats,
+    cancel_check: Optional[Callable[[], bool]] = None,
 ) -> List[Tuple[BuildData, BuildStats]]:
     """
     Evaluate all neighbor configurations using PoB calculations (AC #3).
@@ -409,6 +462,16 @@ def _evaluate_neighbors(
     evaluations = []
 
     for neighbor in neighbors:
+        # Story 4.2 (AC-4.2.9): per-neighbor cooperative cancel. Break the sweep
+        # early and return the partial evaluations gathered so far; the top-of-loop
+        # check in optimize_build then terminates with reason="cancelled". This
+        # bounds cancel latency to one neighbor calc instead of a full sweep.
+        if cancel_check is not None and cancel_check():
+            logger.info(
+                "Cancellation requested mid-sweep after %d/%d neighbors",
+                len(evaluations), len(neighbors),
+            )
+            break
         try:
             stats = calculate_build_stats(neighbor)
             evaluations.append((neighbor, stats))
