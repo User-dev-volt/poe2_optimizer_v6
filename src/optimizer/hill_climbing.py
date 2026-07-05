@@ -351,28 +351,41 @@ def optimize_build(config: OptimizationConfiguration) -> OptimizationResult:
     improvement_pct = _calculate_improvement_percentage(
         baseline_stats, best_stats, config.metric
     )
-    try:
-        full_baseline = calculate_build_stats(config.build, engine="full")
-        full_optimized = calculate_build_stats(best_build, engine="full")
-        # Assign all THREE reported fields TOGETHER, only after both succeed.
-        baseline_report = full_baseline
-        optimized_report = full_optimized
-        improvement_pct = _calculate_improvement_percentage(
-            full_baseline, full_optimized, config.metric
-        )
+    if convergence_reason == "cancelled":
+        # A cancelled run must STOP promptly (AC-4.2.10), not spend ~1-2s on two
+        # real-engine reporting calcs. Report the MinimalCalc best-so-far numbers
+        # already set above -- a consistent same-scale pair, never a mixed pair.
         logger.info(
-            "Two-track reporting on FullCalc: baseline_metric=%.1f -> "
-            "optimized_metric=%.1f (improvement=%.2f%%)",
-            _get_metric_value(full_baseline, config.metric),
-            _get_metric_value(full_optimized, config.metric),
-            improvement_pct,
+            "Run cancelled; skipping FullCalc reporting (MinimalCalc best-so-far)."
         )
-    except Exception as exc:
-        # Atomic downgrade: both reported numbers stay MinimalCalc (already set).
-        logger.warning(
-            "FullCalc reporting unavailable; baseline AND optimized both reported "
-            "on MinimalCalc (atomic downgrade): %s", exc,
-        )
+    else:
+        try:
+            full_baseline = calculate_build_stats(config.build, engine="full")
+            # No improvement -> best_build IS config.build (same object); reuse the
+            # baseline calc instead of running an identical ~1s FullCalc twice.
+            if best_build is config.build:
+                full_optimized = full_baseline
+            else:
+                full_optimized = calculate_build_stats(best_build, engine="full")
+            # Assign all THREE reported fields TOGETHER, only after both succeed.
+            baseline_report = full_baseline
+            optimized_report = full_optimized
+            improvement_pct = _calculate_improvement_percentage(
+                full_baseline, full_optimized, config.metric
+            )
+            logger.info(
+                "Two-track reporting on FullCalc: baseline_metric=%.1f -> "
+                "optimized_metric=%.1f (improvement=%.2f%%)",
+                _get_metric_value(full_baseline, config.metric),
+                _get_metric_value(full_optimized, config.metric),
+                improvement_pct,
+            )
+        except Exception as exc:
+            # Atomic downgrade: both reported numbers stay MinimalCalc (already set).
+            logger.warning(
+                "FullCalc reporting unavailable; baseline AND optimized both reported "
+                "on MinimalCalc (atomic downgrade): %s", exc,
+            )
 
     # Task 3.3 & 3.4: Package result (reported stats are FullCalc when available)
     result = OptimizationResult(

@@ -117,3 +117,31 @@ class SessionManager:
                     )
                 setattr(session, key, value)
             return session
+
+    def set_status(self, session_id: str, new_status: str) -> Optional[str]:
+        """Atomically transition a session's ``status`` under the store lock.
+
+        Enforces the invariants a bare ``update(status=...)`` violates under
+        concurrency (both the Flask request thread and the optimizer worker
+        thread write ``status``):
+
+          * a TERMINAL status (``complete``/``error``/``cancelled``) is never
+            overwritten -- a late ``POST /cancel`` cannot revert a finished run
+            to ``cancelling``;
+          * ``cancelling`` is not clobbered back to ``running``/``pending`` -- a
+            cancel landing in the pending window is not lost when the worker
+            thread starts.
+
+        Returns the resulting status, or ``None`` for an unknown session.
+        """
+        with self._lock:
+            session = self._sessions.get(session_id)
+            if session is None:
+                return None
+            current = session.status
+            if current in ("complete", "error", "cancelled"):
+                return current
+            if current == "cancelling" and new_status in ("running", "pending"):
+                return current
+            session.status = new_status
+            return session.status

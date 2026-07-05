@@ -32,6 +32,7 @@ downgrades to MinimalCalc reporting -- never a mixed-scale pair):
 from __future__ import annotations
 
 import logging
+import math
 import threading
 from typing import Any, Dict, List, Optional
 
@@ -116,9 +117,16 @@ class FullCalcEngine:
             if v is None:
                 return default
             try:
-                return float(v)
+                f = float(v)
             except (TypeError, ValueError):
                 return default
+            # PoB can emit NaN/Infinity and json.loads parses those tokens; a
+            # non-finite value would make int(...) raise ValueError/OverflowError
+            # (or trip BuildStats.__post_init__) OUT of calculate() as an
+            # unclassified error rather than a CalculationError. Coerce to default.
+            if not math.isfinite(f):
+                return default
+            return f
 
         # first-nonzero DPS fallback (AC-4.2.2 row f), computed Python-side.
         total_dps = (

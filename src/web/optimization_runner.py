@@ -112,7 +112,10 @@ def run_optimization(session_id: str) -> None:
     # session.cancel_event via POST /cancel; the optimizer reads it as a Callable
     # (a daemon thread cannot be force-killed, so cancel is cooperative-only).
     config.cancel_check = session.cancel_event.is_set
-    session_manager.update(session_id, status="running")
+    # set_status (not update): if a POST /cancel already moved this session to
+    # 'cancelling' in the pending window, do NOT regress it to 'running' -- the
+    # run will observe the sticky cancel_event and exit 'cancelled'.
+    session_manager.set_status(session_id, "running")
 
     # Serialize optimize runs: only one LuaJIT optimization at a time.
     if not optimization_lock.acquire(timeout=1.0):

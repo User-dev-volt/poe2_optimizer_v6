@@ -104,6 +104,10 @@ class WorkerPool:
         self._lock = threading.Lock()
         self._spawned = False
         self._shutting_down = False
+        # Set by cancel_inflight() so calculate()'s one-retry does NOT re-run a
+        # reporting call whose worker was just hard-killed by a cooperative cancel
+        # (otherwise a cancelled/wedged FullCalc report silently re-executes).
+        self._cancel_requested = threading.Event()
 
     # ----- lifecycle ----------------------------------------------------- #
     def _ensure_spawned(self) -> None:
@@ -111,9 +115,25 @@ class WorkerPool:
             if self._spawned:
                 return
             logger.info("WorkerPool: lazy-spawning %d worker(s)", self.size)
-            for _ in range(self.size):
-                w = self._factory()
-                w.start()
+            # Boot every worker into a local list FIRST; publish to _all/_idle only
+            # once all succeed. A partial boot crash (the SEH the pool exists to
+            # tolerate) then rolls back cleanly instead of leaving an orphan in
+            # _idle that overflows the bounded queue (queue.Full) on the next
+            # acquire -- and leaking the booted worker's process + stderr fd.
+            started: List[Any] = []
+            try:
+                for _ in range(self.size):
+                    w = self._factory()
+                    w.start()
+                    started.append(w)
+            except BaseException:
+                for w in started:
+                    try:
+                        w.shutdown()
+                    except Exception:
+                        pass
+                raise
+            for w in started:
                 self._all.append(w)
                 self._idle.put_nowait(w)
             self._spawned = True
@@ -182,7 +202,11 @@ class WorkerPool:
                 self._respawns.append(now)
         try:
             w.restart()
-        except WorkerCrash as exc:
+        except (WorkerCrash, OSError) as exc:
+            # restart()->start() can raise OSError/PermissionError (e.g. a Windows
+            # sharing violation while the dying child still holds the stderr fd),
+            # not only WorkerCrash. Map BOTH to CalculationError so pool.calculate
+            # honors its "always CalculationError, never a raw crash" contract.
             raise CalculationError(
                 f"WorkerPool respawn failed: {exc}"
             ) from exc
@@ -220,6 +244,10 @@ class WorkerPool:
         worker's ``{ok:false}``) is NOT retried. Never returns a sentinel dict --
         a persistent failure raises :class:`CalculationError`.
         """
+        # A cooperative cancel that lands DURING this call kills the checked-out
+        # worker; clear the flag now so ONLY a cancel arriving from here on
+        # suppresses the retry (a stale flag from a prior run must not).
+        self._cancel_requested.clear()
         last_crash: Optional[WorkerCrash] = None
         for attempt in (1, 2):
             try:
@@ -230,6 +258,12 @@ class WorkerPool:
                     return w.get_stats(stats)  # ProtocolError on {ok:false}, WorkerCrash on death
             except WorkerCrash as exc:
                 last_crash = exc
+                if self._cancel_requested.is_set():
+                    # This crash is a cooperative-cancel hard-stop, not a transient
+                    # fault -- do NOT retry (re-running would defeat the cancel).
+                    raise CalculationError(
+                        f"FullCalc cancelled mid-report: {exc}"
+                    ) from exc
                 logger.warning("FullCalc worker crash (attempt %d/2): %s", attempt, exc)
                 continue  # retry once on a fresh worker (acquire respawns the dead one)
             except ProtocolError as exc:
@@ -253,6 +287,10 @@ class WorkerPool:
         Returns the number of workers signalled. Safe to call when nothing is in
         flight (a MinimalCalc-only run) -- it is then a no-op.
         """
+        # Signal calculate()'s retry loop NOT to re-run a call whose worker we are
+        # about to hard-kill (set before the kill so the flag is visible when the
+        # in-flight read unblocks with WorkerCrash).
+        self._cancel_requested.set()
         with self._lock:
             workers = list(self._inflight)
         for w in workers:

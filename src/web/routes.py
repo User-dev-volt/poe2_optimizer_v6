@@ -370,7 +370,10 @@ def register_routes(app) -> None:
         # Cooperative cancel: SET the live per-session Event (the optimizer's
         # cancel_check reads it between neighbors) and mark the session cancelling.
         session.cancel_event.set()
-        session_manager.update(session_id, status="cancelling")
+        # Atomic transition: if the run finished in the window since the terminal
+        # check above, set_status leaves the terminal status intact (a late cancel
+        # must not revert 'complete'/'error'/'cancelled' back to 'cancelling').
+        effective_status = session_manager.set_status(session_id, "cancelling")
 
         # Hard-stop any FullCalc worker checked out for THIS run. During the
         # MinimalCalc search no worker is in flight (the cooperative check serves
@@ -386,4 +389,4 @@ def register_routes(app) -> None:
         except Exception:  # cancel must never 500 on pool bookkeeping
             logger.exception("cancel: pool.cancel_inflight failed for %s", session_id)
 
-        return jsonify({"status": "cancelling", "session_id": session_id}), 200
+        return jsonify({"status": effective_status or "cancelling", "session_id": session_id}), 200

@@ -262,8 +262,15 @@ class DriverWorker:
         while True:
             remaining = deadline - time.perf_counter()
             if remaining <= 0:
+                # Capture the stderr tail BEFORE stop() (which closes the fh and
+                # deletes the owned temp file) so a silent-stall boot log is not
+                # thrown away -- AC-4.2.6c: stderr_tail is never blank on a crash.
+                tail = self._stderr_tail()
                 self.stop()
-                raise WorkerCrash(f"worker boot timed out after {self.boot_timeout:.0f}s")
+                raise WorkerCrash(
+                    f"worker boot timed out after {self.boot_timeout:.0f}s",
+                    stderr_tail=tail,
+                )
             # Bounded read: a child that hangs during boot without printing a line
             # or exiting no longer blocks here forever -- the original untimed
             # readline() made boot_timeout unreachable on a silent stall.
@@ -335,7 +342,17 @@ class DriverWorker:
         # bogus all-zero BuildStats).
         if not resp.get("ok"):
             raise ProtocolError(f"GET_STATS failed: {resp.get('error', resp)}")
-        return resp.get("stats", {})
+        # An {ok:true} response with an empty/missing stats table is NOT valid:
+        # _stats_from_mainoutput would map it to a bogus all-zero BuildStats
+        # (0 DPS / 0 life) reported as "Truth". Treat it as a protocol failure so
+        # the two-track guard downgrades to MinimalCalc instead of reporting zeros.
+        stats_out = resp.get("stats")
+        if not stats_out:
+            raise ProtocolError(
+                "GET_STATS returned ok with empty/missing stats "
+                "(would map to an all-zero BuildStats)"
+            )
+        return stats_out
 
     def eval_neighbors(self, payload: Optional[dict] = None) -> dict:
         # (AC-4.2.6e) set cmd LAST so a payload key cannot clobber it (pre-hardens
