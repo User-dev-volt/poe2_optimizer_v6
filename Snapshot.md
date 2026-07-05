@@ -28,7 +28,7 @@ Story 2.9.2: Spell/DOT MinimalCalc Enhancement
 ---
 
 ## Next Action
-- Await task notification from `wf_6302dab2-5d5`; present verified findings ranked most-severe-first when they arrive
+1.
 
 ---
 
