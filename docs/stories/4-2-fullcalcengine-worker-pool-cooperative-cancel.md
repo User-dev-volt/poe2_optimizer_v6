@@ -224,6 +224,27 @@ Modified:
 - `docs/decisions/ADR-007-xml-direct-passivespec-convert.md` (Accepted; mutated-BuildData→patched-XML seam)
 - `docs/sprint-status.yaml` (4-2 → in-progress → review)
 
+### Review Findings (code review 2026-07-05)
+
+Adversarial code review (3 parallel fresh-context layers: Blind Hunter / Edge Case Hunter / Acceptance Auditor) over `git diff 0c2b355..0708d3c`. All findings verified against source before rating. Auditor confirmed all 14 ACs substantially MET and all four named Dev-Notes traps (@mainSocketGroup, sentinel-into-argmax, FullCalc-over-FullCalc, source_xml inheritance) correctly handled.
+
+**Patch (unchecked — actionable):**
+
+- [ ] [Review][Patch] Empty/missing `GET_STATS` dict maps to an all-zero `BuildStats` reported as "Truth" — `get_stats` guards `{ok:false}` but returns `resp.get("stats", {})`; an `{ok:true}` empty/missing-stats response silently becomes all-zero (bogus 0%/−100% headline), the exact "bogus all-zero" its own comment names. Fix: treat empty stats as a failure (raise → atomic downgrade). [src/calculator/driver_worker.py:338]
+- [ ] [Review][Patch] Cooperative cancel not prompt in the FullCalc reporting phase — the two-track reporting block runs its 2 `engine="full"` calls unconditionally even after `convergence_reason=="cancelled"`, and `pool.calculate`'s one-retry re-runs a `cancel_inflight()`-killed reporting call to completion (worst case ~2×`cmd_timeout` on a wedged calc). Run still terminates `cancelled` (state correct) but AC-4.2.10's "stop on demand" latency is violated. Fix: guard reporting with `cancel_check`; make retry cancel-aware. [src/optimizer/hill_climbing.py:354; src/calculator/worker_pool.py:224]
+- [ ] [Review][Patch] Partial lazy pool spawn bricks the pool + leaks — a boot `WorkerCrash` on the 2nd worker (the exact SEH the pool exists to tolerate) leaves `_spawned=False` with worker[0] orphaned in `_idle`; the next `acquire` re-runs the spawn loop → `queue.Full` on every subsequent call (FullCalc permanently down for the process) + a leaked ~293MB worker and its stderr fd. Fix: try/except the spawn loop, roll back partial workers on failure. [src/calculator/worker_pool.py:109]
+- [ ] [Review][Patch] Session-status TOCTOU — `cancel()` checks `session.status` then unconditionally writes `cancelling`; if `run_optimization` sets `complete` in between, the terminal state is reverted to non-terminal `cancelling` permanently (a `/result` poller sees it stuck). Separately, `run_optimization` unconditionally writes `running`, transiently overwriting a pending-window cancel. Fix: guard status transitions under the session lock (no terminal→non-terminal regression). [src/web/routes.py:373; src/web/optimization_runner.py:115]
+- [ ] [Review][Patch] `_respawn` maps only `WorkerCrash` — `restart()`→`start()` can raise `OSError`/`PermissionError` (Windows stderr-fd sharing violation while the dying child holds the fd) which escapes `pool.calculate` as a raw `OSError`, violating its "always `CalculationError`, never a sentinel" contract (absorbed today only by hill_climbing's broad except; bites item-4 direct callers). Fix: `except (WorkerCrash, OSError)`. [src/calculator/worker_pool.py:184]
+- [ ] [Review][Patch] NaN/inf worker stats raise `ValueError`/`OverflowError`, not `CalculationError` — `num()` returns non-finite floats unchanged; `int(nan)`/`BuildStats.__post_init__` then throw an unclassified error out of `FullCalcEngine.calculate` (`json.loads` parses `NaN`/`Infinity` by default). Correctness preserved via downgrade today; contract gap for future callers. Fix: reject non-finite in `num()`. [src/calculator/full_calc_engine.py:114]
+- [ ] [Review][Patch] Boot-timeout `WorkerCrash` carries a blank `stderr_tail` — the boot-timeout path calls `stop()` (which deletes the owned stderr temp file) then raises with no tail, unlike every other crash site; the one path most likely to hold a "silent stall" boot log throws it away (undercuts AC-4.2.6c). Fix: capture the tail before `stop()`. [src/calculator/driver_worker.py:265]
+- [ ] [Review][Patch] Non-improving run issues two identical FullCalc reporting calls — when the search finds no improvement `best_build is config.build`, so the two-track block runs the same ~1s real-engine calc twice for a guaranteed 0%. Fix: reuse `full_baseline` when `best_build is config.build`. [src/optimizer/hill_climbing.py:355]
+
+**Deferred (pre-existing, not caused by this change):**
+
+- [x] [Review][Defer] `_select_best_neighbor` indexes the full `mutations[]` with an index into the possibly-shorter `evaluations[]` — when a neighbor calc throws (skip-on-failure) the indices mis-align and node add/remove tracking can point at the wrong mutation. Pre-existing and independent of 4.2 (the new cancel-break returns an aligned prefix); AC-4.2.9 just makes partial `evaluations` routine. [src/optimizer/hill_climbing.py:516] — deferred, pre-existing
+
+**Dismissed (1):** AC-4.2.1's literal "else falls through to the hybrid" wording vs the selector raising `CalculationError` when `source_xml is None` — a spec-internal wording inconsistency the Auditor itself reconciled against AC-4.2.7; the code is self-consistent, test-pinned, and its only call site wraps the raise, so net behavior matches intent. (Optional: reword AC-4.2.1 to match AC-4.2.7.)
+
 ## Change Log
 
 **2026-07-03** — Story IMPLEMENTED via BMAD dev-story (ultracode). Status ready-for-dev → in-progress → review.
